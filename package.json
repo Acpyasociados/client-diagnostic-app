@@ -1,0 +1,10 @@
+{
+  "name": "client-diagnostic-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^9.1.0",
+    "resend": "^4.0.0"
+  }
+}

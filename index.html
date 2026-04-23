@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnóstico de crecimiento y rentabilidad</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <section class="card">
+        <span class="badge">Diagnóstico + implementación</span>
+        <h1>Detecta dónde mejorar ventas, margen y operación en menos de 48 horas.</h1>
+        <p>El cliente completa un diagnóstico inicial, paga, responde un cuestionario sectorial y recibe un informe accionable con 3 mejoras priorizadas. El borrador se genera automáticamente y se valida con revisión humana.</p>
+        <div class="grid-3">
+          <div class="kpi"><strong>3 mejoras</strong><div class="small">corto, medio y largo plazo</div></div>
+          <div class="kpi"><strong>48 horas</strong><div class="small">plazo comprometido</div></div>
+          <div class="kpi"><strong>3 rubros</strong><div class="small">servicios, comercio y terreno</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Diagnóstico inicial</h2>
+        <p class="small">Completa esta información. Luego serás enviado al pago y se activará el cuestionario específico de tu rubro.</p>
+        <div id="message" class="notice hidden"></div>
+        <form id="leadForm">
+          <div class="grid-2">
+            <div class="field"><label>Nombre</label><input name="name" required /></div>
+            <div class="field"><label>Email</label><input type="email" name="email" required /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Teléfono</label><input name="phone" required /></div>
+            <div class="field"><label>Empresa</label><input name="company" required /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Rubro</label>
+              <select name="sector" required>
+                <option value="">Selecciona</option>
+                <option value="servicios_profesionales">Servicios profesionales</option>
+                <option value="comercio_ecommerce">Comercio / e-commerce</option>
+                <option value="servicios_terreno">Servicios en terreno</option>
+              </select>
+            </div>
+            <div class="field"><label>Ventas mensuales (CLP)</label><input type="number" name="monthly_sales" min="0" required /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Margen estimado (%)</label><input type="number" name="margin" min="0" max="100" required /></div>
+            <div class="field"><label>Cantidad de clientes activos</label><input type="number" name="active_clients" min="0" required /></div>
+          </div>
+          <div class="field"><label>Top 3 costos principales</label><textarea name="top_costs" required placeholder="Ej: personal, arriendo, publicidad"></textarea></div>
+          <div class="grid-2">
+            <div class="field"><label>Canal principal de adquisición</label><input name="main_channel" required placeholder="Ej: referidos, Meta Ads, orgánico" /></div>
+            <div class="field"><label>Problema principal</label><input name="main_problem" required placeholder="Ej: bajo cierre, costos altos, poca recompra" /></div>
+          </div>
+          <div class="field"><label>Objetivo a 6 meses</label><textarea name="goal_6m" required placeholder="Ej: subir ventas 20%, estabilizar margen, ordenar operación"></textarea></div>
+
+          <div class="field">
+            <label>Plan</label>
+            <div class="grid-2" id="plans">
+              <div class="plan active" data-plan="basico">
+                <div class="plan-title"><strong>Básico</strong><span class="small">Informe + 3 mejoras</span></div>
+                <p>Diagnóstico accionable con entrega en PDF y HTML.</p>
+              </div>
+              <div class="plan" data-plan="premium">
+                <div class="plan-title"><strong>Premium</strong><span class="small">Informe + implementación sugerida</span></div>
+                <p>Incluye plan de ejecución 30/90/180 días y foco comercial.</p>
+              </div>
+            </div>
+            <input type="hidden" name="plan" value="basico" />
+          </div>
+
+          <button type="submit" id="submitButton">Continuar a pago</button>
+        </form>
+      </section>
+    </div>
+
+    <footer>Versión semi-automática con revisión humana final.</footer>
+  </div>
+
+  <script>
+    const plans = document.querySelectorAll('.plan');
+    const planInput = document.querySelector('input[name="plan"]');
+    const form = document.getElementById('leadForm');
+    const button = document.getElementById('submitButton');
+    const message = document.getElementById('message');
+
+    plans.forEach((plan) => {
+      plan.addEventListener('click', () => {
+        plans.forEach(p => p.classList.remove('active'));
+        plan.classList.add('active');
+        planInput.value = plan.dataset.plan;
+      });
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      button.textContent = 'Procesando...';
+      message.className = 'notice hidden';
+
+      try {
+        const payload = Object.fromEntries(new FormData(form).entries());
+        const response = await fetch('/api/submit-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No fue posible iniciar el proceso');
+        window.location.href = data.checkout_url;
+      } catch (error) {
+        message.textContent = error.message;
+        message.className = 'notice error';
+        button.disabled = false;
+        button.textContent = 'Continuar a pago';
+      }
+    });
+  </script>
+</body>
+</html>
