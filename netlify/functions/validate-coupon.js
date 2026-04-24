@@ -21,7 +21,11 @@ export default async (req) => {
   try {
     let body = req.body;
     if (typeof body !== 'string') {
-      body = await body.text();
+      if (body.toString) {
+        body = body.toString();
+      } else if (Buffer.isBuffer(body)) {
+        body = body.toString('utf-8');
+      }
     }
     const { coupon, plan } = JSON.parse(body || '{}');
 
