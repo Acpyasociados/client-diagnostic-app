@@ -57,6 +57,19 @@
           <div class="field"><label>Objetivo a 6 meses</label><textarea name="goal_6m" required placeholder="Ej: subir ventas 20%, estabilizar margen, ordenar operación"></textarea></div>
 
           <div class="field">
+            <label>Cupón de Descuento (opcional)</label>
+            <input
+              type="text"
+              name="coupon"
+              id="couponInput"
+              placeholder="Ej: TEST100, DEMO100, PRUEBA100"
+            />
+            <small id="couponMessage" style="margin-top: 5px; display: block;"></small>
+            <input type="hidden" name="discountPercentage" value="0" />
+            <input type="hidden" name="finalPrice" value="0" />
+          </div>
+
+          <div class="field">
             <label>Plan</label>
             <div class="grid-2" id="plans">
               <div class="plan active" data-plan="basico">
@@ -87,15 +100,96 @@
     const form = document.getElementById('leadForm');
     const button = document.getElementById('submitButton');
     const message = document.getElementById('message');
+    const couponInput = document.getElementById('couponInput');
+    const couponMessage = document.getElementById('couponMessage');
+    const discountInput = document.querySelector('input[name="discountPercentage"]');
+    const finalPriceInput = document.querySelector('input[name="finalPrice"]');
 
+    // Precios base
+    const basePrices = {
+      'basico': 49900,
+      'premium': 149900
+    };
+
+    // Plan selection
     plans.forEach((plan) => {
       plan.addEventListener('click', () => {
         plans.forEach(p => p.classList.remove('active'));
         plan.classList.add('active');
         planInput.value = plan.dataset.plan;
+        // Resetear cupón cuando cambia plan
+        resetCoupon();
       });
     });
 
+    // Validar cupón cuando se pierde el foco
+    couponInput.addEventListener('blur', () => {
+      if (couponInput.value.trim()) {
+        validateCoupon();
+      }
+    });
+
+    // Validar cupón cuando presiona Enter
+    couponInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        validateCoupon();
+      }
+    });
+
+    // Función para validar cupón
+    async function validateCoupon() {
+      const coupon = couponInput.value.trim();
+      const plan = planInput.value;
+
+      if (!coupon) {
+        resetCoupon();
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/validate-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coupon, plan })
+        });
+
+        const data = await response.json();
+
+        if (data.valid) {
+          couponMessage.textContent = `✅ ${data.message}`;
+          couponMessage.style.color = '#28a745';
+
+          // Guardar descuento y precio final
+          discountInput.value = data.discount_percentage;
+          finalPriceInput.value = data.final_price;
+
+          // Mostrar precio final
+          if (data.final_price === 0) {
+            couponMessage.textContent += ` - GRATIS`;
+          } else {
+            couponMessage.textContent += ` - Precio final: $${data.final_price.toLocaleString('es-CL')}`;
+          }
+        } else {
+          couponMessage.textContent = `❌ ${data.error}`;
+          couponMessage.style.color = '#dc3545';
+          resetCoupon();
+        }
+      } catch (error) {
+        couponMessage.textContent = '❌ Error validando cupón';
+        couponMessage.style.color = '#dc3545';
+        resetCoupon();
+      }
+    }
+
+    // Función para resetear cupón
+    function resetCoupon() {
+      couponMessage.textContent = '';
+      discountInput.value = '0';
+      finalPriceInput.value = '0';
+    }
+
+    // Form submission
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       button.disabled = true;
