@@ -10,11 +10,20 @@ async function parseBody(event) {
     return null;
   }
 
-  // Si es JSON string (el caso normal)
+  // Si es JSON string
   if (typeof event.body === 'string') {
     try {
       return JSON.parse(event.body);
     } catch (e) {
+      // Podría ser form-urlencoded, intentar parsear como query string
+      const params = new URLSearchParams(event.body);
+      if (params.size > 0) {
+        const obj = {};
+        for (const [key, value] of params) {
+          obj[key] = value;
+        }
+        return obj;
+      }
       return null;
     }
   }

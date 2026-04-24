@@ -197,21 +197,14 @@
       message.className = 'notice hidden';
 
       try {
-        // Extraer datos y enviar como JSON con Content-Type explícito
+        // Enviar como FormData - el navegador establecerá automáticamente Content-Type con boundary
         const formData = new FormData(form);
-        const payload = {};
-        for (const [key, value] of formData) {
-          payload[key] = value;
-        }
-        const jsonBody = JSON.stringify(payload);
-        console.log('CLIENT: enviando JSON con Content-Type explícito');
-        console.log('CLIENT: tamaño:', jsonBody.length);
+        console.log('CLIENT: enviando como FormData (multipart)');
+        console.log('CLIENT: campos:', Array.from(formData.keys()).length);
         const response = await fetch('/api/submit-lead', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json; charset=UTF-8'
-          },
-          body: jsonBody
+          body: formData
+          // NO especificar Content-Type - el navegador lo hará automáticamente
         });
         const data = await response.json();
         if (!response.ok) {
