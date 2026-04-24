@@ -20,8 +20,18 @@ export default async (req) => {
   debug('=== DEBUG START ===');
   debug('DEBUG: req.method:' + req.method);
   debug('DEBUG: req.body type:' + typeof req.body);
+  debug('DEBUG: req.body is null:' + (req.body === null));
+  debug('DEBUG: req.body length:' + (req.body ? req.body.length : 'N/A'));
+  debug('DEBUG: req.body keys:' + (typeof req.body === 'object' ? JSON.stringify(Object.keys(req.body)) : 'N/A'));
   debug('DEBUG: req.rawBody type:' + typeof req.rawBody);
+  debug('DEBUG: req.rawBody is null:' + (req.rawBody === null));
   debug('DEBUG: bodyContent type:' + typeof bodyContent);
+  debug('DEBUG: bodyContent is null:' + (bodyContent === null));
+  if (bodyContent && typeof bodyContent === 'object') {
+    debug('DEBUG: bodyContent keys:' + JSON.stringify(Object.keys(bodyContent)));
+    debug('DEBUG: bodyContent.name:' + bodyContent.name);
+  }
+  debug('DEBUG: req.headers:' + JSON.stringify(req.headers));
 
   if (bodyContent) {
     try {
