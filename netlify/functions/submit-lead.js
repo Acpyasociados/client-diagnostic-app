@@ -4,7 +4,7 @@ import { sectorLabels } from './_lib/questions.js';
 
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
 
-export default async (event) => {
+export default async (event, context) => {
   const debugLogs = [];
 
   const debug = (msg) => {
@@ -14,10 +14,28 @@ export default async (event) => {
 
   debug('=== DEBUG START ===');
   debug('DEBUG: typeof event:' + typeof event);
-  debug('DEBUG: event keys:' + JSON.stringify(Object.keys(event)));
-  debug('DEBUG: event.httpMethod:' + event.httpMethod);
-  debug('DEBUG: event.method:' + event.method);
-  debug('DEBUG: event.requestContext?.httpMethod:' + (event.requestContext ? event.requestContext.httpMethod : 'N/A'));
+  debug('DEBUG: event constructor:' + event.constructor.name);
+
+  // Intentar acceder a headers de diferentes formas
+  let headers = event.headers || event.Headers || {};
+  debug('DEBUG: headers type:' + typeof headers);
+  debug('DEBUG: Content-Type:' + (headers['content-type'] || headers['Content-Type'] || 'N/A'));
+
+  // Intentar encontrar body en diferentes propiedades
+  let bodyData = null;
+  if (event.body) {
+    debug('DEBUG: event.body found');
+    bodyData = event.body;
+  } else if (event.rawBody) {
+    debug('DEBUG: event.rawBody found');
+    bodyData = event.rawBody;
+  } else if (event.bodyAsText) {
+    debug('DEBUG: event.bodyAsText found');
+    bodyData = event.bodyAsText;
+  }
+
+  debug('DEBUG: bodyData type:' + typeof bodyData);
+  debug('DEBUG: bodyData constructor:' + (bodyData ? bodyData.constructor.name : 'null'));
 
   // Check method - accept POST
   const method = (event.httpMethod || event.method || '').toUpperCase();
