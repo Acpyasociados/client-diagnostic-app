@@ -11,6 +11,7 @@ export default async (req) => {
   let body = {};
   let bodyContent = req.body || req.rawBody;
 
+  console.log('=== DEBUG START ===');
   console.log('DEBUG: req.method:', req.method);
   console.log('DEBUG: req.body type:', typeof req.body);
   console.log('DEBUG: req.rawBody type:', typeof req.rawBody);
@@ -20,36 +21,48 @@ export default async (req) => {
     try {
       // Si es string, parsea directamente
       if (typeof bodyContent === 'string') {
-        console.log('DEBUG: Parsing string body');
+        console.log('DEBUG: [STRING BRANCH] Parsing JSON string');
         body = JSON.parse(bodyContent);
       }
       // Si es Buffer, convierte a string y parsea
       else if (Buffer.isBuffer(bodyContent)) {
-        console.log('DEBUG: Parsing Buffer body');
+        console.log('DEBUG: [BUFFER BRANCH] Converting buffer to string and parsing');
         body = JSON.parse(bodyContent.toString('utf-8'));
       }
-      // Si es objeto, úsalo directamente (prioritario)
+      // Si es objeto
       else if (typeof bodyContent === 'object' && bodyContent !== null) {
-        console.log('DEBUG: Using object body directly');
-        // Verifica si tiene propiedades
+        console.log('DEBUG: [OBJECT BRANCH] Got object type bodyContent');
         const keys = Object.keys(bodyContent);
-        console.log('DEBUG: Object keys:', keys);
-        if (keys.length > 0) {
+        console.log('DEBUG: Object keys:', JSON.stringify(keys));
+        console.log('DEBUG: Object keys count:', keys.length);
+
+        // Intenta convertir a JSON y reparsear (fallback para asegurar todas las props)
+        try {
+          const jsonStr = JSON.stringify(bodyContent);
+          console.log('DEBUG: Stringified body length:', jsonStr.length);
+          body = JSON.parse(jsonStr);
+          console.log('DEBUG: Successfully reparsed object');
+        } catch (reparsearr) {
+          console.log('DEBUG: Reparse failed, using object directly');
           body = bodyContent;
-        } else {
-          // Si está vacío, no hay nada que hacer
-          console.log('DEBUG: Object is empty, body remains {}');
         }
+      } else {
+        console.log('DEBUG: [FALLBACK] Unknown bodyContent type:', typeof bodyContent);
       }
     } catch (parseError) {
       console.error('DEBUG: Parse error:', parseError.message);
+      console.error('DEBUG: Stack:', parseError.stack);
       return json(400, { error: 'No se pudo procesar el cuerpo de la solicitud' });
     }
+  } else {
+    console.log('DEBUG: bodyContent is falsy');
   }
 
-  console.log('DEBUG: parsed body keys:', Object.keys(body));
-  console.log('DEBUG: body.name:', body.name);
-  console.log('DEBUG: body.email:', body.email);
+  console.log('DEBUG: Final parsed body keys:', JSON.stringify(Object.keys(body)));
+  console.log('DEBUG: body.name value:', body.name);
+  console.log('DEBUG: body.email value:', body.email);
+  console.log('DEBUG: body object:', JSON.stringify(body).substring(0, 200));
+  console.log('=== DEBUG END ===');
 
   for (const field of requiredFields) {
     if (!body[field]) return json(400, { error: `Falta ${field}` });
