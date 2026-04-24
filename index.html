@@ -204,10 +204,18 @@
           body: JSON.stringify(payload)
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'No fue posible iniciar el proceso');
+        if (!response.ok) {
+          let errorMsg = data.error || 'No fue posible iniciar el proceso';
+          // Si hay logs de debug, agregarlos al mensaje
+          if (data.debug && Array.isArray(data.debug)) {
+            errorMsg += '\n\nDEBUG: ' + data.debug.join('\n');
+          }
+          throw new Error(errorMsg);
+        }
         window.location.href = data.checkout_url;
       } catch (error) {
         message.textContent = error.message;
+        message.style.whiteSpace = 'pre-wrap';
         message.className = 'notice error';
         button.disabled = false;
         button.textContent = 'Continuar a pago';
