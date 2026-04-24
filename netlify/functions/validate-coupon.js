@@ -19,7 +19,11 @@ export default async (req) => {
   }
 
   try {
-    const { coupon, plan } = JSON.parse(req.body || '{}');
+    let body = req.body;
+    if (typeof body !== 'string') {
+      body = await body.text();
+    }
+    const { coupon, plan } = JSON.parse(body || '{}');
 
     if (!coupon || !plan) {
       return json(400, { error: 'Falta cupón o plan' });
