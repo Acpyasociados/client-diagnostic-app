@@ -197,14 +197,21 @@
       message.className = 'notice hidden';
 
       try {
-        // Usar FormData nativo (URL-encoded)
+        // Extraer datos y enviar como JSON con Content-Type explícito
         const formData = new FormData(form);
-        console.log('CLIENT: enviando como form-urlencoded');
-        console.log('CLIENT: campos:', Array.from(formData.keys()).length);
+        const payload = {};
+        for (const [key, value] of formData) {
+          payload[key] = value;
+        }
+        const jsonBody = JSON.stringify(payload);
+        console.log('CLIENT: enviando JSON con Content-Type explícito');
+        console.log('CLIENT: tamaño:', jsonBody.length);
         const response = await fetch('/api/submit-lead', {
           method: 'POST',
-          body: formData
-          // NO especificar Content-Type - navegador lo hace automáticamente
+          headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+          },
+          body: jsonBody
         });
         const data = await response.json();
         if (!response.ok) {
