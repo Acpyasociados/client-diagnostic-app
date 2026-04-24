@@ -61,7 +61,7 @@ export default async (event, context) => {
   const method = (event.httpMethod || event.method || '').toUpperCase();
   if (method !== 'POST') {
     debug('Method rejected: ' + method);
-    return json(405, { error: 'Método no permitido' });
+    return json(405, { error: 'Método no permitido', debug: debugLogs });
   }
 
   // Parse body
@@ -72,12 +72,13 @@ export default async (event, context) => {
     debug('Body keys: ' + JSON.stringify(Object.keys(body || {})));
   } catch (err) {
     debug('Parse error: ' + err.message);
-    return json(400, { error: 'No se pudo parsear el body: ' + err.message });
+    debug('Stack: ' + err.stack);
+    return json(400, { error: 'No se pudo parsear el body: ' + err.message, debug: debugLogs });
   }
 
   if (!body) {
     debug('Body is null/empty');
-    return json(400, { error: 'No hay contenido en la request' });
+    return json(400, { error: 'No hay contenido en la request', debug: debugLogs });
   }
 
   debug('=== DEBUG END ===');
