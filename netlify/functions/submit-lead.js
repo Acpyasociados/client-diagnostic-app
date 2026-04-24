@@ -31,7 +31,8 @@ export default async (req) => {
     debug('DEBUG: bodyContent keys:' + JSON.stringify(Object.keys(bodyContent)));
     debug('DEBUG: bodyContent.name:' + bodyContent.name);
   }
-  debug('DEBUG: req.headers:' + JSON.stringify(req.headers));
+  debug('DEBUG: req.headers.content-type:' + req.headers['content-type']);
+  debug('DEBUG: req.headers keys:' + JSON.stringify(Object.keys(req.headers)));
 
   if (bodyContent) {
     try {
