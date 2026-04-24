@@ -81,7 +81,7 @@ export default async (req) => {
 
   for (const field of requiredFields) {
     if (!body[field]) {
-      return json(400, { error: `Falta ${field}`, debug: debugLogs.slice(-5) });
+      return json(400, { error: `Falta ${field}`, debug: debugLogs });
     }
   }
 
