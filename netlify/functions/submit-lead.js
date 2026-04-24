@@ -5,11 +5,6 @@ import { sectorLabels } from './_lib/questions.js';
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
 
 export default async (event) => {
-  if (event.httpMethod !== 'POST') return json(405, { error: 'Método no permitido' });
-
-  // Extract and parse body safely
-  let body = {};
-  let bodyContent = event.body;
   const debugLogs = [];
 
   const debug = (msg) => {
@@ -18,12 +13,28 @@ export default async (event) => {
   };
 
   debug('=== DEBUG START ===');
+  debug('DEBUG: typeof event:' + typeof event);
+  debug('DEBUG: event keys:' + JSON.stringify(Object.keys(event)));
   debug('DEBUG: event.httpMethod:' + event.httpMethod);
+  debug('DEBUG: event.method:' + event.method);
+  debug('DEBUG: event.requestContext?.httpMethod:' + (event.requestContext ? event.requestContext.httpMethod : 'N/A'));
+
+  // Check method - accept POST
+  const method = (event.httpMethod || event.method || '').toUpperCase();
+  if (method !== 'POST') {
+    debug('DEBUG: Method check failed. Method is: ' + method);
+    return json(405, { error: 'Método no permitido: ' + method, debug: debugLogs });
+  }
+
+  // Extract and parse body safely
+  let body = {};
+  let bodyContent = event.body;
+
   debug('DEBUG: event.body type:' + typeof event.body);
   debug('DEBUG: event.body is null:' + (event.body === null));
   debug('DEBUG: event.body length:' + (event.body ? event.body.length : 'N/A'));
   debug('DEBUG: event.body sample:' + (event.body ? event.body.substring(0, 100) : 'N/A'));
-  debug('DEBUG: event.headers.content-type:' + event.headers['content-type']);
+  debug('DEBUG: event.headers:' + JSON.stringify(event.headers));
 
   if (bodyContent) {
     try {
