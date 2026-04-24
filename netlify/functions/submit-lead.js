@@ -48,8 +48,14 @@ export default async (event, context) => {
   debug('=== DEBUG START ===');
   debug('event.body type: ' + typeof event.body);
   debug('event.body is string: ' + (typeof event.body === 'string'));
+  debug('event.body length: ' + (event.body ? event.body.length : 0));
+  if (typeof event.body === 'string') {
+    debug('event.body sample: ' + event.body.substring(0, 100));
+  }
   debug('event.method: ' + event.method);
   debug('event.httpMethod: ' + event.httpMethod);
+  debug('content-type header: ' + (event.headers['content-type'] || 'MISSING'));
+  debug('all headers: ' + JSON.stringify(event.headers || {}));
 
   // Check method
   const method = (event.httpMethod || event.method || '').toUpperCase();
