@@ -19,14 +19,22 @@ export default async (req) => {
   }
 
   try {
-    let body = req.body;
-    if (typeof body !== 'string') {
-      if (body.toString) {
-        body = body.toString();
-      } else if (Buffer.isBuffer(body)) {
-        body = body.toString('utf-8');
-      }
+    let body;
+
+    // Try to extract body in multiple ways
+    if (typeof req.body === 'string') {
+      body = req.body;
+    } else if (Buffer.isBuffer(req.body)) {
+      body = req.body.toString('utf-8');
+    } else if (req.rawBody) {
+      body = typeof req.rawBody === 'string' ? req.rawBody : req.rawBody.toString('utf-8');
+    } else if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) {
+      // Maybe it's already parsed JSON
+      body = JSON.stringify(req.body);
+    } else {
+      body = '{}';
     }
+
     const { coupon, plan } = JSON.parse(body || '{}');
 
     if (!coupon || !plan) {
