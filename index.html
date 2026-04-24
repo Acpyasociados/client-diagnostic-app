@@ -197,21 +197,14 @@
       message.className = 'notice hidden';
 
       try {
-        // Extraer valores del formulario directamente
+        // Usar FormData nativo (URL-encoded)
         const formData = new FormData(form);
-        const payload = {};
-        for (const [key, value] of formData.entries()) {
-          payload[key] = value;
-        }
-        console.log('CLIENT: payload keys:', Object.keys(payload).length);
-        console.log('CLIENT: payload.name:', payload.name);
-        const bodyStr = JSON.stringify(payload);
-        console.log('CLIENT: body length:', bodyStr.length);
-        console.log('CLIENT: body starts with:', bodyStr.substring(0, 50));
+        console.log('CLIENT: enviando como form-urlencoded');
+        console.log('CLIENT: campos:', Array.from(formData.keys()).length);
         const response = await fetch('/api/submit-lead', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: bodyStr
+          body: formData
+          // NO especificar Content-Type - navegador lo hace automáticamente
         });
         const data = await response.json();
         if (!response.ok) {

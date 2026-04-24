@@ -4,13 +4,36 @@ import { sectorLabels } from './_lib/questions.js';
 
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
 
-// Parse request body - handle both string and pre-parsed JSON
+// Parse request body - handle form-urlencoded and JSON
 async function parseBody(event) {
+  if (!event.body) return null;
+
+  const contentType = event.headers['content-type'] || '';
+
+  // Si es form-urlencoded
+  if (contentType.includes('application/x-www-form-urlencoded')) {
+    const params = new URLSearchParams(event.body);
+    const body = {};
+    for (const [key, value] of params) {
+      body[key] = value;
+    }
+    return Object.keys(body).length > 0 ? body : null;
+  }
+
+  // Si es JSON string
   if (typeof event.body === 'string') {
-    return JSON.parse(event.body);
-  } else if (typeof event.body === 'object' && Object.keys(event.body).length > 0) {
+    try {
+      return JSON.parse(event.body);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Si ya es un objeto
+  if (typeof event.body === 'object' && Object.keys(event.body).length > 0) {
     return event.body;
   }
+
   return null;
 }
 
