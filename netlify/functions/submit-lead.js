@@ -8,34 +8,48 @@ export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'Método no permitido' });
 
   // Extract and parse body safely
-  let bodyStr = null;
   let body = {};
+  let bodyContent = req.body || req.rawBody;
 
-  if (req.body) {
-    if (typeof req.body === 'string') {
-      bodyStr = req.body;
-    } else if (Buffer.isBuffer(req.body)) {
-      bodyStr = req.body.toString('utf-8');
-    } else if (req.rawBody) {
-      if (typeof req.rawBody === 'string') {
-        bodyStr = req.rawBody;
-      } else if (Buffer.isBuffer(req.rawBody)) {
-        bodyStr = req.rawBody.toString('utf-8');
-      }
-    } else if (typeof req.body === 'object') {
-      if (req.body.name !== undefined || req.body.email !== undefined) {
-        body = req.body;
-      }
-    }
-  }
+  console.log('DEBUG: req.method:', req.method);
+  console.log('DEBUG: req.body type:', typeof req.body);
+  console.log('DEBUG: req.rawBody type:', typeof req.rawBody);
+  console.log('DEBUG: bodyContent type:', typeof bodyContent);
 
-  if (bodyStr) {
+  if (bodyContent) {
     try {
-      body = JSON.parse(bodyStr);
+      // Si es string, parsea directamente
+      if (typeof bodyContent === 'string') {
+        console.log('DEBUG: Parsing string body');
+        body = JSON.parse(bodyContent);
+      }
+      // Si es Buffer, convierte a string y parsea
+      else if (Buffer.isBuffer(bodyContent)) {
+        console.log('DEBUG: Parsing Buffer body');
+        body = JSON.parse(bodyContent.toString('utf-8'));
+      }
+      // Si es objeto, úsalo directamente (prioritario)
+      else if (typeof bodyContent === 'object' && bodyContent !== null) {
+        console.log('DEBUG: Using object body directly');
+        // Verifica si tiene propiedades
+        const keys = Object.keys(bodyContent);
+        console.log('DEBUG: Object keys:', keys);
+        if (keys.length > 0) {
+          body = bodyContent;
+        } else {
+          // Si está vacío, no hay nada que hacer
+          console.log('DEBUG: Object is empty, body remains {}');
+        }
+      }
     } catch (parseError) {
-      return json(400, { error: 'JSON inválido en el cuerpo de la solicitud' });
+      console.error('DEBUG: Parse error:', parseError.message);
+      return json(400, { error: 'No se pudo procesar el cuerpo de la solicitud' });
     }
   }
+
+  console.log('DEBUG: parsed body keys:', Object.keys(body));
+  console.log('DEBUG: body.name:', body.name);
+  console.log('DEBUG: body.email:', body.email);
 
   for (const field of requiredFields) {
     if (!body[field]) return json(400, { error: `Falta ${field}` });
