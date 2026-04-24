@@ -32,8 +32,20 @@ export default async (event) => {
 
   debug('DEBUG: event.body type:' + typeof event.body);
   debug('DEBUG: event.body is null:' + (event.body === null));
-  debug('DEBUG: event.body length:' + (event.body ? event.body.length : 'N/A'));
-  debug('DEBUG: event.body sample:' + (event.body ? event.body.substring(0, 100) : 'N/A'));
+  debug('DEBUG: event.body is buffer:' + Buffer.isBuffer(event.body));
+
+  // Convertir body a string si es necesario
+  if (Buffer.isBuffer(bodyContent)) {
+    bodyContent = bodyContent.toString('utf-8');
+    debug('DEBUG: [CONVERTED] Buffer converted to string');
+  } else if (typeof bodyContent === 'object' && bodyContent !== null) {
+    bodyContent = JSON.stringify(bodyContent);
+    debug('DEBUG: [CONVERTED] Object converted to JSON string');
+  }
+
+  debug('DEBUG: bodyContent type after conversion:' + typeof bodyContent);
+  debug('DEBUG: bodyContent length:' + (bodyContent ? bodyContent.length : 'N/A'));
+  debug('DEBUG: bodyContent sample:' + (bodyContent ? String(bodyContent).substring(0, 100) : 'N/A'));
   debug('DEBUG: event.headers:' + JSON.stringify(event.headers));
 
   if (bodyContent) {
@@ -45,7 +57,9 @@ export default async (event) => {
       debug('DEBUG: [SUCCESS] body.email:' + body.email);
     } catch (parseError) {
       debug('DEBUG: [ERROR] Parse error:' + parseError.message);
-      debug('DEBUG: [ERROR] Body content preview:' + (bodyContent ? bodyContent.substring(0, 200) : 'empty'));
+      debug('DEBUG: [ERROR] Body type:' + typeof bodyContent);
+      const preview = String(bodyContent).substring(0, 200);
+      debug('DEBUG: [ERROR] Body content preview:' + preview);
       return json(400, { error: 'No se pudo procesar el cuerpo: ' + parseError.message, debug: debugLogs });
     }
   } else {
