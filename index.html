@@ -197,12 +197,17 @@
       message.className = 'notice hidden';
 
       try {
-        const payload = Object.fromEntries(new FormData(form).entries());
-        console.log('CLIENT: payload keys:', Object.keys(payload));
+        // Extraer valores del formulario directamente
+        const formData = new FormData(form);
+        const payload = {};
+        for (const [key, value] of formData.entries()) {
+          payload[key] = value;
+        }
+        console.log('CLIENT: payload keys:', Object.keys(payload).length);
         console.log('CLIENT: payload.name:', payload.name);
         const bodyStr = JSON.stringify(payload);
-        console.log('CLIENT: serialized body length:', bodyStr.length);
-        console.log('CLIENT: serialized body sample:', bodyStr.substring(0, 200));
+        console.log('CLIENT: body length:', bodyStr.length);
+        console.log('CLIENT: body starts with:', bodyStr.substring(0, 50));
         const response = await fetch('/api/submit-lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
