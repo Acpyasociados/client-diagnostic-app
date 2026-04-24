@@ -6,7 +6,37 @@ const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_
 
 export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'Método no permitido' });
-  const body = JSON.parse(req.body || '{}');
+
+  // Extract and parse body safely
+  let bodyStr = null;
+  let body = {};
+
+  if (req.body) {
+    if (typeof req.body === 'string') {
+      bodyStr = req.body;
+    } else if (Buffer.isBuffer(req.body)) {
+      bodyStr = req.body.toString('utf-8');
+    } else if (req.rawBody) {
+      if (typeof req.rawBody === 'string') {
+        bodyStr = req.rawBody;
+      } else if (Buffer.isBuffer(req.rawBody)) {
+        bodyStr = req.rawBody.toString('utf-8');
+      }
+    } else if (typeof req.body === 'object') {
+      if (req.body.name !== undefined || req.body.email !== undefined) {
+        body = req.body;
+      }
+    }
+  }
+
+  if (bodyStr) {
+    try {
+      body = JSON.parse(bodyStr);
+    } catch (parseError) {
+      return json(400, { error: 'JSON inválido en el cuerpo de la solicitud' });
+    }
+  }
+
   for (const field of requiredFields) {
     if (!body[field]) return json(400, { error: `Falta ${field}` });
   }
