@@ -197,14 +197,24 @@
       message.className = 'notice hidden';
 
       try {
-        // Enviar como FormData - el navegador establecerá automáticamente Content-Type con boundary
+        // Extraer datos del formulario como objeto
         const formData = new FormData(form);
-        console.log('CLIENT: enviando como FormData (multipart)');
-        console.log('CLIENT: campos:', Array.from(formData.keys()).length);
+        const payload = {};
+        for (const [key, value] of formData) {
+          payload[key] = value;
+        }
+
+        // Codificar como application/x-www-form-urlencoded (más compatible con Netlify)
+        const encodedBody = new URLSearchParams(payload).toString();
+        console.log('CLIENT: enviando form-urlencoded');
+        console.log('CLIENT: tamaño:', encodedBody.length);
+
         const response = await fetch('/api/submit-lead', {
           method: 'POST',
-          body: formData
-          // NO especificar Content-Type - el navegador lo hará automáticamente
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: encodedBody
         });
         const data = await response.json();
         if (!response.ok) {
