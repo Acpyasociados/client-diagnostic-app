@@ -10,62 +10,69 @@ export default async (req) => {
   // Extract and parse body safely
   let body = {};
   let bodyContent = req.body || req.rawBody;
+  const debugLogs = [];
 
-  console.log('=== DEBUG START ===');
-  console.log('DEBUG: req.method:', req.method);
-  console.log('DEBUG: req.body type:', typeof req.body);
-  console.log('DEBUG: req.rawBody type:', typeof req.rawBody);
-  console.log('DEBUG: bodyContent type:', typeof bodyContent);
+  const debug = (msg) => {
+    console.log(msg);
+    debugLogs.push(msg);
+  };
+
+  debug('=== DEBUG START ===');
+  debug('DEBUG: req.method:' + req.method);
+  debug('DEBUG: req.body type:' + typeof req.body);
+  debug('DEBUG: req.rawBody type:' + typeof req.rawBody);
+  debug('DEBUG: bodyContent type:' + typeof bodyContent);
 
   if (bodyContent) {
     try {
       // Si es string, parsea directamente
       if (typeof bodyContent === 'string') {
-        console.log('DEBUG: [STRING BRANCH] Parsing JSON string');
+        debug('DEBUG: [STRING BRANCH] Parsing JSON string');
         body = JSON.parse(bodyContent);
       }
       // Si es Buffer, convierte a string y parsea
       else if (Buffer.isBuffer(bodyContent)) {
-        console.log('DEBUG: [BUFFER BRANCH] Converting buffer to string and parsing');
+        debug('DEBUG: [BUFFER BRANCH] Converting buffer to string and parsing');
         body = JSON.parse(bodyContent.toString('utf-8'));
       }
       // Si es objeto
       else if (typeof bodyContent === 'object' && bodyContent !== null) {
-        console.log('DEBUG: [OBJECT BRANCH] Got object type bodyContent');
+        debug('DEBUG: [OBJECT BRANCH] Got object type bodyContent');
         const keys = Object.keys(bodyContent);
-        console.log('DEBUG: Object keys:', JSON.stringify(keys));
-        console.log('DEBUG: Object keys count:', keys.length);
+        debug('DEBUG: Object keys:' + JSON.stringify(keys));
+        debug('DEBUG: Object keys count:' + keys.length);
 
         // Intenta convertir a JSON y reparsear (fallback para asegurar todas las props)
         try {
           const jsonStr = JSON.stringify(bodyContent);
-          console.log('DEBUG: Stringified body length:', jsonStr.length);
+          debug('DEBUG: Stringified body length:' + jsonStr.length);
           body = JSON.parse(jsonStr);
-          console.log('DEBUG: Successfully reparsed object');
+          debug('DEBUG: Successfully reparsed object');
         } catch (reparsearr) {
-          console.log('DEBUG: Reparse failed, using object directly');
+          debug('DEBUG: Reparse failed, using object directly');
           body = bodyContent;
         }
       } else {
-        console.log('DEBUG: [FALLBACK] Unknown bodyContent type:', typeof bodyContent);
+        debug('DEBUG: [FALLBACK] Unknown bodyContent type:' + typeof bodyContent);
       }
     } catch (parseError) {
-      console.error('DEBUG: Parse error:', parseError.message);
-      console.error('DEBUG: Stack:', parseError.stack);
-      return json(400, { error: 'No se pudo procesar el cuerpo de la solicitud' });
+      debug('DEBUG: Parse error:' + parseError.message);
+      return json(400, { error: 'No se pudo procesar el cuerpo', debug: debugLogs });
     }
   } else {
-    console.log('DEBUG: bodyContent is falsy');
+    debug('DEBUG: bodyContent is falsy');
   }
 
-  console.log('DEBUG: Final parsed body keys:', JSON.stringify(Object.keys(body)));
-  console.log('DEBUG: body.name value:', body.name);
-  console.log('DEBUG: body.email value:', body.email);
-  console.log('DEBUG: body object:', JSON.stringify(body).substring(0, 200));
-  console.log('=== DEBUG END ===');
+  debug('DEBUG: Final parsed body keys:' + JSON.stringify(Object.keys(body)));
+  debug('DEBUG: body.name value:' + body.name);
+  debug('DEBUG: body.email value:' + body.email);
+  debug('DEBUG: body object:' + JSON.stringify(body).substring(0, 300));
+  debug('=== DEBUG END ===');
 
   for (const field of requiredFields) {
-    if (!body[field]) return json(400, { error: `Falta ${field}` });
+    if (!body[field]) {
+      return json(400, { error: `Falta ${field}`, debug: debugLogs.slice(-5) });
+    }
   }
 
   const leadId = crypto.randomUUID();
