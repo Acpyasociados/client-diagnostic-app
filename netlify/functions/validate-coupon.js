@@ -19,23 +19,52 @@ export default async (req) => {
   }
 
   try {
-    let body;
+    let parsedBody;
 
-    // Try to extract body in multiple ways
-    if (typeof req.body === 'string') {
-      body = req.body;
-    } else if (Buffer.isBuffer(req.body)) {
-      body = req.body.toString('utf-8');
-    } else if (req.rawBody) {
-      body = typeof req.rawBody === 'string' ? req.rawBody : req.rawBody.toString('utf-8');
-    } else if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) {
-      // Maybe it's already parsed JSON
-      body = JSON.stringify(req.body);
-    } else {
-      body = '{}';
+    // Handle different body formats
+    if (req.body) {
+      let bodyContent = req.body;
+
+      // Convert Buffer to string
+      if (Buffer.isBuffer(bodyContent)) {
+        bodyContent = bodyContent.toString('utf-8');
+      }
+      // If it's already a string, use it
+      else if (typeof bodyContent === 'string') {
+        // Already a string
+      }
+      // If it's an object that looks like already-parsed JSON (has coupon/plan properties)
+      else if (typeof bodyContent === 'object' && (bodyContent.coupon || bodyContent.plan)) {
+        parsedBody = bodyContent;
+      }
+      // Last resort: if it's an object, try toString()
+      else if (typeof bodyContent === 'object') {
+        const str = String(bodyContent);
+        // If toString() returns something useful (not "[object Object]"), use it
+        if (str !== '[object Object]' && !str.includes('[object ')) {
+          bodyContent = str;
+        }
+      }
+
+      // If we haven't parsed yet, parse the string
+      if (!parsedBody && typeof bodyContent === 'string') {
+        try {
+          parsedBody = JSON.parse(bodyContent);
+        } catch (e) {
+          // If JSON parse fails, try alternative method
+          // Maybe the body is URL encoded or something else
+          console.error('Failed to parse JSON:', bodyContent, e);
+          return json(400, { error: 'Invalid request body format' });
+        }
+      }
     }
 
-    const { coupon, plan } = JSON.parse(body || '{}');
+    // Default to empty object if no body
+    if (!parsedBody) {
+      parsedBody = {};
+    }
+
+    const { coupon, plan } = parsedBody;
 
     if (!coupon || !plan) {
       return json(400, { error: 'Falta cupón o plan' });
