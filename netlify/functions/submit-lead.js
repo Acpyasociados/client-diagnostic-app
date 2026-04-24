@@ -4,12 +4,12 @@ import { sectorLabels } from './_lib/questions.js';
 
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
 
-export default async (req) => {
-  if (req.method !== 'POST') return json(405, { error: 'Método no permitido' });
+export default async (event) => {
+  if (event.httpMethod !== 'POST') return json(405, { error: 'Método no permitido' });
 
   // Extract and parse body safely
   let body = {};
-  let bodyContent = req.body || req.rawBody;
+  let bodyContent = event.body;
   const debugLogs = [];
 
   const debug = (msg) => {
@@ -18,66 +18,30 @@ export default async (req) => {
   };
 
   debug('=== DEBUG START ===');
-  debug('DEBUG: req.method:' + req.method);
-  debug('DEBUG: req.body type:' + typeof req.body);
-  debug('DEBUG: req.body is null:' + (req.body === null));
-  debug('DEBUG: req.body length:' + (req.body ? req.body.length : 'N/A'));
-  debug('DEBUG: req.body keys:' + (typeof req.body === 'object' ? JSON.stringify(Object.keys(req.body)) : 'N/A'));
-  debug('DEBUG: req.rawBody type:' + typeof req.rawBody);
-  debug('DEBUG: req.rawBody is null:' + (req.rawBody === null));
-  debug('DEBUG: bodyContent type:' + typeof bodyContent);
-  debug('DEBUG: bodyContent is null:' + (bodyContent === null));
-  if (bodyContent && typeof bodyContent === 'object') {
-    debug('DEBUG: bodyContent keys:' + JSON.stringify(Object.keys(bodyContent)));
-    debug('DEBUG: bodyContent.name:' + bodyContent.name);
-  }
-  debug('DEBUG: req.headers.content-type:' + req.headers['content-type']);
-  debug('DEBUG: req.headers keys:' + JSON.stringify(Object.keys(req.headers)));
+  debug('DEBUG: event.httpMethod:' + event.httpMethod);
+  debug('DEBUG: event.body type:' + typeof event.body);
+  debug('DEBUG: event.body is null:' + (event.body === null));
+  debug('DEBUG: event.body length:' + (event.body ? event.body.length : 'N/A'));
+  debug('DEBUG: event.body sample:' + (event.body ? event.body.substring(0, 100) : 'N/A'));
+  debug('DEBUG: event.headers.content-type:' + event.headers['content-type']);
 
   if (bodyContent) {
     try {
-      // Si es string, parsea directamente
-      if (typeof bodyContent === 'string') {
-        debug('DEBUG: [STRING BRANCH] Parsing JSON string');
-        body = JSON.parse(bodyContent);
-      }
-      // Si es Buffer, convierte a string y parsea
-      else if (Buffer.isBuffer(bodyContent)) {
-        debug('DEBUG: [BUFFER BRANCH] Converting buffer to string and parsing');
-        body = JSON.parse(bodyContent.toString('utf-8'));
-      }
-      // Si es objeto
-      else if (typeof bodyContent === 'object' && bodyContent !== null) {
-        debug('DEBUG: [OBJECT BRANCH] Got object type bodyContent');
-        const keys = Object.keys(bodyContent);
-        debug('DEBUG: Object keys:' + JSON.stringify(keys));
-        debug('DEBUG: Object keys count:' + keys.length);
-
-        // Intenta convertir a JSON y reparsear (fallback para asegurar todas las props)
-        try {
-          const jsonStr = JSON.stringify(bodyContent);
-          debug('DEBUG: Stringified body length:' + jsonStr.length);
-          body = JSON.parse(jsonStr);
-          debug('DEBUG: Successfully reparsed object');
-        } catch (reparsearr) {
-          debug('DEBUG: Reparse failed, using object directly');
-          body = bodyContent;
-        }
-      } else {
-        debug('DEBUG: [FALLBACK] Unknown bodyContent type:' + typeof bodyContent);
-      }
+      debug('DEBUG: [PARSING] Parsing JSON from event.body string');
+      body = JSON.parse(bodyContent);
+      debug('DEBUG: [SUCCESS] Body parsed, keys:' + JSON.stringify(Object.keys(body)));
+      debug('DEBUG: [SUCCESS] body.name:' + body.name);
+      debug('DEBUG: [SUCCESS] body.email:' + body.email);
     } catch (parseError) {
-      debug('DEBUG: Parse error:' + parseError.message);
-      return json(400, { error: 'No se pudo procesar el cuerpo', debug: debugLogs });
+      debug('DEBUG: [ERROR] Parse error:' + parseError.message);
+      debug('DEBUG: [ERROR] Body content preview:' + (bodyContent ? bodyContent.substring(0, 200) : 'empty'));
+      return json(400, { error: 'No se pudo procesar el cuerpo: ' + parseError.message, debug: debugLogs });
     }
   } else {
-    debug('DEBUG: bodyContent is falsy');
+    debug('DEBUG: [ERROR] event.body is empty or null');
+    return json(400, { error: 'No hay contenido en el cuerpo de la request', debug: debugLogs });
   }
 
-  debug('DEBUG: Final parsed body keys:' + JSON.stringify(Object.keys(body)));
-  debug('DEBUG: body.name value:' + body.name);
-  debug('DEBUG: body.email value:' + body.email);
-  debug('DEBUG: body object:' + JSON.stringify(body).substring(0, 300));
   debug('=== DEBUG END ===');
 
   for (const field of requiredFields) {

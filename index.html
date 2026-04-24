@@ -198,10 +198,15 @@
 
       try {
         const payload = Object.fromEntries(new FormData(form).entries());
+        console.log('CLIENT: payload keys:', Object.keys(payload));
+        console.log('CLIENT: payload.name:', payload.name);
+        const bodyStr = JSON.stringify(payload);
+        console.log('CLIENT: serialized body length:', bodyStr.length);
+        console.log('CLIENT: serialized body sample:', bodyStr.substring(0, 200));
         const response = await fetch('/api/submit-lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: bodyStr
         });
         const data = await response.json();
         if (!response.ok) {
