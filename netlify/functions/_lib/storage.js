@@ -1,12 +1,15 @@
-// In-memory storage for leads during the diagnostic process
-// This allows the form submission flow to work without requiring external services
-const leadsStore = new Map();
+import { getStore } from '@netlify/blobs';
+
+const STORE_NAME = 'diagnostic-leads';
 
 export async function saveLead(leadId, data) {
-  leadsStore.set(leadId, data);
+  const store = getStore(STORE_NAME);
+  await store.set(leadId, JSON.stringify(data, null, 2));
   return data;
 }
 
 export async function getLead(leadId) {
-  return leadsStore.get(leadId);
+  const store = getStore(STORE_NAME);
+  const data = await store.get(leadId);
+  return data ? JSON.parse(data) : null;
 }
