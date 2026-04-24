@@ -19,49 +19,45 @@ export default async (req) => {
   }
 
   try {
-    let parsedBody;
+    let parsedBody = {};
 
-    // Handle different body formats
+    // Try to extract and parse the body from multiple sources
+    let bodyStr = null;
+
     if (req.body) {
-      let bodyContent = req.body;
-
-      // Convert Buffer to string
-      if (Buffer.isBuffer(bodyContent)) {
-        bodyContent = bodyContent.toString('utf-8');
+      // Try direct string
+      if (typeof req.body === 'string') {
+        bodyStr = req.body;
       }
-      // If it's already a string, use it
-      else if (typeof bodyContent === 'string') {
-        // Already a string
+      // Try Buffer
+      else if (Buffer.isBuffer(req.body)) {
+        bodyStr = req.body.toString('utf-8');
       }
-      // If it's an object that looks like already-parsed JSON (has coupon/plan properties)
-      else if (typeof bodyContent === 'object' && (bodyContent.coupon || bodyContent.plan)) {
-        parsedBody = bodyContent;
-      }
-      // Last resort: if it's an object, try toString()
-      else if (typeof bodyContent === 'object') {
-        const str = String(bodyContent);
-        // If toString() returns something useful (not "[object Object]"), use it
-        if (str !== '[object Object]' && !str.includes('[object ')) {
-          bodyContent = str;
+      // Try rawBody (Netlify specific)
+      else if (req.rawBody) {
+        if (typeof req.rawBody === 'string') {
+          bodyStr = req.rawBody;
+        } else if (Buffer.isBuffer(req.rawBody)) {
+          bodyStr = req.rawBody.toString('utf-8');
         }
       }
-
-      // If we haven't parsed yet, parse the string
-      if (!parsedBody && typeof bodyContent === 'string') {
-        try {
-          parsedBody = JSON.parse(bodyContent);
-        } catch (e) {
-          // If JSON parse fails, try alternative method
-          // Maybe the body is URL encoded or something else
-          console.error('Failed to parse JSON:', bodyContent, e);
-          return json(400, { error: 'Invalid request body format' });
+      // If it's an object, check if it's already parsed
+      else if (typeof req.body === 'object') {
+        // If it has the fields we need, use it directly
+        if (req.body.coupon !== undefined || req.body.plan !== undefined) {
+          parsedBody = req.body;
         }
       }
     }
 
-    // Default to empty object if no body
-    if (!parsedBody) {
-      parsedBody = {};
+    // If we got a string, try to parse it
+    if (bodyStr) {
+      try {
+        parsedBody = JSON.parse(bodyStr);
+      } catch (parseError) {
+        console.error('Failed to parse JSON body:', bodyStr, parseError);
+        return json(400, { error: 'Invalid JSON in request body' });
+      }
     }
 
     const { coupon, plan } = parsedBody;
