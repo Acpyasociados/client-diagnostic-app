@@ -1,166 +1,209 @@
 import crypto from 'crypto';
-import { saveLead } from './_lib/storage.js';
 import { sectorLabels } from './_lib/questions.js';
+import { sendAdvisorEmail } from './send-advisor-email.js';
 
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
 
-// Parse request body
+// Parse body - sin depender de headers
 async function parseBody(event) {
-  if (!event.body) {
-    return null;
-  }
+  if (!event.body) return null;
 
-  // Si es JSON string
+  // Caso 1: String (JSON o form-urlencoded)
   if (typeof event.body === 'string') {
+    // Intentar JSON primero
     try {
       return JSON.parse(event.body);
     } catch (e) {
-      // Podría ser form-urlencoded, intentar parsear como query string
-      const params = new URLSearchParams(event.body);
-      if (params.size > 0) {
+      // Intentar form-urlencoded
+      try {
+        const params = new URLSearchParams(event.body);
         const obj = {};
         for (const [key, value] of params) {
           obj[key] = value;
         }
-        return obj;
+        return Object.keys(obj).length > 0 ? obj : null;
+      } catch (e2) {
+        return null;
       }
-      return null;
     }
   }
 
-  // Si ya es un objeto con datos
-  if (typeof event.body === 'object' && Object.keys(event.body).length > 0) {
-    return event.body;
+  // Caso 2: Objeto (ya parseado por Netlify)
+  if (typeof event.body === 'object') {
+    return Object.keys(event.body).length > 0 ? event.body : null;
   }
 
   return null;
 }
 
 export default async (event, context) => {
-  const debugLogs = [];
+  console.log('=== SUBMIT-LEAD START ===');
+  console.log('Method:', event.httpMethod || event.method);
+  console.log('Body type:', typeof event.body);
 
-  const debug = (msg) => {
-    console.log(msg);
-    debugLogs.push(msg);
-  };
-
-  debug('=== DEBUG START ===');
-  debug('event.body type: ' + typeof event.body);
-  debug('event.body is string: ' + (typeof event.body === 'string'));
-  debug('event.body length: ' + (event.body ? event.body.length : 0));
-  if (typeof event.body === 'string') {
-    debug('event.body sample: ' + event.body.substring(0, 100));
-  }
-  debug('event.method: ' + event.method);
-  debug('event.httpMethod: ' + event.httpMethod);
-
-  // Intentar acceder a headers de múltiples formas
-  let contentType = event.headers?.['content-type'] ||
-                   event.headers?.['Content-Type'] ||
-                   event.multiValueHeaders?.['content-type']?.[0] ||
-                   event.multiValueHeaders?.['Content-Type']?.[0] ||
-                   'MISSING';
-
-  debug('content-type header: ' + contentType);
-  debug('all headers: ' + JSON.stringify(event.headers || {}));
-  debug('multiValueHeaders: ' + JSON.stringify(event.multiValueHeaders || {}));
-
-  // Check method
+  // Verificar método
   const method = (event.httpMethod || event.method || '').toUpperCase();
   if (method !== 'POST') {
-    debug('Method rejected: ' + method);
-    return json(405, { error: 'Método no permitido', debug: debugLogs });
+    return json(405, { error: 'Método no permitido' });
   }
 
   // Parse body
-  let body = null;
+  let body;
   try {
     body = await parseBody(event);
-    debug('Body parsed successfully');
-    debug('Body keys: ' + JSON.stringify(Object.keys(body || {})));
+    console.log('Body parsed, keys:', body ? Object.keys(body).length : 0);
   } catch (err) {
-    debug('Parse error: ' + err.message);
-    debug('Stack: ' + err.stack);
-    return json(400, { error: 'No se pudo parsear el body: ' + err.message, debug: debugLogs });
+    console.error('Parse error:', err.message);
+    return json(400, { error: 'Error parseando body: ' + err.message });
   }
 
   if (!body) {
-    debug('Body is null/empty');
-    return json(400, { error: 'No hay contenido en la request', debug: debugLogs });
+    console.error('Body is empty or null');
+    return json(400, { error: 'No hay contenido en la solicitud' });
   }
 
-  debug('=== DEBUG END ===');
-
+  // Validar campos requeridos
   for (const field of requiredFields) {
     if (!body[field]) {
-      return json(400, { error: `Falta ${field}`, debug: debugLogs });
+      console.error('Missing field:', field);
+      return json(400, { error: `Falta campo requerido: ${field}` });
     }
   }
 
+  // Crear lead
   const leadId = crypto.randomUUID();
   const clientToken = crypto.randomBytes(18).toString('hex');
   const createdAt = new Date().toISOString();
-  const prices = {
-    basico: Number(process.env.PRICE_BASIC_CLP || 99000),
-    premium: Number(process.env.PRICE_PREMIUM_CLP || 199000)
-  };
-  const unitPrice = prices[body.plan] || prices.basico;
-  const siteUrl = process.env.SITE_URL;
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-  if (!siteUrl || !accessToken) return json(500, { error: 'Faltan variables SITE_URL o MERCADOPAGO_ACCESS_TOKEN' });
 
+  // Precios
+  const prices = {
+    basico: Number(process.env.PRICE_BASIC_CLP || 49900),
+    premium: Number(process.env.PRICE_PREMIUM_CLP || 149900)
+  };
+
+  const plan = body.plan || 'basico';
+  const discount = Number(body.discountPercentage || 0);
+  const basePrice = prices[plan] || prices.basico;
+  const finalPrice = Number(body.finalPrice) || (basePrice * (100 - discount) / 100);
+
+  // Datos del lead
   const lead = {
-    ...body,
     lead_id: leadId,
     client_token: clientToken,
+    created_at: createdAt,
     status: 'lead_creado',
     payment_status: 'pending',
+    name: body.name,
+    email: body.email,
+    phone: body.phone,
+    company: body.company,
+    sector: body.sector,
+    sector_label: sectorLabels[body.sector] || body.sector,
+    monthly_sales: body.monthly_sales,
+    margin: body.margin,
+    active_clients: body.active_clients,
+    top_costs: body.top_costs,
+    main_channel: body.main_channel,
+    main_problem: body.main_problem,
+    goal_6m: body.goal_6m,
+    plan: plan,
+    discount_percentage: discount,
+    final_price: Math.round(finalPrice),
     questionnaire_sent: false,
     questionnaire_completed: false,
     draft_generated: false,
     reviewed_by_human: false,
-    delivered_at: null,
-    created_at: createdAt,
-    sector_label: sectorLabels[body.sector]
+    delivered_at: null
   };
-  await saveLead(leadId, lead);
+
+  try {
+    // Guardar en Netlify Blobs
+    const { getStore } = await import('@netlify/blobs');
+    const store = getStore('diagnostic-leads');
+    await store.set(leadId, JSON.stringify(lead), { metadata: { email: lead.email } });
+    console.log('Lead saved to Blobs:', leadId);
+
+    // Crear preferencia de pago en Mercado Pago
+    const mpResponse = await createMercadoPagoPreference(lead);
+    if (!mpResponse.ok) {
+      throw new Error('Error creating Mercado Pago preference');
+    }
+
+    const mpData = mpResponse.mpData;
+    lead.checkout_id = mpData.id;
+    lead.checkout_url = mpData.init_point;
+
+    // Actualizar lead con datos de pago
+    await store.set(leadId, JSON.stringify(lead), { metadata: { email: lead.email } });
+
+    // Enviar email al asesor
+    await sendAdvisorEmail(lead);
+
+    console.log('Lead submission successful:', leadId);
+    return json(200, {
+      success: true,
+      lead_id: leadId,
+      client_token: clientToken,
+      checkout_url: mpData.init_point,
+      final_price: lead.final_price
+    });
+  } catch (err) {
+    console.error('Error in lead processing:', err.message);
+    return json(500, { error: 'Error procesando lead: ' + err.message });
+  }
+};
+
+async function createMercadoPagoPreference(lead) {
+  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const siteUrl = process.env.SITE_URL;
+
+  if (!accessToken || !siteUrl) {
+    throw new Error('Missing Mercado Pago configuration');
+  }
 
   const preferencePayload = {
     items: [{
-      title: `Diagnóstico ${body.plan} - ${body.company}`,
+      title: `Diagnóstico ${lead.plan} - ${lead.company}`,
       quantity: 1,
       currency_id: 'CLP',
-      unit_price: unitPrice
+      unit_price: lead.final_price
     }],
-    metadata: { lead_id: leadId, client_email: body.email, plan: body.plan },
+    metadata: {
+      lead_id: lead.lead_id,
+      client_email: lead.email,
+      plan: lead.plan,
+      discount: lead.discount_percentage
+    },
     back_urls: {
-      success: `${siteUrl}/success.html?lead_id=${leadId}`,
-      failure: `${siteUrl}/cancel.html?lead_id=${leadId}`,
-      pending: `${siteUrl}/success.html?lead_id=${leadId}`
+      success: `${siteUrl}/success.html?lead_id=${lead.lead_id}`,
+      failure: `${siteUrl}/cancel.html?lead_id=${lead.lead_id}`,
+      pending: `${siteUrl}/success.html?lead_id=${lead.lead_id}`
     },
     auto_return: 'approved',
     notification_url: `${siteUrl}/api/mercadopago-webhook`
   };
 
-  const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+  const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(preferencePayload)
   });
 
-  const mpData = await mpResponse.json();
-  if (!mpResponse.ok) return json(500, { error: mpData.message || 'No se pudo crear checkout' });
+  const data = await response.json();
 
-  lead.checkout_id = mpData.id;
-  lead.checkout_url = mpData.init_point;
-  await saveLead(leadId, lead);
+  return {
+    ok: response.ok,
+    mpData: data
+  };
+}
 
-  return json(200, { checkout_url: mpData.init_point, lead_id: leadId });
-};
 
 function json(statusCode, body) {
-  return new Response(JSON.stringify(body), { status: statusCode, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
+    headers: { 'Content-Type': 'application/json' }
+  });
 }

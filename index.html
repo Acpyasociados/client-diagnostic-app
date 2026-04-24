@@ -197,24 +197,23 @@
       message.className = 'notice hidden';
 
       try {
-        // Extraer datos del formulario como objeto
+        // Extraer datos del formulario
         const formData = new FormData(form);
         const payload = {};
         for (const [key, value] of formData) {
           payload[key] = value;
         }
 
-        // Codificar como application/x-www-form-urlencoded (más compatible con Netlify)
-        const encodedBody = new URLSearchParams(payload).toString();
-        console.log('CLIENT: enviando form-urlencoded');
-        console.log('CLIENT: tamaño:', encodedBody.length);
+        console.log('CLIENT: Enviando formulario', Object.keys(payload).length, 'campos');
+        console.log('CLIENT: Plan:', payload.plan, 'Precio final:', payload.finalPrice);
 
+        // Enviar como JSON (método estándar)
         const response = await fetch('/api/submit-lead', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/json'
           },
-          body: encodedBody
+          body: JSON.stringify(payload)
         });
         const data = await response.json();
         if (!response.ok) {

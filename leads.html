@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Leads - Diagnósticos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a2d3e 0%, #2a3f5f 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+      max-width: 800px;
+      width: 100%;
+    }
+    h1 {
+      color: #1a2d3e;
+      margin-bottom: 10px;
+      font-size: 2em;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+    .info-box {
+      background: #f0f4f8;
+      border-left: 4px solid #d4a574;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      flex: 1;
+      padding: 15px 25px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    .btn-primary {
+      background: #d4a574;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #c29461;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(212, 165, 116, 0.4);
+    }
+    .btn-secondary {
+      background: #1a2d3e;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #0f1e2e;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(26, 45, 62, 0.4);
+    }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .feature {
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+    .feature h3 {
+      color: #1a2d3e;
+      margin-bottom: 10px;
+    }
+    .feature p {
+      color: #666;
+      font-size: 0.9em;
+      line-height: 1.5;
+    }
+    .icon {
+      font-size: 1.5em;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 Panel de Diagnósticos</h1>
+    <p class="subtitle">Acceso a solicitudes y datos guardados</p>
+
+    <div class="info-box">
+      <strong>ℹ️ Información:</strong><br>
+      Aquí puedes revisar todas las solicitudes de diagnóstico que se han registrado, incluyendo el estado de pago y los detalles de cada cliente.
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <h3>📋 Listado Completo</h3>
+        <p>Visualiza todas las solicitudes registradas con información del cliente, plan y estado de pago.</p>
+      </div>
+      <div class="feature">
+        <h3>🔍 Ver Detalles</h3>
+        <p>Accede a los detalles completos de cada solicitud incluyendo información del negocio.</p>
+      </div>
+      <div class="feature">
+        <h3>💳 Estado de Pago</h3>
+        <p>Revisa el estado del pago de cada diagnóstico (Pendiente o Pagado).</p>
+      </div>
+      <div class="feature">
+        <h3>📧 Información Completa</h3>
+        <p>Todos los datos del cliente y su empresa en un solo lugar.</p>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <a href="/api/view-leads" class="btn btn-primary">
+        <span class="icon">📊</span> Ver Todos los Leads
+      </a>
+      <a href="/" class="btn btn-secondary">
+        <span class="icon">🏠</span> Volver al Inicio
+      </a>
+    </div>
+  </div>
+</body>
+</html>
