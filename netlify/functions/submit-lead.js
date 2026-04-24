@@ -32,40 +32,45 @@ export default async (event) => {
 
   debug('DEBUG: event.body type:' + typeof event.body);
   debug('DEBUG: event.body is null:' + (event.body === null));
-  debug('DEBUG: event.body is buffer:' + Buffer.isBuffer(event.body));
+  debug('DEBUG: event.body keys:' + (typeof event.body === 'object' ? JSON.stringify(Object.keys(event.body)) : 'N/A'));
 
-  // Convertir body a string si es necesario
-  if (Buffer.isBuffer(bodyContent)) {
-    bodyContent = bodyContent.toString('utf-8');
-    debug('DEBUG: [CONVERTED] Buffer converted to string');
-  } else if (typeof bodyContent === 'object' && bodyContent !== null) {
-    bodyContent = JSON.stringify(bodyContent);
-    debug('DEBUG: [CONVERTED] Object converted to JSON string');
-  }
-
-  debug('DEBUG: bodyContent type after conversion:' + typeof bodyContent);
-  debug('DEBUG: bodyContent length:' + (bodyContent ? bodyContent.length : 'N/A'));
-  debug('DEBUG: bodyContent sample:' + (bodyContent ? String(bodyContent).substring(0, 100) : 'N/A'));
-  debug('DEBUG: event.headers:' + JSON.stringify(event.headers));
-
-  if (bodyContent) {
-    try {
-      debug('DEBUG: [PARSING] Parsing JSON from event.body string');
-      body = JSON.parse(bodyContent);
-      debug('DEBUG: [SUCCESS] Body parsed, keys:' + JSON.stringify(Object.keys(body)));
-      debug('DEBUG: [SUCCESS] body.name:' + body.name);
-      debug('DEBUG: [SUCCESS] body.email:' + body.email);
-    } catch (parseError) {
-      debug('DEBUG: [ERROR] Parse error:' + parseError.message);
-      debug('DEBUG: [ERROR] Body type:' + typeof bodyContent);
-      const preview = String(bodyContent).substring(0, 200);
-      debug('DEBUG: [ERROR] Body content preview:' + preview);
-      return json(400, { error: 'No se pudo procesar el cuerpo: ' + parseError.message, debug: debugLogs });
-    }
+  // Si event.body es un objeto con propiedades, usarlo directamente
+  if (typeof event.body === 'object' && event.body !== null && Object.keys(event.body).length > 0) {
+    debug('DEBUG: [DIRECT] Using event.body as object directly');
+    body = event.body;
   } else {
-    debug('DEBUG: [ERROR] event.body is empty or null');
-    return json(400, { error: 'No hay contenido en el cuerpo de la request', debug: debugLogs });
+    // De lo contrario, intentar parsear como string o convertir
+    debug('DEBUG: [PARSE] Attempting to parse event.body');
+
+    // Convertir body a string si es necesario
+    if (Buffer.isBuffer(bodyContent)) {
+      bodyContent = bodyContent.toString('utf-8');
+      debug('DEBUG: [CONVERTED] Buffer converted to string');
+    } else if (typeof bodyContent === 'object' && bodyContent !== null) {
+      bodyContent = JSON.stringify(bodyContent);
+      debug('DEBUG: [CONVERTED] Object converted to JSON string');
+    }
+
+    debug('DEBUG: bodyContent type:' + typeof bodyContent);
+    debug('DEBUG: bodyContent length:' + (bodyContent ? bodyContent.length : 'N/A'));
+
+    if (bodyContent && typeof bodyContent === 'string' && bodyContent.length > 2) {
+      try {
+        body = JSON.parse(bodyContent);
+        debug('DEBUG: [SUCCESS] Parsed JSON string');
+      } catch (parseError) {
+        debug('DEBUG: [ERROR] Parse error:' + parseError.message);
+        return json(400, { error: 'No se pudo procesar: ' + parseError.message, debug: debugLogs });
+      }
+    } else {
+      debug('DEBUG: [ERROR] No body content to parse');
+      return json(400, { error: 'No hay contenido en la request', debug: debugLogs });
+    }
   }
+
+  debug('DEBUG: Final body keys:' + JSON.stringify(Object.keys(body)));
+  debug('DEBUG: body.name:' + body.name);
+  debug('DEBUG: body.email:' + body.email);
 
   debug('=== DEBUG END ===');
 
