@@ -44,8 +44,17 @@ export default async (event, context) => {
   }
   debug('event.method: ' + event.method);
   debug('event.httpMethod: ' + event.httpMethod);
-  debug('content-type header: ' + (event.headers['content-type'] || 'MISSING'));
+
+  // Intentar acceder a headers de múltiples formas
+  let contentType = event.headers?.['content-type'] ||
+                   event.headers?.['Content-Type'] ||
+                   event.multiValueHeaders?.['content-type']?.[0] ||
+                   event.multiValueHeaders?.['Content-Type']?.[0] ||
+                   'MISSING';
+
+  debug('content-type header: ' + contentType);
   debug('all headers: ' + JSON.stringify(event.headers || {}));
+  debug('multiValueHeaders: ' + JSON.stringify(event.multiValueHeaders || {}));
 
   // Check method
   const method = (event.httpMethod || event.method || '').toUpperCase();
