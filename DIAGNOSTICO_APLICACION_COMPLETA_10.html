@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Estratégico - ACP & Asociados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: linear-gradient(135deg, #1B3B5C 0%, #16A085 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 40px; }
+        .header h1 { font-family: 'Cormorant Garamond', serif; font-size: 48px; margin-bottom: 10px; }
+        .header p { font-size: 18px; opacity: 0.9; }
+        .form-container { background: white; border-radius: 12px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .form-container.hidden { display: none; }
+        .preview-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; display: none; }
+        .preview-container.active { display: block; }
+        .preview-container iframe { width: 100%; height: 800px; border: none; border-radius: 8px; }
+        .success-container { background: white; border-radius: 12px; padding: 60px 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; display: none; }
+        .success-container.active { display: block; }
+        .success-icon { font-size: 80px; margin-bottom: 20px; }
+        .success-container h2 { color: #16A085; font-size: 32px; margin-bottom: 15px; }
+        .success-container p { color: #2C3E50; font-size: 16px; margin-bottom: 30px; }
+        .section-title { font-size: 20px; font-weight: 600; color: #1B3B5C; border-bottom: 3px solid #D4AF37; padding-bottom: 10px; margin-top: 30px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #1B3B5C; font-size: 14px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 14px; }
+        input::placeholder, textarea::placeholder { color: #bbb; font-style: italic; }
+        input:focus, textarea:focus { outline: none; border-color: #16A085; box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1); }
+        textarea { resize: vertical; min-height: 100px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .opportunity-box { background: #ECF0F3; padding: 20px; border-radius: 8px; border-left: 4px solid #16A085; margin-bottom: 20px; }
+        .opportunity-box h4 { color: #1B3B5C; margin-bottom: 15px; font-size: 14px; }
+        .button-group { display: flex; gap: 15px; margin-top: 40px; }
+        button { flex: 1; padding: 14px 24px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.3s; }
+        .btn-primary { background: #16A085; color: white; }
+        .btn-primary:hover { background: #0d8670; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3); }
+        .btn-secondary { background: #3498DB; color: white; }
+        .btn-secondary:hover { background: #2980b9; }
+        .btn-back { background: #95A5A6; color: white; }
+        .btn-back:hover { background: #7f8c8d; }
+        .btn-success { background: #16A085; color: white; }
+        .btn-success:hover { background: #0d8670; }
+        .btn-premium { background: #E67E22; color: white; font-size: 18px; padding: 20px !important; }
+        .btn-premium:hover { background: #d35400; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } .button-group { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Diagnóstico Estratégico</h1>
+            <p>ACP & Asociados</p>
+        </div>
+        
+        <div class="form-container" id="formContainer">
+            <form id="diagnosticoForm">
+                <h3 class="section-title">📋 Información del Cliente</h3>
+                <div class="grid-2">
+                    <div class="form-group"><label>Nombre Completo *</label><input type="text" name="nombreCliente" placeholder="Ej: Juan García López" required></div>
+                    <div class="form-group"><label>Email *</label><input type="email" name="emailCliente" placeholder="Ej: juan@empresa.cl" required></div>
+                    <div class="form-group"><label>Empresa *</label><input type="text" name="empresa" placeholder="Ej: Mi Empresa S.A." required></div>
+                    <div class="form-group"><label>Rubro *</label><input type="text" name="rubro" placeholder="Ej: Transporte, Retail" required></div>
+                    <div class="form-group"><label>Ubicación *</label><input type="text" name="ubicacion" placeholder="Ej: Santiago" required></div>
+                    <div class="form-group"><label>Zona de Operación *</label><input type="text" name="zonaOperacion" placeholder="Ej: Zona Sur" required></div>
+                </div>
+                
+                <h3 class="section-title">📊 Datos Operacionales</h3>
+                <div class="form-group"><label>Descripción *</label><textarea name="descripcionOperacion" placeholder="Ej: Contamos con 3 vehículos..." required></textarea></div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Volumen Actual *</label><input type="text" name="volumenActual" placeholder="Ej: 50 clientes/mes" required></div>
+                    <div class="form-group"><label>Clientes Principales *</label><input type="text" name="clientesActuales" placeholder="Ej: 3 principales" required></div>
+                    <div class="form-group"><label>Ingresos Actuales *</label><input type="text" name="ingresosActuales" placeholder="Ej: $500k-$800k" required></div>
+                    <div class="form-group"><label>Margen (%) *</label><input type="text" name="margenActual" placeholder="Ej: 35-40%" required></div>
+                </div>
+                
+                <h3 class="section-title">⚠️ Problema Principal</h3>
+                <div class="form-group"><label>Problema *</label><textarea name="problemaPrincipal" placeholder="Ej: Dependencia de pocos clientes..." required></textarea></div>
+                <div class="form-group"><label>Impacto *</label><textarea name="impactoProblema" placeholder="Ej: Ingresos volátiles..." required></textarea></div>
+                
+                <h3 class="section-title">🎯 Oportunidad Principal (Obligatoria)</h3>
+                <div class="opportunity-box">
+                    <div class="grid-2">
+                        <div class="form-group"><label>Nombre *</label><input type="text" name="op1_nombre" placeholder="Ej: Exportación de frutas" required></div>
+                        <div class="form-group"><label>Volumen</label><input type="text" name="op1_volumen" placeholder="Ej: 5-10 clientes"></div>
+                        <div class="form-group"><label>Tarifa</label><input type="text" name="op1_tarifa" placeholder="Ej: $15-20/km"></div>
+                        <div class="form-group"><label>Margen</label><input type="text" name="op1_margen" placeholder="Ej: 40-45%"></div>
+                    </div>
+                    <div class="form-group"><label>Mercado</label><textarea name="op1_mercado" placeholder="Ej: Exportadoras..."></textarea></div>
+                    <div class="form-group"><label>Ingresos Potenciales</label><input type="text" name="op1_ingresos" placeholder="Ej: $150k-250k/mes"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">📄 Ver Informe Básico</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <div class="button-group">
+                <button type="button" class="btn-primary" onclick="descargarInforme()">⬇️ Descargar Básico</button>
+                <button type="button" class="btn-back" onclick="volverAlFormulario()">← Volver</button>
+            </div>
+            <iframe id="previewIframe"></iframe>
+        </div>
+        
+        <div class="success-container" id="successContainer">
+            <div class="success-icon">✅</div>
+            <h2>¡Solicitud Recibida!</h2>
+            <p id="successMessage">Tu solicitud de informe premium ha sido enviada a ACP & Asociados</p>
+            <p style="font-size: 14px; color: #666;">Nos contactaremos pronto con tu propuesta personalizada</p>
+            <button type="button" class="btn-success" onclick="volverAlFormulario()" style="width: 300px; margin: 0 auto;">Crear otro diagnóstico</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
+    <script>
+        let emailjsReady = false;
+        let initAttempts = 0;
+        
+        function initializeEmailJS() {
+            initAttempts++;
+            if (typeof emailjs !== 'undefined') {
+                try {
+                    emailjs.init('dZhZ5eK-2NgfWBlhT');
+                    emailjsReady = true;
+                    console.log('✅ EmailJS inicializado correctamente');
+                } catch(e) {
+                    console.log('Error al inicializar:', e);
+                    if (initAttempts < 10) {
+                        setTimeout(initializeEmailJS, 500);
+                    }
+                }
+            } else {
+                // Reintentar si EmailJS aún no está disponible
+                if (initAttempts < 10) {
+                    setTimeout(initializeEmailJS, 500);
+                }
+            }
+        }
+        
+        // Esperar 2 segundos antes de intentar inicializar
+        setTimeout(initializeEmailJS, 2000);
+
+        function crearOportunidades() {
+            // No se necesita para esta versión
+        }
+
+        function obtenerDatos() {
+            const form = document.getElementById('diagnosticoForm');
+            const fd = new FormData(form);
+            const datos = Object.fromEntries(fd);
+            
+            if (!datos['op1_nombre']) {
+                alert('Oportunidad principal es obligatoria');
+                return null;
+            }
+            
+            return datos;
+        }
+
+        function generarInformeBasico(datos) {
+            return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Diagnóstico Básico</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans';line-height:1.7;color:#2C3E50;background-color:#ECF0F3}.container{max-width:1000px;margin:0 auto;padding:40px 20px}header{background:linear-gradient(135deg,#1B3B5C 0%,#0F2C47 100%);color:#FFF;padding:80px 40px;border-radius:8px;margin-bottom:40px;position:relative;overflow:hidden}header::before{content:'';position:absolute;top:0;right:-100px;width:400px;height:400px;background:rgba(22,160,133,0.05);border-radius:50%}.header-content{position:relative;z-index:2}header h1{font-family:'Cormorant Garamond',serif;font-size:52px;line-height:1.2;margin-bottom:15px;font-weight:400}header h2{font-family:'Cormorant Garamond',serif;font-size:36px;font-style:italic;color:#D4AF37;font-weight:400;margin-bottom:25px}.client-info{background:rgba(22,160,133,0.15);padding:25px;border-radius:6px;border-left:4px solid #D4AF37}.client-info p{margin-bottom:10px;font-size:14px}.content{background:#FFF;padding:60px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05)}section{margin-bottom:60px}h2{font-family:'Cormorant Garamond',serif;font-size:40px;margin-bottom:30px;color:#1B3B5C;font-weight:400}.highlight-box{background:#FFF8E1;padding:30px;border-radius:6px;border-left:4px solid #D4AF37;margin-bottom:25px}.metric{background:#ECF0F3;padding:20px;border-radius:6px;margin-bottom:15px;border-left:4px solid #D4AF37}.metric-label{font-weight:600;color:#1B3B5C;font-size:12px;text-transform:uppercase;margin-bottom:5px}.metric-value{font-size:24px;font-weight:700;color:#16A085}.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:25px;margin-bottom:25px}.opp-box{background:#ECF0F3;padding:20px;border-radius:6px;border-left:4px solid #16A085;margin-bottom:15px}.opp-box h4{margin:0 0 10px 0;color:#1B3B5C}.premium-box{background:#FFF3CD;border:2px solid #D4AF37;padding:30px;border-radius:8px;text-align:center;margin:40px 0}.premium-box h3{color:#D4AF37;font-size:28px;margin-bottom:15px}.premium-box p{color:#856404;font-size:16px;margin-bottom:10px}footer{background:#1B3B5C;color:#FFF;padding:40px;text-align:center;border-radius:8px;margin-top:60px;font-size:12px}</style></head><body><div class="container"><header><div class="header-content"><h1>${datos.rubro}:</h1><h2>Diagnóstico Estratégico</h2><div class="client-info"><p><strong>Empresa:</strong> ${datos.empresa}</p><p><strong>Contacto:</strong> ${datos.nombreCliente}</p><p><strong>Email:</strong> ${datos.emailCliente}</p></div></div></header><div class="content"><section><h2>Tu Situación Actual</h2><div class="grid-2"><div class="metric"><div class="metric-label">Volumen</div><div class="metric-value">${datos.volumenActual}</div></div><div class="metric"><div class="metric-label">Clientes</div><div class="metric-value">${datos.clientesActuales}</div></div><div class="metric"><div class="metric-label">Ingresos</div><div class="metric-value">${datos.ingresosActuales}</div></div><div class="metric"><div class="metric-label">Margen</div><div class="metric-value">${datos.margenActual}</div></div></div><div class="highlight-box"><strong>⚠️ Problema Identificado:</strong><p style="margin-top:10px;">${datos.problemaPrincipal}</p></div></section><section><h2>Oportunidad Principal Identificada</h2><div class="opp-box"><h4>${datos.op1_nombre}</h4><p><strong>Volumen:</strong> ${datos.op1_volumen}</p><p><strong>Tarifa:</strong> ${datos.op1_tarifa}</p><p><strong>Margen:</strong> ${datos.op1_margen}</p><p><strong>Ingresos Potenciales:</strong> ${datos.op1_ingresos}</p><p><strong>Mercado:</strong> ${datos.op1_mercado}</p></div></section><section><div class="premium-box"><h3>¿Quieres el Informe Premium?</h3><p>Este es un diagnóstico básico. Para un análisis completo con:</p><ul style="text-align:left;display:inline-block;margin:15px 0;"><li>✓ Múltiples oportunidades de crecimiento</li><li>✓ Plan de ejecución 12 semanas</li><li>✓ Propuesta comercial personalizada</li><li>✓ ROI y proyecciones detalladas</li></ul><p><strong>Solicita nuestro informe premium por $49.000</strong></p></div></section></div><footer><p><strong>ACP & Asociados</strong></p><p>Providencia, Santiago | +56 9 4401 8594 | info@acpasociados.cl</p></footer></div></body></html>`;
+        }
+
+        function descargarInforme() {
+            const form = document.getElementById('diagnosticoForm');
+            const nombre = form.nombreCliente.value;
+            const email = form.emailCliente.value;
+            const empresa = form.empresa.value;
+            const html = document.getElementById('previewIframe').srcdoc;
+            
+            // 1. DESCARGAR EL ARCHIVO
+            const blob = new Blob([html], {type: 'text/html'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `DIAGNOSTICO_BASICO_${nombre.replace(/\s+/g, '_').toUpperCase()}.html`;
+            link.click();
+            
+            // 2. ENVIAR EMAIL CON PARÁMETROS ESTÁNDAR
+            setTimeout(function() {
+                if (typeof emailjs !== 'undefined') {
+                    console.log('📧 Intentando enviar email...');
+                    
+                    // Usar parámetros estándar que EmailJS reconoce
+                    const templateParams = {
+                        to_email: 'asesor.pac@gmail.com',
+                        from_name: nombre,
+                        from_email: email,
+                        reply_to: email,
+                        subject: 'NUEVO CLIENTE DESCARGÓ DIAGNÓSTICO BÁSICO',
+                        message: `
+NUEVO CLIENTE - DESCARGÓ DIAGNÓSTICO
+
+Nombre: ${nombre}
+Email: ${email}
+Empresa: ${empresa}
+
+---
+Link de contacto: https://wa.me/56944018594?text=Hola%20${nombre}%20vi%20tu%20diagnóstico
+                        `.trim()
+                    };
+                    
+                    emailjs.send('service_2ve9h64', 'diagnostico_acp', templateParams)
+                        .then(function(response) {
+                            console.log('✅ Email enviado exitosamente:', response.status);
+                        })
+                        .catch(function(error) {
+                            console.log('⚠️ Error al enviar email:', error);
+                        });
+                } else {
+                    console.log('⚠️ EmailJS no disponible aún');
+                }
+            }, 1500);
+        }
+
+        function solicitarPremium() {
+            const form = document.getElementById('diagnosticoForm');
+            const email = form.emailCliente.value;
+            const nombre = form.nombreCliente.value;
+            const empresa = form.empresa.value;
+            
+            // Esperar a que EmailJS esté listo
+            function enviarConEspera() {
+                if (typeof emailjs !== 'undefined' && emailjsReady) {
+                    emailjs.send('service_2ve9h64', 'diagnostico_acp', {
+                        nombre: nombre,
+                        email: email,
+                        to_email: 'asesor.pac@gmail.com',
+                        empresa: empresa,
+                        asunto: `NUEVO LEAD: ${nombre} - ${empresa} - Solicita Premium`
+                    }).then(function(response) {
+                        console.log('Email enviado:', response);
+                        document.getElementById('successMessage').textContent = `✅ Solicitud enviada a ACP & Asociados. Te contactaremos al email: ${email}`;
+                        mostrarSuccess();
+                    }).catch(function(error) {
+                        console.log('Error:', error);
+                        alert('⚠️ Error al enviar. Por favor contacta: +56 9 4401 8594');
+                    });
+                } else if (emailjsReady === false) {
+                    // Reintentar en 1 segundo
+                    setTimeout(enviarConEspera, 1000);
+                } else {
+                    alert('EmailJS no disponible. Por favor llama a: +56 9 4401 8594');
+                }
+            }
+            
+            enviarConEspera();
+        }
+
+        function mostrarSuccess() {
+            document.getElementById('formContainer').classList.add('hidden');
+            document.getElementById('previewContainer').classList.remove('active');
+            document.getElementById('successContainer').classList.add('active');
+        }
+
+        function volverAlFormulario() {
+            document.getElementById('formContainer').classList.remove('hidden');
+            document.getElementById('previewContainer').classList.remove('active');
+            document.getElementById('successContainer').classList.remove('active');
+        }
+
+        document.getElementById('diagnosticoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const datos = obtenerDatos();
+            if (!datos) return;
+            
+            const html = generarInformeBasico(datos);
+            document.getElementById('previewIframe').srcdoc = html;
+            document.getElementById('formContainer').classList.add('hidden');
+            document.getElementById('previewContainer').classList.add('active');
+        });
+    </script>
+</body>
+</html>

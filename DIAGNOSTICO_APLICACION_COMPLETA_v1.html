@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Estratégico - ACP & Asociados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #1B3B5C 0%, #16A085 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+        }
+        
+        .form-container.active {
+            display: block;
+        }
+        
+        .preview-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .preview-container.active {
+            display: block;
+        }
+        
+        .preview-container iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            border-radius: 8px;
+        }
+        
+        .success-container {
+            background: white;
+            border-radius: 12px;
+            padding: 60px 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            text-align: center;
+        }
+        
+        .success-container.active {
+            display: block;
+        }
+        
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .success-container h2 {
+            color: #16A085;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .success-container p {
+            color: #2C3E50;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1B3B5C;
+            border-bottom: 3px solid #D4AF37;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #1B3B5C;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #16A085;
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .opportunity-box {
+            background: #ECF0F3;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #16A085;
+            margin-bottom: 20px;
+        }
+        
+        .opportunity-box h4 {
+            color: #1B3B5C;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        .btn-primary {
+            background: #16A085;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0d8670;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #3498DB;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-back {
+            background: #95A5A6;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-success {
+            background: #16A085;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #0d8670;
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .error-message {
+            background: #fadbd8;
+            border: 1px solid #f5b7b1;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Diagnóstico Estratégico</h1>
+            <p>ACP & Asociados</p>
+        </div>
+        
+        <!-- FORMULARIO -->
+        <div class="form-container active" id="formContainer">
+            <div class="error-message" id="errorMessage"></div>
+            
+            <form id="diagnosticoForm">
+                <!-- CLIENTE -->
+                <h3 class="section-title">📋 Información del Cliente</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Nombre Completo *</label>
+                        <input type="text" name="nombreCliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" name="emailCliente" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Empresa *</label>
+                        <input type="text" name="empresa" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Rubro *</label>
+                        <input type="text" name="rubro" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ubicación *</label>
+                        <input type="text" name="ubicacion" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Zona de Operación *</label>
+                        <input type="text" name="zonaOperacion" required>
+                    </div>
+                </div>
+                
+                <!-- OPERACIONALES -->
+                <h3 class="section-title">📊 Datos Operacionales</h3>
+                <div class="form-group">
+                    <label>Descripción de la Operación Actual *</label>
+                    <textarea name="descripcionOperacion" required></textarea>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Volumen/Escala Actual *</label>
+                        <input type="text" name="volumenActual" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Clientes/Segmentos Principales *</label>
+                        <input type="text" name="clientesActuales" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ingresos Mensuales Actuales *</label>
+                        <input type="text" name="ingresosActuales" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Margen Operativo Actual (%) *</label>
+                        <input type="text" name="margenActual" required>
+                    </div>
+                </div>
+                
+                <!-- PROBLEMA -->
+                <h3 class="section-title">⚠️ Problema Identificado</h3>
+                <div class="form-group">
+                    <label>Problema Principal Identificado *</label>
+                    <textarea name="problemaPrincipal" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Impacto del Problema *</label>
+                    <textarea name="impactoProblema" required></textarea>
+                </div>
+                
+                <!-- OPORTUNIDADES -->
+                <h3 class="section-title">🎯 Oportunidades (1 Obligatoria + 1 Opcional)</h3>
+                <div id="opportunitiesContainer"></div>
+                
+                <!-- META FINAL -->
+                <h3 class="section-title">🏆 Meta Final (12 Semanas)</h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Ingresos Nuevos Esperados</label>
+                        <input type="text" name="metaIngresos">
+                    </div>
+                    <div class="form-group">
+                        <label>Crecimiento Esperado (%)</label>
+                        <input type="text" name="metaCrecimiento">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>ROI Esperado</label>
+                    <input type="text" name="roiEsperado">
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">📄 Generar Informe</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- PREVIEW -->
+        <div class="preview-container" id="previewContainer">
+            <div class="button-group">
+                <button type="button" class="btn-primary" onclick="descargarInforme()">⬇️ Descargar Informe</button>
+                <button type="button" class="btn-secondary" onclick="enviarEmail()">✉️ Enviar por Email</button>
+                <button type="button" class="btn-back" onclick="volverAlFormulario()">← Volver</button>
+            </div>
+            <iframe id="previewIframe"></iframe>
+        </div>
+        
+        <!-- SUCCESS -->
+        <div class="success-container" id="successContainer">
+            <div class="success-icon">✅</div>
+            <h2>¡Éxito!</h2>
+            <p>Tu informe ha sido generado correctamente.</p>
+            <p>Puedes descargarlo o volver a crear otro.</p>
+            <button type="button" class="btn-success" onclick="volverAlFormulario()" style="width: 300px; margin: 0 auto;">Crear otro informe</button>
+        </div>
+    </div>
+    
+    <script>
+        // Crear oportunidades dinámicamente
+        function crearOportunidades() {
+            const container = document.getElementById('opportunitiesContainer');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= 2; i++) {
+                const esObligatoria = i === 1;
+                const html = `
+                    <div class="opportunity-box">
+                        <h4>Oportunidad ${i} ${esObligatoria ? '(Obligatoria)' : '(Opcional)'}</h4>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Nombre ${esObligatoria ? '*' : ''}</label>
+                                <input type="text" name="op${i}_nombre" ${esObligatoria ? 'required' : ''}>
+                            </div>
+                            <div class="form-group">
+                                <label>Volumen</label>
+                                <input type="text" name="op${i}_volumen">
+                            </div>
+                            <div class="form-group">
+                                <label>Tarifa/Precio</label>
+                                <input type="text" name="op${i}_tarifa">
+                            </div>
+                            <div class="form-group">
+                                <label>Margen</label>
+                                <input type="text" name="op${i}_margen">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mercado</label>
+                            <textarea name="op${i}_mercado"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Ingresos Potenciales</label>
+                            <input type="text" name="op${i}_ingresos">
+                        </div>
+                        <div class="form-group">
+                            <label>Acción Inicial</label>
+                            <textarea name="op${i}_accion"></textarea>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            }
+        }
+        
+        // Obtener datos del formulario
+        function obtenerDatos() {
+            const form = document.getElementById('diagnosticoForm');
+            const formData = new FormData(form);
+            const datos = Object.fromEntries(formData);
+            
+            // Oportunidades con datos - Solo requiere Oportunidad 1
+            const oportunidades = [];
+            
+            // Oportunidad 1 es OBLIGATORIA
+            if (datos['op1_nombre']) {
+                oportunidades.push({
+                    nombre: datos['op1_nombre'],
+                    mercado: datos['op1_mercado'],
+                    volumen: datos['op1_volumen'],
+                    tarifa: datos['op1_tarifa'],
+                    ingresos: datos['op1_ingresos'],
+                    margen: datos['op1_margen'],
+                    accion: datos['op1_accion']
+                });
+            } else {
+                mostrarError('La Oportunidad 1 es obligatoria (mínimo el nombre)');
+                return null;
+            }
+            
+            // Oportunidad 2 es OPCIONAL
+            if (datos['op2_nombre']) {
+                oportunidades.push({
+                    nombre: datos['op2_nombre'],
+                    mercado: datos['op2_mercado'],
+                    volumen: datos['op2_volumen'],
+                    tarifa: datos['op2_tarifa'],
+                    ingresos: datos['op2_ingresos'],
+                    margen: datos['op2_margen'],
+                    accion: datos['op2_accion']
+                });
+            }
+            
+            return { ...datos, oportunidades };
+        }
+        
+        // Mostrar error
+        function mostrarError(mensaje) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = mensaje;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Generar HTML del informe
+        function generarInformeHTML(datos) {
+            const htmlOps = datos.oportunidades.map((op, idx) => `
+                <div style="background: #ECF0F3; padding: 30px; border-radius: 6px; border-left: 4px solid #16A085; margin-bottom: 25px;">
+                    <h4 style="margin: 0 0 15px 0; color: #1B3B5C; font-size: 16px; font-weight: 600;">${idx + 1}. ${op.nombre}</h4>
+                    <p><strong>Mercado:</strong> ${op.mercado}</p>
+                    <p><strong>Volumen:</strong> ${op.volumen}</p>
+                    <p><strong>Tarifa/Precio:</strong> ${op.tarifa}</p>
+                    <p><strong>Ingresos Potenciales:</strong> ${op.ingresos}</p>
+                    <p><strong>Margen Esperado:</strong> ${op.margen}</p>
+                    <div style="background: #E8F8F5; padding: 15px; border-radius: 4px; margin-top: 15px; border-left: 3px solid #16A085; font-size: 13px;">
+                        <strong style="color: #1B3B5C;">Acción semana 1-2:</strong> ${op.accion}
+                    </div>
+                </div>
+            `).join('');
+            
+            return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propuesta - ${datos.nombreCliente}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            line-height: 1.7;
+            color: #2C3E50;
+            background-color: #ECF0F3;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #1B3B5C 0%, #0F2C47 100%);
+            color: #FFFFFF;
+            padding: 80px 40px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba(22, 160, 133, 0.05);
+            border-radius: 50%;
+        }
+        .header-content { position: relative; z-index: 2; }
+        header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 52px;
+            line-height: 1.2;
+            margin-bottom: 15px;
+            font-weight: 400;
+        }
+        header h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-style: italic;
+            color: #D4AF37;
+            font-weight: 400;
+            margin-bottom: 25px;
+        }
+        .client-info {
+            background: rgba(22, 160, 133, 0.15);
+            padding: 25px;
+            border-radius: 6px;
+            border-left: 4px solid #D4AF37;
+        }
+        .client-info p { margin-bottom: 10px; font-size: 14px; }
+        .content {
+            background: #FFFFFF;
+            padding: 60px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        section { margin-bottom: 60px; }
+        h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 40px;
+            margin-bottom: 30px;
+            color: #1B3B5C;
+            font-weight: 400;
+        }
+        .highlight-box {
+            background: #FFF8E1;
+            padding: 30px;
+            border-radius: 6px;
+            border-left: 4px solid #D4AF37;
+            margin-bottom: 25px;
+        }
+        .metric {
+            background: #ECF0F3;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid #D4AF37;
+        }
+        .metric-label {
+            font-weight: 600;
+            color: #1B3B5C;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #16A085;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        footer {
+            background: #1B3B5C;
+            color: #FFFFFF;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 60px;
+            font-size: 12px;
+        }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            header h1 { font-size: 36px; }
+            h2 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>${datos.rubro}:</h1>
+                <h2>Estrategia de Crecimiento</h2>
+                <div class="client-info">
+                    <p><strong>Empresa:</strong> ${datos.empresa}</p>
+                    <p><strong>Contacto:</strong> ${datos.nombreCliente}</p>
+                    <p><strong>Ubicación:</strong> ${datos.ubicacion}</p>
+                </div>
+            </div>
+        </header>
+        <div class="content">
+            <section>
+                <h2>Tu Situación Actual</h2>
+                <div class="grid-2">
+                    <div class="metric">
+                        <div class="metric-label">Volumen Actual</div>
+                        <div class="metric-value">${datos.volumenActual}</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Clientes Actuales</div>
+                        <div class="metric-value">${datos.clientesActuales}</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Ingresos Actuales</div>
+                        <div class="metric-value">${datos.ingresosActuales}</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Margen</div>
+                        <div class="metric-value">${datos.margenActual}</div>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <strong>⚠️ Lo que vemos:</strong>
+                    <p style="margin-top: 10px;">${datos.problemaPrincipal}</p>
+                </div>
+            </section>
+            <section>
+                <h2>Oportunidades Estratégicas</h2>
+                ${htmlOps}
+            </section>
+            <section>
+                <h2>Propuesta Comercial</h2>
+                <div style="background: #ECF0F3; padding: 30px; border-radius: 6px; border-left: 4px solid #16A085;">
+                    <h4 style="margin: 0 0 15px 0; color: #1B3B5C;">Plan Integral - Ejecución 12 Semanas</h4>
+                    <div style="font-size: 32px; font-weight: 700; color: #16A085; margin: 20px 0;">$49.000</div>
+                    <p><strong>Resultado esperado:</strong></p>
+                    <p>✓ Ingresos nuevos: ${datos.metaIngresos}</p>
+                    <p>✓ Crecimiento: ${datos.metaCrecimiento}</p>
+                    <p>✓ ROI: ${datos.roiEsperado}</p>
+                </div>
+            </section>
+        </div>
+        <footer>
+            <p><strong>ACP & Asociados</strong></p>
+            <p>Providencia, Santiago | +56 9 4401 8594 | info@acpasociados.cl</p>
+        </footer>
+    </div>
+</body>
+</html>`;
+        }
+        
+        // Descargar informe
+        function descargarInforme() {
+            const form = document.getElementById('diagnosticoForm');
+            const nombreCliente = form.nombreCliente.value;
+            const iframe = document.getElementById('previewIframe');
+            const html = iframe.srcdoc;
+            
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `PROPUESTA_${nombreCliente.replace(/\s+/g, '_').toUpperCase()}.html`;
+            link.click();
+        }
+        
+        // Enviar email (simulado)
+        function enviarEmail() {
+            const form = document.getElementById('diagnosticoForm');
+            const emailCliente = form.emailCliente.value;
+            const nombreCliente = form.nombreCliente.value;
+            
+            // Mostrar mensaje de éxito
+            mostrarSuccess();
+            
+            // En producción, aquí iría un servicio como EmailJS
+            console.log('Email enviado a:', emailCliente);
+        }
+        
+        // Mostrar éxito
+        function mostrarSuccess() {
+            document.getElementById('previewContainer').classList.remove('active');
+            document.getElementById('formContainer').classList.remove('active');
+            document.getElementById('successContainer').classList.add('active');
+        }
+        
+        // Volver al formulario
+        function volverAlFormulario() {
+            document.getElementById('formContainer').classList.add('active');
+            document.getElementById('previewContainer').classList.remove('active');
+            document.getElementById('successContainer').classList.remove('active');
+        }
+        
+        // Envío del formulario
+        document.getElementById('diagnosticoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const datos = obtenerDatos();
+            if (!datos) return;
+            
+            const html = generarInformeHTML(datos);
+            const iframe = document.getElementById('previewIframe');
+            iframe.srcdoc = html;
+            
+            // Mostrar preview
+            document.getElementById('formContainer').classList.remove('active');
+            document.getElementById('previewContainer').classList.add('active');
+        });
+        
+        // Inicializar
+        crearOportunidades();
+    </script>
+</body>
+</html>
