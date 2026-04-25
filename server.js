@@ -1,10 +1,10 @@
 import express from 'express';
-import sqlite3 from 'sqlite3';
 import axios from 'axios';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -19,15 +19,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Base de datos SQLite
-const db = new sqlite3.Database(':memory:', (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-    process.exit(1);
-  }
-  console.log('✅ SQLite database initialized');
-  initializeDB();
-});
+// Base de datos en memoria (sin sqlite3)
+const leadsStore = {};
 
 // Inicializar tabla de leads
 function initializeDB() {
