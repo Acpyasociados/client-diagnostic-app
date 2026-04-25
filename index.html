@@ -95,6 +95,9 @@
   </div>
 
   <script>
+    // ⚙️ CONFIGURACIÓN: Backend en Render
+    const BACKEND_URL = 'https://acp-backend-g3io.onrender.com'; // ← RENDER PRODUCTION
+
     const plans = document.querySelectorAll('.plan');
     const planInput = document.querySelector('input[name="plan"]');
     const form = document.getElementById('leadForm');
@@ -148,7 +151,7 @@
       }
 
       try {
-        const response = await fetch('/api/validate-coupon', {
+        const response = await fetch(`${BACKEND_URL}/api/validate-coupon`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ coupon, plan })
@@ -207,8 +210,8 @@
         console.log('CLIENT: Enviando formulario', Object.keys(payload).length, 'campos');
         console.log('CLIENT: Plan:', payload.plan, 'Precio final:', payload.finalPrice);
 
-        // Enviar como JSON (método estándar)
-        const response = await fetch('/api/submit-lead', {
+        // Enviar al backend en Railway
+        const response = await fetch(`${BACKEND_URL}/api/submit-lead`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
