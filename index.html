@@ -43,7 +43,7 @@
                 <option value="servicios_terreno">Servicios en terreno</option>
               </select>
             </div>
-            <div class="field"><label>Ventas mensuales (CLP)</label><input type="number" name="monthly_sales" min="0" placeholder="Ej: 1000000" required /></div>
+            <div class="field"><label>Ventas mensuales (CLP)</label><input type="text" name="monthly_sales" placeholder="Ej: 1.000.000" required /></div>
           </div>
           <div class="grid-2">
             <div class="field"><label>Margen de ganancia estimado (%)</label><input type="number" name="margin" min="0" max="100" placeholder="Ej: 30" required /></div>
@@ -131,13 +131,14 @@
       monthlySalesInput.addEventListener('input', (e) => {
         let value = e.target.value.replace(/\D/g, ''); // Solo dígitos
         if (value) {
-          e.target.value = new Intl.NumberFormat('es-CL').format(value);
+          // Usar punto como separador de miles (formato chileno)
+          e.target.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
       });
       monthlySalesInput.addEventListener('blur', (e) => {
         let value = e.target.value.replace(/\D/g, ''); // Limpiar separadores
         if (value) {
-          e.target.value = new Intl.NumberFormat('es-CL').format(value);
+          e.target.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
       });
     }
