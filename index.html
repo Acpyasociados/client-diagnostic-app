@@ -43,10 +43,10 @@ const BACKEND_URL = 'https://acp-backend-g3io.onrender.com';
                 <option value="servicios_terreno">Servicios en terreno</option>
               </select>
             </div>
-            <div class="field"><label>Ventas mensuales (CLP)</label><input type="number" name="monthly_sales" min="0" required /></div>
+            <div class="field"><label>Ventas mensuales (CLP)</label><input type="number" name="monthly_sales" min="0" placeholder="Ej: 1000000" required /></div>
           </div>
           <div class="grid-2">
-            <div class="field"><label>Margen estimado (%)</label><input type="number" name="margin" min="0" max="100" required /></div>
+            <div class="field"><label>Margen de ganancia estimado (%)</label><input type="number" name="margin" min="0" max="100" placeholder="Ej: 30" required /></div>
             <div class="field"><label>Cantidad de clientes activos</label><input type="number" name="active_clients" min="0" required /></div>
           </div>
           <div class="field"><label>Top 3 costos principales</label><textarea name="top_costs" required placeholder="Ej: personal, arriendo, publicidad"></textarea></div>
