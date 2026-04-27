@@ -107,6 +107,7 @@
     const couponMessage = document.getElementById('couponMessage');
     const discountInput = document.querySelector('input[name="discountPercentage"]');
     const finalPriceInput = document.querySelector('input[name="finalPrice"]');
+    const monthlySalesInput = document.querySelector('input[name="monthly_sales"]');
 
     // Precios base
     const basePrices = {
@@ -124,6 +125,22 @@
         resetCoupon();
       });
     });
+
+    // Formatear ventas mensuales con separador de miles
+    if (monthlySalesInput) {
+      monthlySalesInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, ''); // Solo dígitos
+        if (value) {
+          e.target.value = new Intl.NumberFormat('es-CL').format(value);
+        }
+      });
+      monthlySalesInput.addEventListener('blur', (e) => {
+        let value = e.target.value.replace(/\D/g, ''); // Limpiar separadores
+        if (value) {
+          e.target.value = new Intl.NumberFormat('es-CL').format(value);
+        }
+      });
+    }
 
     // Validar cupón cuando se pierde el foco
     couponInput.addEventListener('blur', () => {
@@ -205,6 +222,11 @@
         const payload = {};
         for (const [key, value] of formData) {
           payload[key] = value;
+        }
+
+        // Limpiar separadores de miles en monthly_sales antes de enviar
+        if (payload.monthly_sales) {
+          payload.monthly_sales = payload.monthly_sales.replace(/\./g, '');
         }
 
         console.log('CLIENT: Enviando formulario', Object.keys(payload).length, 'campos');
