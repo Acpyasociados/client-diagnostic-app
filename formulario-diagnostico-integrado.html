@@ -694,6 +694,8 @@
             ]
         };
 
+        // Función que se ejecuta cuando el DOM está listo
+        document.addEventListener('DOMContentLoaded', function() {
         // DOM Elements
         const form = document.getElementById('diagnosticForm');
         const sectorSelect = document.getElementById('sector');
@@ -974,6 +976,7 @@
 
         // Inicialización
         console.log('✅ Formulario dinámico cargado correctamente');
+        }); // Fin de DOMContentLoaded
     </script>
 </body>
 </html>
