@@ -16,9 +16,18 @@ app.use(express.static('public'));
 
 let htmlContent = '';
 try {
-    htmlContent = fs.readFileSync('./public/index.html', 'utf8');
+    // Intentar leer formulario-diagnostico-integrado.html primero
+    htmlContent = fs.readFileSync('./formulario-diagnostico-integrado.html', 'utf8');
+    console.log('✅ Cargado: formulario-diagnostico-integrado.html');
 } catch (e) {
-    console.warn('No se pudo leer index.html:', e.message);
+    console.warn('No se pudo leer formulario-diagnostico-integrado.html:', e.message);
+    try {
+        // Fallback a public/index.html
+        htmlContent = fs.readFileSync('./public/index.html', 'utf8');
+        console.log('✅ Cargado: public/index.html');
+    } catch (e2) {
+        console.warn('No se pudo leer public/index.html:', e2.message);
+    }
 }
 
 app.get('/', (req, res) => {
