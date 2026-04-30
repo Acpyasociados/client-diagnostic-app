@@ -3,8 +3,13 @@ import axios from 'axios';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,28 +19,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-let htmlContent = '';
-try {
-    // Intentar leer formulario-diagnostico-integrado.html primero
-    htmlContent = fs.readFileSync('./formulario-diagnostico-integrado.html', 'utf8');
-    console.log('✅ Cargado: formulario-diagnostico-integrado.html');
-} catch (e) {
-    console.warn('No se pudo leer formulario-diagnostico-integrado.html:', e.message);
-    try {
-        // Fallback a public/index.html
-        htmlContent = fs.readFileSync('./public/index.html', 'utf8');
-        console.log('✅ Cargado: public/index.html');
-    } catch (e2) {
-        console.warn('No se pudo leer public/index.html:', e2.message);
-    }
-}
-
 app.get('/', (req, res) => {
-    if (htmlContent) {
-          res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          res.send(htmlContent);
+    const formularioPath = path.join(__dirname, 'formulario-diagnostico-integrado.html');
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+
+    if (fs.existsSync(formularioPath)) {
+        console.log('✅ Sirviendo: formulario-diagnostico-integrado.html');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.sendFile(formularioPath);
+    } else if (fs.existsSync(indexPath)) {
+        console.log('✅ Sirviendo: public/index.html');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.sendFile(indexPath);
     } else {
-          res.json({ message: 'ACP Backend operativo', status: 'running' });
+        console.error('❌ No se encontró formulario HTML');
+        res.json({ message: 'ACP Backend operativo', status: 'running' });
     }
 });
 
