@@ -7,6 +7,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import sgMail from '@sendgrid/mail';
 
+// Importar configuración dinámica del formulario
+import { OPERATIONAL_FIELDS_MAP, ADVISOR_TYPES, CHALLENGE_OPTIONS } from './config-form-dynamics.js';
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -56,7 +59,7 @@ app.get('/api/health', (req, res) => {
 
 app.post('/api/submit-lead', async (req, res) => {
     const body = req.body;
-    const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
+    const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan', 'advisor_type', 'main_challenge'];
 
            for (const field of requiredFields) {
                  if (!body[field] && body[field] !== 0 && body[field] !== '0') {
@@ -64,8 +67,47 @@ app.post('/api/submit-lead', async (req, res) => {
                  }
            }
 
+           // Validar sector personalizado si es "otro"
+           if (body.sector === 'otro' && !body.industry_other) {
+                 return res.status(400).json({ error: 'Debe especificar su rubro personalizado' });
+           }
+
+           // Validar que advisor_type sea válido
+           const validAdvisors = ADVISOR_TYPES.map(a => a.value);
+           if (!validAdvisors.includes(body.advisor_type)) {
+                 return res.status(400).json({ error: 'Tipo de asesor inválido' });
+           }
+
+           // Validar que main_challenge sea válido
+           const validChallenges = CHALLENGE_OPTIONS.map(c => c.value);
+           if (!validChallenges.includes(body.main_challenge)) {
+                 return res.status(400).json({ error: 'Desafío principal inválido' });
+           }
+
+           // Validar desafío personalizado si es "otro"
+           if (body.main_challenge === 'otro' && !body.main_challenge_other) {
+                 return res.status(400).json({ error: 'Debe especificar su desafío principal' });
+           }
+
+           // Validar campos operacionales según sector
+           const operationalFields = body.operational_fields || {};
+           const expectedFields = OPERATIONAL_FIELDS_MAP[body.sector] || [];
+           for (const field of expectedFields) {
+                 if (field.required && !operationalFields[field.key] && operationalFields[field.key] !== 0) {
+                         return res.status(400).json({ error: `Falta campo operacional: ${field.label}` });
+                 }
+           }
+
            const leadId = 'lead-' + Math.random().toString(36).substr(2, 9);
-    const lead = { lead_id: leadId, ...body, created_at: new Date().toISOString() };
+    const lead = {
+          lead_id: leadId,
+          ...body,
+          industry_other: body.industry_other || null,
+          advisor_type: body.advisor_type,
+          operational_fields: body.operational_fields ? JSON.stringify(body.operational_fields) : null,
+          main_challenge_other: body.main_challenge_other || null,
+          created_at: new Date().toISOString()
+    };
 
            try {
                  const mpResponse = await createMercadoPagoPreference(lead);
@@ -94,6 +136,32 @@ async function sendLeadEmail(lead) {
     const to = 'asesor.pac@gmail.com';
 
     const subject = `🔔 Nuevo Lead: ${lead.company} - ${lead.plan}`;
+
+    // Obtener labels dinámicos
+    const sectorLabel = lead.sector === 'otro' ? lead.industry_other : lead.sector;
+    const advisorTypeLabel = ADVISOR_TYPES.find(a => a.value === lead.advisor_type)?.label || lead.advisor_type;
+    const challengeLabel = CHALLENGE_OPTIONS.find(c => c.value === lead.main_challenge)?.label || lead.main_challenge;
+
+    // Parsear campos operacionales
+    let operationalFieldsHTML = '';
+    if (lead.operational_fields) {
+          try {
+                const opFields = typeof lead.operational_fields === 'string' ? JSON.parse(lead.operational_fields) : lead.operational_fields;
+                const expectedFields = OPERATIONAL_FIELDS_MAP[lead.sector] || [];
+
+                operationalFieldsHTML = '<h3>Información Operacional:</h3><ul>';
+                for (const field of expectedFields) {
+                      const value = opFields[field.key];
+                      if (value !== undefined && value !== null) {
+                            operationalFieldsHTML += `<li><strong>${field.label}:</strong> ${value}</li>`;
+                      }
+                }
+                operationalFieldsHTML += '</ul>';
+          } catch (e) {
+                console.error('Error parsing operational fields:', e);
+          }
+    }
+
     const html = `
         <h2>Nuevo Lead Registrado</h2>
         <p><strong>ID del Lead:</strong> ${lead.lead_id}</p>
@@ -104,7 +172,8 @@ async function sendLeadEmail(lead) {
             <li><strong>Email:</strong> ${lead.email}</li>
             <li><strong>Teléfono:</strong> ${lead.phone}</li>
             <li><strong>Empresa:</strong> ${lead.company}</li>
-            <li><strong>Sector:</strong> ${lead.sector}</li>
+            <li><strong>Sector:</strong> ${sectorLabel}</li>
+            <li><strong>Tipo de Asesor:</strong> ${advisorTypeLabel}</li>
         </ul>
         <h3>Información Financiera:</h3>
         <ul>
@@ -112,11 +181,12 @@ async function sendLeadEmail(lead) {
             <li><strong>Margen de Ganancia:</strong> ${lead.margin}%</li>
             <li><strong>Clientes Activos:</strong> ${lead.active_clients}</li>
         </ul>
-        <h3>Información Adicional:</h3>
+        ${operationalFieldsHTML}
+        <h3>Situación Actual:</h3>
         <ul>
+            <li><strong>Mayor Desafío:</strong> ${lead.main_challenge_other || challengeLabel}</li>
             <li><strong>Costos Principales:</strong> ${lead.top_costs}</li>
             <li><strong>Canal Principal:</strong> ${lead.main_channel}</li>
-            <li><strong>Problema Principal:</strong> ${lead.main_problem}</li>
             <li><strong>Objetivo 6 Meses:</strong> ${lead.goal_6m}</li>
         </ul>
         <p><strong>Fecha:</strong> ${new Date(lead.created_at).toLocaleString('es-CL')}</p>
