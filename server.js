@@ -2,345 +2,88 @@ import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import crypto from 'crypto';
+import fs from 'fs';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Base de datos en memoria (sin sqlite3)
-const leadsStore = {};
+let htmlContent = '';
+try {
+    htmlContent = fs.readFileSync('./public/index.html', 'utf8');
+} catch (e) {
+    console.warn('No se pudo leer index.html:', e.message);
+}
 
+app.get('/', (req, res) => {
+    if (htmlContent) {
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.send(htmlContent);
+    } else {
+          res.json({ message: 'ACP Backend operativo', status: 'running' });
+    }
+});
 
-// Rutas API
 app.get('/api/', (req, res) => {
-  res.json({ message: 'ACP Backend operativo', status: 'running' });
+    res.json({ message: 'ACP Backend operativo', status: 'running' });
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+    res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Endpoint principal: submit-lead
 app.post('/api/submit-lead', async (req, res) => {
-  console.log('=== SUBMIT-LEAD HANDLER START ===');
-  console.log('Headers:', req.headers['content-type']);
-  console.log('Body keys:', Object.keys(req.body).length);
-
-  try {
     const body = req.body;
-    const requiredFields = [
-      'name', 'email', 'phone', 'company', 'sector',
-      'monthly_sales', 'margin', 'active_clients', 'top_costs',
-      'main_channel', 'main_problem', 'goal_6m', 'plan'
-    ];
+    const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
 
-    // Validar campos requeridos
-    for (const field of requiredFields) {
-      if (!body[field] && body[field] !== 0 && body[field] !== '0') {
-        console.error(`Missing field: ${field}`);
-        return res.status(400).json({ error: `Falta campo requerido: ${field}` });
-      }
-    }
+           for (const field of requiredFields) {
+                 if (!body[field] && body[field] !== 0 && body[field] !== '0') {
+                         return res.status(400).json({ error: `Falta campo: ${field}` });
+                 }
+           }
 
-    // Generar IDs únicos
-    const leadId = generateUUID();
-    const clientToken = generateToken();
-    const createdAt = new Date().toISOString();
+           const leadId = 'lead-' + Math.random().toString(36).substr(2, 9);
+    const lead = { lead_id: leadId, ...body, created_at: new Date().toISOString() };
 
-    // Precios base
-    const basePrices = {
-      basico: Number(process.env.PRICE_BASIC_CLP || 49900),
-      premium: Number(process.env.PRICE_PREMIUM_CLP || 149900)
-    };
+           try {
+                 const mpResponse = await createMercadoPagoPreference(lead);
+                 lead.checkout_url = mpResponse.data.init_point;
+           } catch (e) {
+                 console.error('MP Error:', e.message);
+           }
 
-    const plan = body.plan || 'basico';
-    const discount = Number(body.discountPercentage || 0);
-    const basePrice = basePrices[plan] || basePrices.basico;
-    const finalPrice = Number(body.finalPrice) || Math.round(basePrice * (100 - discount) / 100);
-
-    // Datos del lead
-    const lead = {
-      lead_id: leadId,
-      client_token: clientToken,
-      created_at: createdAt,
-      status: 'lead_creado',
-      payment_status: 'pending',
-      name: body.name,
-      email: body.email,
-      phone: body.phone,
-      company: body.company,
-      sector: body.sector,
-      monthly_sales: body.monthly_sales,
-      margin: body.margin,
-      active_clients: body.active_clients,
-      top_costs: body.top_costs,
-      main_channel: body.main_channel,
-      main_problem: body.main_problem,
-      goal_6m: body.goal_6m,
-      plan: plan,
-      discount_percentage: discount,
-      final_price: finalPrice,
-      questionnaire_sent: 0,
-      questionnaire_completed: 0,
-      draft_generated: 0,
-      reviewed_by_human: 0,
-      delivered_at: null
-    };
-
-    // Guardar en BD
-    await saveLead(lead);
-    console.log('✅ Lead saved to database:', leadId);
-
-    // Crear preferencia en Mercado Pago
-    const mpResponse = await createMercadoPagoPreference(lead);
-    if (!mpResponse.ok) {
-      throw new Error(`Mercado Pago error: ${mpResponse.error}`);
-    }
-
-    lead.checkout_id = mpResponse.data.id;
-    lead.checkout_url = mpResponse.data.init_point;
-
-    // Actualizar con datos de MP
-    await updateLead(leadId, { checkout_id: lead.checkout_id, checkout_url: lead.checkout_url });
-    console.log('✅ Lead updated with MP data');
-
-    // Enviar email al asesor
-    try {
-      await sendAdvisorEmail(lead);
-      console.log('✅ Email sent to advisor');
-    } catch (emailErr) {
-      console.error('⚠️ Email error (non-fatal):', emailErr.message);
-    }
-
-    console.log('✅ Lead submission successful:', leadId);
-    return res.status(200).json({
-      success: true,
-      lead_id: leadId,
-      client_token: clientToken,
-      checkout_url: mpResponse.data.init_point,
-      final_price: lead.final_price
-    });
-
-  } catch (error) {
-    console.error('❌ Error in lead processing:', error.message);
-    return res.status(500).json({
-      error: 'Error processing lead: ' + error.message
-    });
-  }
+           return res.status(200).json({
+                 success: true,
+                 lead_id: leadId,
+                 checkout_url: lead.checkout_url || 'https://checkout.mercadopago.com'
+           });
 });
-
-// Endpoint para validar cupón
-app.post('/api/validate-coupon', (req, res) => {
-  const { coupon, plan } = req.body;
-
-  if (!coupon || !plan) {
-    return res.status(400).json({ error: 'Falta cupón o plan' });
-  }
-
-  // Base de cupones disponibles
-  const coupons = {
-    'TEST100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
-    'DEMO100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
-    'PRUEBA100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
-    'TESTBASICO': { valid: true, discount: 100, plans: ['basico'] },
-    'TESTPREMIUM': { valid: true, discount: 100, plans: ['premium'] },
-    'DESC50': { valid: true, discount: 50, plans: ['basico', 'premium'] },
-    'DESC90': { valid: true, discount: 90, plans: ['basico', 'premium'] },
-    'STARTUP30': { valid: true, discount: 30, plans: ['premium'] },
-    'TIHARE90': { valid: true, discount: 90, plans: ['basico', 'premium'] },
-  };
-
-  const couponKey = coupon.toUpperCase().trim();
-  const couponData = coupons[couponKey];
-
-  if (!couponData) {
-    return res.status(400).json({
-      valid: false,
-      error: 'Cupón inválido o expirado'
-    });
-  }
-
-  if (!couponData.plans.includes(plan)) {
-    return res.status(400).json({
-      valid: false,
-      error: `Este cupón no aplica al plan ${plan.toUpperCase()}`
-    });
-  }
-
-  // Calcular precio final
-  const basePrices = {
-    'basico': 49900,
-    'premium': 149900
-  };
-
-  const basePrice = basePrices[plan];
-  const discount = (basePrice * couponData.discount) / 100;
-  const finalPrice = Math.max(0, basePrice - discount);
-
-  return res.json({
-    valid: true,
-    discount_percentage: couponData.discount,
-    base_price: basePrice,
-    discount_amount: discount,
-    final_price: finalPrice,
-    message: `Cupón válido - ${couponData.discount}% descuento`,
-    coupon_code: couponKey
-  });
-});
-
-// Endpoint para ver leads
-app.get('/api/leads', (req, res) => {
-  const leads = Object.values(leadsStore).sort((a, b) =>
-    new Date(b.created_at) - new Date(a.created_at)
-  );
-  res.json({ leads });
-});
-
-// Funciones auxiliares
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
-function generateToken() {
-  return crypto.randomBytes(18).toString('hex');
-}
-
-function saveLead(lead) {
-  return new Promise((resolve) => {
-    leadsStore[lead.lead_id] = lead;
-    console.log('✅ Lead saved in-memory:', lead.lead_id);
-    resolve(lead.lead_id);
-  });
-}
-
-function updateLead(leadId, data) {
-  return new Promise((resolve) => {
-    if (leadsStore[leadId]) {
-      leadsStore[leadId] = { ...leadsStore[leadId], ...data };
-      console.log('✅ Lead updated in-memory:', leadId);
-    }
-    resolve();
-  });
-}
 
 async function createMercadoPagoPreference(lead) {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-  const siteUrl = process.env.SITE_URL || 'https://acp.example.com';
+    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    if (!accessToken) throw new Error('Falta MERCADOPAGO_ACCESS_TOKEN');
 
-  if (!accessToken) {
-    throw new Error('Missing MERCADOPAGO_ACCESS_TOKEN');
-  }
+  const basePrices = { basico: 49900, premium: 149900 };
+    const basePrice = basePrices[lead.plan] || 49900;
 
-  const preferencePayload = {
-    items: [{
-      title: `Diagnóstico ${lead.plan} - ${lead.company}`,
-      quantity: 1,
-      currency_id: 'CLP',
-      unit_price: lead.final_price
-    }],
-    metadata: {
-      lead_id: lead.lead_id,
-      client_email: lead.email,
-      plan: lead.plan,
-      discount: lead.discount_percentage
+  const response = await axios.post(
+        'https://api.mercadopago.com/checkout/preferences',
+    {
+            items: [{ title: `Diagnostico ${lead.plan}`, quantity: 1, currency_id: 'CLP', unit_price: basePrice }],
+            back_urls: { success: 'https://acp.example.com/success' }
     },
-    back_urls: {
-      success: `${siteUrl}/success.html?lead_id=${lead.lead_id}`,
-      failure: `${siteUrl}/cancel.html?lead_id=${lead.lead_id}`,
-      pending: `${siteUrl}/success.html?lead_id=${lead.lead_id}`
-    },
-    auto_return: 'approved',
-    notification_url: `${siteUrl}/api/mercadopago-webhook`
-  };
-
-  try {
-    const response = await axios.post(
-      'https://api.mercadopago.com/checkout/preferences',
-      preferencePayload,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    return { ok: true, data: response.data };
-  } catch (error) {
-    console.error('Mercado Pago error:', error.response?.data || error.message);
-    return { ok: false, error: error.response?.data?.message || error.message };
-  }
+    { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+    return response.data;
 }
 
-async function sendAdvisorEmail(lead) {
-  const sendgridKey = process.env.SENDGRID_API_KEY;
-  const advisorEmail = process.env.ADVISOR_EMAIL || 'asesor.pac@gmail.com';
-
-  if (!sendgridKey) {
-    throw new Error('Missing SENDGRID_API_KEY');
-  }
-
-  const emailContent = `
-    <h2>Nuevo Lead - ${lead.company}</h2>
-    <p><strong>Nombre:</strong> ${lead.name}</p>
-    <p><strong>Email:</strong> ${lead.email}</p>
-    <p><strong>Teléfono:</strong> ${lead.phone}</p>
-    <p><strong>Rubro:</strong> ${lead.sector}</p>
-    <p><strong>Ventas Mensuales:</strong> $${Number(lead.monthly_sales).toLocaleString('es-CL')}</p>
-    <p><strong>Plan:</strong> ${lead.plan.toUpperCase()}</p>
-    <p><strong>Precio Final:</strong> $${lead.final_price.toLocaleString('es-CL')}</p>
-    <p><strong>Link Checkout:</strong> <a href="${lead.checkout_url}">Ver pago</a></p>
-    <p><strong>ID Lead:</strong> ${lead.lead_id}</p>
-  `;
-
-  try {
-    await axios.post(
-      'https://api.sendgrid.com/v3/mail/send',
-      {
-        personalizations: [{
-          to: [{ email: advisorEmail }],
-          subject: `Nuevo Lead: ${lead.company}`
-        }],
-        from: { email: 'noreply@acp.cl', name: 'ACP Diagnóstico' },
-        content: [{ type: 'text/html', value: emailContent }]
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${sendgridKey}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-  } catch (error) {
-    console.error('SendGrid error:', error.response?.data || error.message);
-    throw error;
-  }
-}
-
-// Error handling
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 ACP Backend running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Servidor ejecutándose en puerto ${PORT}`);
+    console.log(`Formulario disponible en /`);
 });
