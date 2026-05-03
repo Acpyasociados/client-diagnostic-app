@@ -22,3 +22,5 @@
                               NODE_ENV = "production"
                                 PRICE_BASIC_CLP = "49900"
                                   PRICE_PREMIUM_CLP = "149900"
+
+# Trigger Netlify redeploy - May 3, 2026
