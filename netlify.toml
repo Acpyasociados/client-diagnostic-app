@@ -13,14 +13,15 @@
                 external_node_modules = ["@sendgrid/mail"]
                   node_bundler = "esbuild"
 
-                  [context.production.environment]
-                    MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-7215833646681882-042314-8a6b73129c1eaa7bad24e626d312c736-254339153"
-                      SENDGRID_API_KEY = "re_HxvrhAzV_MVPawJuhabzjZY3DeZKE1Kt3"
-                        SENDGRID_FROM_EMAIL = "noreply@acp-asociados.com"
-                          ADVISOR_EMAIL = "asesor.pac@gmail.com"
-                            SITE_URL = "https://acp-asociados.netlify.app"
-                              NODE_ENV = "production"
-                                PRICE_BASIC_CLP = "49900"
-                                  PRICE_PREMIUM_CLP = "149900"
-
+# IMPORTANT: Production environment variables are configured in Netlify UI
+# DO NOT store sensitive credentials (API keys, tokens) in this file
+# Configure the following in Netlify Dashboard > Site settings > Build & deploy > Environment:
+# - MERCADO_PAGO_ACCESS_TOKEN
+# - SENDGRID_API_KEY
+# - SENDGRID_FROM_EMAIL
+# - ADVISOR_EMAIL
+# - SITE_URL
+# - NODE_ENV
+# - PRICE_BASIC_CLP
+# - PRICE_PREMIUM_CLP
 # Trigger Netlify redeploy - May 3, 2026
