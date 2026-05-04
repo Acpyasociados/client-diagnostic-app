@@ -79,3 +79,9 @@ Solo debes intervenir en 2 puntos:
 - remitente de email real
 - copy del informe final
 - thresholds de reglas por sector
+
+
+## Seguridad
+- Credenciales sensibles (API keys, tokens) se configuran únicamente en Netlify UI
+- - Nunca commit credentials a GitHub
+  - - Rotación de credenciales: 4 de mayo de 2026
