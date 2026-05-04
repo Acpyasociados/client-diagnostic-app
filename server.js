@@ -94,8 +94,8 @@ async function createMercadoPagoPreference(lead) {
 
 async function sendAdvisorEmail(lead) {
     const apiKey = process.env.SENDGRID_API_KEY;
-    const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@acp-asociados.com';
     const advisorEmail = process.env.ADVISOR_EMAIL || 'asesor.pac@gmail.com';
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL || advisorEmail;
 
     if (!apiKey) throw new Error('Falta SENDGRID_API_KEY');
 
