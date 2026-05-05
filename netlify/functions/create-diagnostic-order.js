@@ -1,4 +1,4 @@
-import { sendAdvisorEmail } from './_lib/email.js';
+import { sendEmail } from './_lib/email.js';
 
 export default async (req, context) => {
   if (req.method !== 'POST') {
@@ -14,21 +14,20 @@ export default async (req, context) => {
     // Map form data to lead object
     const lead = {
       lead_id: `lead_${Date.now()}`,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      company: data.company_name,
-      rut: data.company_rut,
-      sector: data.industry,
-      sector_label: data.industry || 'No especificado',
-      monthly_sales: data.monthly_income || 0,
-      margin: data.profit_margin || 0,
+      name: data.name || '',
+      email: data.email || '',
+      phone: data.phone || '',
+      company_name: data.company_name || '',
+      company_rut: data.company_rut || '',
+      industry: data.industry || '',
+      monthly_income: data.monthly_income || 0,
+      profit_margin: data.profit_margin || 0,
       active_clients: data.active_clients || 0,
       tax_regime: data.tax_regime || '',
       top_costs: data.top_costs || '',
-      main_channel: data.digital_presence === 'si' ? 'Digital' : 'Sin presencia digital',
+      digital_presence: data.digital_presence || '',
       advisor_name: data.advisor_name || '',
-      main_problem: data.main_challenge || '',
+      main_challenge: data.main_challenge || '',
       goal_6m: data.goal_6m || '',
       plan: data.plan?.toLowerCase() === 'premium' ? 'premium' : 'basico',
       final_price: data.plan?.toLowerCase() === 'premium' ? 149900 : 49900,
@@ -37,11 +36,41 @@ export default async (req, context) => {
       created_at: new Date().toISOString()
     };
 
-    // Send email to advisor
-    const emailSent = await sendAdvisorEmail(lead);
+    // Prepare email content
+    const emailContent = `
+    <h2>Nueva Solicitud de Diagnóstico</h2>
+    <p><strong>Cliente:</strong> ${lead.name}</p>
+    <p><strong>Email:</strong> ${lead.email}</p>
+    <p><strong>Teléfono:</strong> ${lead.phone}</p>
+    <p><strong>Empresa:</strong> ${lead.company_name}</p>
+    <p><strong>RUT:</strong> ${lead.company_rut}</p>
+    <p><strong>Rubro:</strong> ${lead.industry}</p>
+    <p><strong>Ventas Mensuales:</strong> $${Number(lead.monthly_income).toLocaleString('es-CL')}</p>
+    <p><strong>Margen:</strong> ${lead.profit_margin}%</p>
+    <p><strong>Clientes Activos:</strong> ${lead.active_clients}</p>
+    <p><strong>Costos Principales:</strong> ${lead.top_costs}</p>
+    <p><strong>Presencia Digital:</strong> ${lead.digital_presence}</p>
+    <p><strong>Desafío Principal:</strong> ${lead.main_challenge}</p>
+    <p><strong>Objetivo 6 Meses:</strong> ${lead.goal_6m}</p>
+    <p><strong>Plan:</strong> ${lead.plan === 'basico' ? 'Básico ($49.900)' : 'Premium ($149.900 + $19.900/mes)'}</p>
+    <p><strong>Precio Final:</strong> $${lead.final_price.toLocaleString('es-CL')}</p>
+    ${lead.discount_percentage ? `<p><strong>Descuento Aplicado:</strong> ${lead.discount_percentage}%</p>` : ''}
+    <p><strong>Estado de Pago:</strong> ${lead.payment_status}</p>
+    <p><strong>Fecha:</strong> ${new Date(lead.created_at).toLocaleString('es-CL')}</p>
+    `;
 
-    if (!emailSent) {
-      console.warn('Email no pudo ser enviado, continuando con el orden');
+    // Send email to advisor
+    try {
+      const advisorEmail = process.env.ADVISOR_EMAIL || 'asesor.pac@gmail.com';
+      await sendEmail({
+        to: advisorEmail,
+        subject: `Nueva solicitud de diagnóstico - ${lead.company_name}`,
+        html: emailContent
+      });
+      console.log('Email enviado al asesor:', advisorEmail);
+    } catch (emailError) {
+      console.warn('Email no pudo ser enviado:', emailError.message);
+      // Continue anyway, don't fail the entire request
     }
 
     // Generate Mercado Pago preference
