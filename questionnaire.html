@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cuestionario sectorial</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <section class="card">
+      <span class="badge">Paso 2</span>
+      <h1 style="font-size:32px">Cuestionario sectorial</h1>
+      <p>Responde estas preguntas para activar el informe final.</p>
+      <div id="questionnaireMessage" class="notice hidden"></div>
+      <form id="questionnaireForm"></form>
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById('questionnaireForm');
+    const message = document.getElementById('questionnaireMessage');
+    const params = new URLSearchParams(window.location.search);
+    const leadId = params.get('lead_id');
+    const token = params.get('token');
+
+    async function init() {
+      if (!leadId || !token) {
+        message.textContent = 'Link inválido.';
+        message.className = 'notice error';
+        return;
+      }
+      const response = await fetch(`/api/get-questionnaire?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
+      const data = await response.json();
+      if (!response.ok) {
+        message.textContent = data.error || 'No se pudo cargar el cuestionario';
+        message.className = 'notice error';
+        return;
+      }
+      render(data);
+    }
+
+    function render(data) {
+      form.innerHTML = `
+        <div class="notice">Empresa: ${data.lead.company} · Rubro: ${data.lead.sector_label}</div>
+        ${data.questions.map((q) => `
+          <div class="field">
+            <label>${q.label}</label>
+            <input name="${q.key}" type="${q.type || 'number'}" ${q.type !== 'text' ? 'min="0"' : ''} ${q.required ? 'required' : ''} placeholder="${q.placeholder || ''}" />
+          </div>
+        `).join('')}
+        <button type="submit">Enviar cuestionario</button>
+      `;
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const payload = Object.fromEntries(new FormData(form).entries());
+        const response = await fetch('/api/submit-questionnaire', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: leadId, token, answers: payload })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          message.textContent = result.error || 'No fue posible enviar respuestas';
+          message.className = 'notice error';
+          return;
+        }
+        form.innerHTML = `<div class="notice">Cuestionario enviado. Tu caso ya quedó en revisión final y recibirás el informe dentro del plazo comprometido.</div>`;
+      });
+    }
+    init();
+  </script>
+</body>
+</html>

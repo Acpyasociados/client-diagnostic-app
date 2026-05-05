@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Revisión interna</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <section class="card">
+      <span class="badge">Revisión interna</span>
+      <h1 style="font-size:32px">Aprobación del informe</h1>
+      <div id="reviewMessage" class="notice hidden"></div>
+      <div id="reviewMeta" class="small"></div>
+      <div id="reportBox" class="report" style="margin-top:16px"></div>
+      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+        <button id="approveBtn">Aprobar y enviar</button>
+      </div>
+    </section>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const leadId = params.get('lead_id');
+    const token = params.get('token');
+    const reportBox = document.getElementById('reportBox');
+    const reviewMessage = document.getElementById('reviewMessage');
+    const reviewMeta = document.getElementById('reviewMeta');
+    const approveBtn = document.getElementById('approveBtn');
+    let currentPayload = null;
+
+    async function loadCase() {
+      const response = await fetch(`/api/get-review-case?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
+      const data = await response.json();
+      if (!response.ok) {
+        reviewMessage.textContent = data.error || 'No se pudo cargar el caso';
+        reviewMessage.className = 'notice error';
+        return;
+      }
+      currentPayload = data;
+      reviewMeta.textContent = `${data.lead.company} · ${data.lead.email} · ${data.lead.plan.toUpperCase()} · ${data.lead.status}`;
+      reportBox.innerHTML = data.report_html;
+    }
+
+    approveBtn.addEventListener('click', async () => {
+      const response = await fetch('/api/approve-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, token })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        reviewMessage.textContent = data.error || 'No fue posible aprobar';
+        reviewMessage.className = 'notice error';
+        return;
+      }
+      reviewMessage.textContent = 'Informe aprobado y enviado al cliente.';
+      reviewMessage.className = 'notice';
+    });
+
+    loadCase();
+  </script>
+</body>
+</html>
