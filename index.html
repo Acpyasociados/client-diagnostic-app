@@ -974,30 +974,4 @@
         const otherChallengeGroup = document.getElementById('other_challenge_group');
         const otherChallengeInput = document.getElementById('other_challenge');
 
-        // Show/hide "Especifica tu rubro" when "Otro" is selected
-        industrySelect.addEventListener('change', function() {
-            if (this.value === 'otro') {
-                otherIndustryGroup.style.display = 'block';
-                otherIndustryInput.required = true;
-            } else {
-                otherIndustryGroup.style.display = 'none';
-                otherIndustryInput.required = false;
-                otherIndustryInput.value = '';
-            }
-        });
-
-        // Show/hide "Especifica tu desafío" when "Otro" is selected
-        mainChallengeSelect.addEventListener('change', function() {
-            if (this.value === 'otro') {
-                otherChallengeGroup.style.display = 'block';
-                otherChallengeInput.required = true;
-            } else {
-                otherChallengeGroup.style.display = 'none';
-                otherChallengeInput.required = false;
-                otherChallengeInput.value = '';
-            }
-        });
-    </script>
-
-</body>
-</html>
+        // Show/hide "Especifica tu rubro" when
