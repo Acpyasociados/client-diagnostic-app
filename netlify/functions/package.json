@@ -1,0 +1,9 @@
+{
+  "name": "acp-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for ACP y Asociados",
+  "main": "create-diagnostic-order.js",
+  "dependencies": {
+    "@sendgrid/mail": "^7.7.0"
+  }
+}
