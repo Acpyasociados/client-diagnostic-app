@@ -14,8 +14,8 @@
   node_bundler = "esbuild"
 
 [context.production.environment]
-  MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-7215833646681882-042314-8a6b73129c1eaa7bad24e626d312c736-254339153"
-  SENDGRID_API_KEY = "re_HxvrhAzV_MVPawJuhabzjZY3DeZKE1Kt3"
+  # Secrets (MERCADO_PAGO_ACCESS_TOKEN, SENDGRID_API_KEY) are configured in Netlify UI
+  # Non-secret environment variables:
   SENDGRID_FROM_EMAIL = "noreply@acp-asociados.com"
   ADVISOR_EMAIL = "asesor.pac@gmail.com"
   SITE_URL = "https://acp-asociados.netlify.app"
