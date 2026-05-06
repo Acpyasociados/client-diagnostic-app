@@ -62,10 +62,34 @@ export default async (event, context) => {
     return json(400, { error: 'No hay contenido en la solicitud' });
   }
 
+  // Mapear nombres de campos del formulario HTML a nombres esperados por backend
+  const fieldMapping = {
+    'contact_name': 'name',
+    'contact_email': 'email',
+    'contact_phone': 'phone',
+    'company_name': 'company',
+    'industry': 'sector',
+    'annual_income': 'monthly_sales',
+    'main_costs': 'top_costs',
+    'main_challenge': 'main_problem',
+    'objective_6m': 'goal_6m'
+  };
+
+  // Aplicar mapeo de nombres
+  for (const [htmlName, backendName] of Object.entries(fieldMapping)) {
+    if (body[htmlName] && !body[backendName]) {
+      body[backendName] = body[htmlName];
+      console.log(`Mapped ${htmlName} → ${backendName}`);
+    }
+  }
+
+  console.log('Body fields after mapping:', Object.keys(body).sort());
+
   // Validar campos requeridos
   for (const field of requiredFields) {
     if (!body[field]) {
-      console.error('Missing field:', field);
+      console.error('Missing required field:', field);
+      console.error('Available fields:', Object.keys(body).sort());
       return json(400, { error: `Falta campo requerido: ${field}` });
     }
   }
