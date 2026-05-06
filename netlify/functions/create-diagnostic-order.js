@@ -124,34 +124,51 @@ export default async (event, context) => {
     console.log('Lead saved to Blobs:', leadId);
 
     // Crear preferencia de pago en Mercado Pago
+    console.log('About to call createMercadoPagoPreference');
     const mpResponse = await createMercadoPagoPreference(lead);
+    console.log('createMercadoPagoPreference returned, ok:', mpResponse.ok);
+
     if (!mpResponse.ok) {
-      throw new Error('Error creating Mercado Pago preference');
+      console.error('Mercado Pago preference creation failed');
+      throw new Error('Error creating Mercado Pago preference: ' + JSON.stringify(mpResponse.mpData));
     }
 
     const mpData = mpResponse.mpData;
+    console.log('mpData keys:', Object.keys(mpData));
+
+    if (!mpData.id || !mpData.init_point) {
+      console.error('Missing required fields in MP response - id:', !!mpData.id, 'init_point:', !!mpData.init_point);
+      throw new Error('Mercado Pago response missing id or init_point');
+    }
+
     lead.checkout_id = mpData.id;
     lead.checkout_url = mpData.init_point;
 
     // Actualizar lead con datos de pago
     await store.set(leadId, JSON.stringify(lead), { metadata: { email: lead.email } });
+    console.log('Lead updated with Mercado Pago data');
 
     // Enviar email al asesor
     await sendAdvisorEmail(lead);
+    console.log('Advisor email sent');
 
-    console.log('Lead submission successful:', leadId);
+    console.log('Lead submission successful:', leadId, 'with MP init_point:', mpData.init_point.substring(0, 50));
 
     // Retornar en formato esperado por frontend (mercadoPagoUrl)
-    return json(200, {
+    const responseData = {
       success: true,
       lead_id: leadId,
       client_token: clientToken,
       mercadoPagoUrl: mpData.init_point,
       checkout_url: mpData.init_point,
       final_price: lead.final_price
-    });
+    };
+
+    console.log('Sending response with mercadoPagoUrl');
+    return json(200, responseData);
   } catch (err) {
     console.error('Error in lead processing:', err.message);
+    console.error('Error stack:', err.stack);
     return json(500, { error: 'Error procesando lead: ' + err.message });
   }
 };
@@ -162,10 +179,13 @@ async function createMercadoPagoPreference(lead) {
 
   console.log('Creating Mercado Pago preference:');
   console.log('- accessToken exists:', !!accessToken);
+  console.log('- accessToken first 10 chars:', accessToken ? accessToken.substring(0, 10) : 'MISSING');
   console.log('- siteUrl:', siteUrl);
 
   if (!accessToken || !siteUrl) {
-    throw new Error(`Missing Mercado Pago configuration: accessToken=${!!accessToken}, siteUrl=${!!siteUrl}`);
+    const errorMsg = `Missing Mercado Pago configuration: accessToken=${!!accessToken}, siteUrl=${!!siteUrl}`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 
   const preferencePayload = {
@@ -190,6 +210,8 @@ async function createMercadoPagoPreference(lead) {
     notification_url: `${siteUrl}/api/mercadopago-webhook`
   };
 
+  console.log('Mercado Pago preference payload prepared');
+
   const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',
     headers: {
@@ -203,6 +225,11 @@ async function createMercadoPagoPreference(lead) {
 
   console.log('Mercado Pago response status:', response.status);
   console.log('Mercado Pago response has init_point:', !!data.init_point);
+  console.log('Mercado Pago response keys:', Object.keys(data));
+
+  if (!response.ok) {
+    console.error('Mercado Pago error response:', JSON.stringify(data));
+  }
 
   return {
     ok: response.ok,
