@@ -2,7 +2,8 @@ import crypto from 'crypto';
 import { sectorLabels } from './_lib/questions.js';
 import { sendAdvisorEmail } from './send-advisor-email.js';
 
-const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_channel', 'main_problem', 'goal_6m', 'plan'];
+// Campos que REALMENTE envía el formulario HTML (después del mapeo)
+const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_problem', 'goal_6m', 'plan'];
 
 // Parse body - sin depender de headers
 async function parseBody(event) {
@@ -127,7 +128,7 @@ export default async (event, context) => {
     margin: body.margin,
     active_clients: body.active_clients,
     top_costs: body.top_costs,
-    main_channel: body.main_channel,
+    main_channel: body.main_channel || 'no especificado',
     main_problem: body.main_problem,
     goal_6m: body.goal_6m,
     plan: plan,
