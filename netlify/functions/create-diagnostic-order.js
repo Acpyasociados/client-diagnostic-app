@@ -10,7 +10,7 @@ async function parseBody(event) {
   console.log('=== parseBody START ===');
   console.log('event.body exists:', 'body' in event);
   console.log('event.body type:', typeof event.body);
-  console.log('event.body constructor:', event.body?.constructor?.name);
+  console.log('event.body has .text method:', typeof event.body?.text === 'function');
 
   if (!event.body) {
     console.log('Body is null/undefined');
@@ -19,14 +19,15 @@ async function parseBody(event) {
 
   let bodyText = null;
 
-  // Caso 1: ReadableStream (Netlify Functions moderno)
-  if (event.body instanceof ReadableStream || event.body?.text) {
-    console.log('Body is ReadableStream, calling .text()');
+  // Caso 1: ReadableStream con método .text() (Netlify Functions moderno)
+  if (typeof event.body?.text === 'function') {
+    console.log('Body has .text() method, calling it...');
     try {
       bodyText = await event.body.text();
-      console.log('ReadableStream converted to text, length:', bodyText.length);
+      console.log('Body converted to text, length:', bodyText.length);
     } catch (e) {
-      console.error('ReadableStream.text() error:', e.message);
+      console.error('Body.text() error:', e.message);
+      console.error('Error stack:', e.stack);
       return null;
     }
   }
@@ -43,8 +44,14 @@ async function parseBody(event) {
     return Object.keys(event.body).length > 0 ? event.body : null;
   }
 
+  // Caso 4: Tipo desconocido
+  else {
+    console.log('Body type not recognized:', typeof event.body);
+    return null;
+  }
+
   if (!bodyText) {
-    console.log('No body text after conversion');
+    console.log('No body text after conversion, bodyText is:', bodyText);
     return null;
   }
 
