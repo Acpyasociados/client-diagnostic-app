@@ -41,6 +41,9 @@ export default async (event, context) => {
   console.log('=== CREATE-DIAGNOSTIC-ORDER START ===');
   console.log('Method:', event.httpMethod || event.method);
   console.log('Body type:', typeof event.body);
+  console.log('Body value:', event.body);
+  console.log('Body is null?', event.body === null);
+  console.log('Body is undefined?', event.body === undefined);
 
   // Verificar método
   const method = (event.httpMethod || event.method || '').toUpperCase();
