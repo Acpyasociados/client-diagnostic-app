@@ -4,12 +4,6 @@
   publish = "."
 
 [[redirects]]
-  from = "/.netlify/*"
-  to = "/.netlify/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
   from = "/*"
   to = "/"
   status = 200
