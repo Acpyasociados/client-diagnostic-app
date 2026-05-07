@@ -5,70 +5,72 @@ import { sendAdvisorEmail } from './send-advisor-email.js';
 // Campos que REALMENTE envía el formulario HTML (después del mapeo)
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_problem', 'goal_6m', 'plan'];
 
-// Parse body - intentar múltiples formas de acceder al body
+// Parse body - Netlify Functions envía el body como ReadableStream
 async function parseBody(event) {
   console.log('=== parseBody START ===');
   console.log('event.body exists:', 'body' in event);
-  console.log('event.rawBody exists:', 'rawBody' in event);
-  console.log('event.isBase64Encoded:', event.isBase64Encoded);
-  console.log('Body type:', typeof event.body);
+  console.log('event.body type:', typeof event.body);
+  console.log('event.body constructor:', event.body?.constructor?.name);
 
-  let body = event.body;
-
-  // Si el body está en base64, decodificarlo
-  if (event.isBase64Encoded && typeof event.body === 'string') {
-    console.log('Body is base64 encoded, decoding...');
-    try {
-      body = Buffer.from(event.body, 'base64').toString('utf-8');
-      console.log('Decoded body (first 100 chars):', body.substring(0, 100));
-    } catch (e) {
-      console.error('Base64 decode error:', e.message);
-      body = null;
-    }
-  }
-
-  if (!body) {
-    console.log('Body is null/undefined/empty after decoding');
+  if (!event.body) {
+    console.log('Body is null/undefined');
     return null;
   }
 
-  // Caso 1: String (JSON o form-urlencoded)
-  if (typeof body === 'string') {
-    console.log('Body is string, length:', body.length);
+  let bodyText = null;
 
-    // Intentar JSON primero
+  // Caso 1: ReadableStream (Netlify Functions moderno)
+  if (event.body instanceof ReadableStream || event.body?.text) {
+    console.log('Body is ReadableStream, calling .text()');
     try {
-      const parsed = JSON.parse(body);
-      console.log('Successfully parsed as JSON, keys:', Object.keys(parsed).length);
-      return parsed;
+      bodyText = await event.body.text();
+      console.log('ReadableStream converted to text, length:', bodyText.length);
     } catch (e) {
-      console.log('JSON parse failed:', e.message);
-
-      // Intentar form-urlencoded
-      try {
-        const params = new URLSearchParams(body);
-        const obj = {};
-        for (const [key, value] of params) {
-          obj[key] = value;
-        }
-        const result = Object.keys(obj).length > 0 ? obj : null;
-        console.log('Parsed as form-urlencoded, keys:', Object.keys(obj).length);
-        return result;
-      } catch (e2) {
-        console.error('form-urlencoded parse failed:', e2.message);
-        return null;
-      }
+      console.error('ReadableStream.text() error:', e.message);
+      return null;
     }
   }
 
-  // Caso 2: Objeto (ya parseado por Netlify)
-  if (typeof body === 'object') {
-    console.log('Body is object, keys:', Object.keys(body).length);
-    return Object.keys(body).length > 0 ? body : null;
+  // Caso 2: String (forma antigua o alternativa)
+  else if (typeof event.body === 'string') {
+    console.log('Body is already string, length:', event.body.length);
+    bodyText = event.body;
   }
 
-  console.log('Body type not recognized:', typeof body);
-  return null;
+  // Caso 3: Objeto (ya parseado)
+  else if (typeof event.body === 'object') {
+    console.log('Body is object, keys:', Object.keys(event.body).length);
+    return Object.keys(event.body).length > 0 ? event.body : null;
+  }
+
+  if (!bodyText) {
+    console.log('No body text after conversion');
+    return null;
+  }
+
+  // Intentar parsear como JSON
+  try {
+    const parsed = JSON.parse(bodyText);
+    console.log('Successfully parsed as JSON, keys:', Object.keys(parsed).length);
+    return parsed;
+  } catch (e) {
+    console.log('JSON parse failed:', e.message);
+
+    // Intentar form-urlencoded
+    try {
+      const params = new URLSearchParams(bodyText);
+      const obj = {};
+      for (const [key, value] of params) {
+        obj[key] = value;
+      }
+      const result = Object.keys(obj).length > 0 ? obj : null;
+      console.log('Parsed as form-urlencoded, keys:', Object.keys(obj).length);
+      return result;
+    } catch (e2) {
+      console.error('form-urlencoded parse failed:', e2.message);
+      return null;
+    }
+  }
 }
 
 export default async (event, context) => {
