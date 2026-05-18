@@ -154,7 +154,7 @@ export default async (event, context) => {
 };
 
 async function createMercadoPagoPreference(lead) {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   const siteUrl = process.env.SITE_URL;
 
   if (!accessToken || !siteUrl) {

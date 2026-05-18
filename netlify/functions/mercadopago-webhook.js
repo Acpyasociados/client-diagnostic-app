@@ -12,7 +12,7 @@ export default async (req) => {
       return new Response('ok', { status: 200 });
     }
 
-    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
     const siteUrl = process.env.SITE_URL;
     const reviewerToken = process.env.ADMIN_REVIEW_TOKEN;
     const reviewerEmail = process.env.REVIEWER_EMAIL;

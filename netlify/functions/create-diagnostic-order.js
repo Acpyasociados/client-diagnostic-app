@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { getStore } from '@netlify/blobs';
 import { sectorLabels } from './_lib/questions.js';
 import { sendAdvisorEmail } from './send-advisor-email.js';
 
@@ -201,7 +202,6 @@ export default async (event, context) => {
 
   try {
     // Guardar en Netlify Blobs
-    const { getStore } = await import('@netlify/blobs');
     const store = getStore('diagnostic-leads');
     await store.set(leadId, JSON.stringify(lead), { metadata: { email: lead.email } });
     console.log('Lead saved to Blobs:', leadId);
@@ -257,7 +257,7 @@ export default async (event, context) => {
 };
 
 async function createMercadoPagoPreference(lead) {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   const siteUrl = process.env.SITE_URL;
 
   console.log('Creating Mercado Pago preference:');

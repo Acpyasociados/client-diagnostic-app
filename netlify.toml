@@ -10,7 +10,7 @@
 
 [functions]
   directory = "netlify/functions"
-  external_node_modules = ["@sendgrid/mail"]
+  external_node_modules = ["@sendgrid/mail", "@netlify/blobs"]
   node_bundler = "esbuild"
 
 [context.production.environment]
