@@ -5,74 +5,76 @@ import { sendAdvisorEmail } from './send-advisor-email.js';
 // Campos que REALMENTE envía el formulario HTML (después del mapeo)
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_problem', 'goal_6m', 'plan'];
 
-// Parse body - Netlify Functions envía el body como ReadableStream
+// Parse body - Netlify Functions v2 entrega un Request object (Web API)
+// El método .text() está en el Request mismo, no en request.body
 async function parseBody(event) {
   console.log('=== parseBody START ===');
+  console.log('event has .text() method (Request v2):', typeof event.text === 'function');
   console.log('event.body exists:', 'body' in event);
   console.log('event.body type:', typeof event.body);
-  console.log('event.body has .text method:', typeof event.body?.text === 'function');
-
-  if (!event.body) {
-    console.log('Body is null/undefined');
-    return null;
-  }
 
   let bodyText = null;
 
-  // Caso 1: ReadableStream con método .text() (Netlify Functions moderno)
-  if (typeof event.body?.text === 'function') {
-    console.log('Body has .text() method, calling it...');
+  // Caso 1: Netlify Functions v2 — event ES el Request object, tiene .text() directo
+  if (typeof event.text === 'function') {
+    console.log('Using event.text() (Netlify Functions v2 Request object)');
     try {
-      bodyText = await event.body.text();
-      console.log('Body converted to text, length:', bodyText.length);
+      bodyText = await event.text();
+      console.log('Body text length:', bodyText?.length ?? 0);
     } catch (e) {
-      console.error('Body.text() error:', e.message);
-      console.error('Error stack:', e.stack);
+      console.error('event.text() error:', e.message);
       return null;
     }
   }
 
-  // Caso 2: String (forma antigua o alternativa)
+  // Caso 2: ReadableStream legacy con .text() en el body
+  else if (typeof event.body?.text === 'function') {
+    console.log('Using event.body.text() (legacy ReadableStream)');
+    try {
+      bodyText = await event.body.text();
+      console.log('Body text length:', bodyText.length);
+    } catch (e) {
+      console.error('Body.text() error:', e.message);
+      return null;
+    }
+  }
+
+  // Caso 3: String
   else if (typeof event.body === 'string') {
     console.log('Body is already string, length:', event.body.length);
     bodyText = event.body;
   }
 
-  // Caso 3: Objeto (ya parseado)
-  else if (typeof event.body === 'object') {
-    console.log('Body is object, keys:', Object.keys(event.body).length);
-    return Object.keys(event.body).length > 0 ? event.body : null;
+  // Caso 4: Objeto plano ya parseado (con keys propias)
+  else if (event.body && typeof event.body === 'object') {
+    const keys = Object.keys(event.body);
+    console.log('Body is plain object, keys:', keys.length);
+    return keys.length > 0 ? event.body : null;
   }
 
-  // Caso 4: Tipo desconocido
   else {
-    console.log('Body type not recognized:', typeof event.body);
+    console.log('Body is null/undefined or unrecognized type:', typeof event.body);
     return null;
   }
 
   if (!bodyText) {
-    console.log('No body text after conversion, bodyText is:', bodyText);
+    console.log('Empty body text after conversion');
     return null;
   }
 
   // Intentar parsear como JSON
   try {
     const parsed = JSON.parse(bodyText);
-    console.log('Successfully parsed as JSON, keys:', Object.keys(parsed).length);
+    console.log('Parsed as JSON, keys:', Object.keys(parsed).length);
     return parsed;
   } catch (e) {
-    console.log('JSON parse failed:', e.message);
+    console.log('JSON parse failed, trying form-urlencoded');
 
-    // Intentar form-urlencoded
     try {
       const params = new URLSearchParams(bodyText);
-      const obj = {};
-      for (const [key, value] of params) {
-        obj[key] = value;
-      }
-      const result = Object.keys(obj).length > 0 ? obj : null;
+      const obj = Object.fromEntries(params);
       console.log('Parsed as form-urlencoded, keys:', Object.keys(obj).length);
-      return result;
+      return Object.keys(obj).length > 0 ? obj : null;
     } catch (e2) {
       console.error('form-urlencoded parse failed:', e2.message);
       return null;
@@ -81,14 +83,25 @@ async function parseBody(event) {
 }
 
 export default async (event, context) => {
+  // Netlify Functions v2: event es un Request object (Web API)
+  // Los métodos de Headers y body son distintos al v1 event-based
+  const isRequestObject = typeof event.text === 'function';
+
+  const method = (event.method || event.httpMethod || '').toUpperCase();
+  const contentType = isRequestObject
+    ? event.headers.get('content-type')
+    : (event.headers?.['content-type'] || event.headers?.['Content-Type']);
+  const headerKeys = isRequestObject
+    ? [...event.headers.keys()].sort()
+    : Object.keys(event.headers || {}).sort();
+
   console.log('=== CREATE-DIAGNOSTIC-ORDER START ===');
-  console.log('Method:', event.httpMethod || event.method);
-  console.log('ContentType header:', event.headers['content-type'] || event.headers['Content-Type'] || 'MISSING');
-  console.log('All headers keys:', Object.keys(event.headers || {}).sort());
-  console.log('Event keys:', Object.keys(event).sort());
+  console.log('Runtime mode:', isRequestObject ? 'v2 (Request object)' : 'v1 (event object)');
+  console.log('Method:', method);
+  console.log('ContentType header:', contentType || 'MISSING');
+  console.log('All headers keys:', headerKeys);
 
   // Verificar método
-  const method = (event.httpMethod || event.method || '').toUpperCase();
   if (method !== 'POST') {
     return json(405, { error: 'Método no permitido' });
   }
