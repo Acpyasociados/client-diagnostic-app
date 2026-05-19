@@ -10,8 +10,12 @@
 
 [functions]
   directory = "netlify/functions"
-  external_node_modules = ["@sendgrid/mail", "@netlify/blobs"]
+  external_node_modules = ["@sendgrid/mail", "@netlify/blobs", "@sparticuz/chromium", "puppeteer-core"]
   node_bundler = "esbuild"
+  included_files = ["templates/**"]
+
+[functions.generate-report]
+  timeout = 26
 
 [context.production.environment]
   # Secrets (MERCADO_PAGO_ACCESS_TOKEN, SENDGRID_API_KEY) are configured in Netlify UI

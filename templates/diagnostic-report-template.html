@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Diagnóstico Empresarial — {{company}}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; background: #FFFFFF; color: #2C3E50; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PÁGINA 1 · PORTADA
+════════════════════════════════════════════════════════════ -->
+<div style="width:210mm; height:297mm; background:#1B3B5C; display:flex; flex-direction:column; page-break-after:always; break-after:page; overflow:hidden; position:relative;">
+
+  <!-- Franja decorativa izquierda -->
+  <div style="position:absolute; left:0; top:0; width:4px; height:100%; background:linear-gradient(180deg, #3498DB 0%, #16A085 50%, #E67E22 100%);"></div>
+
+  <!-- Header: logo + badge plan -->
+  <div style="padding:12mm 14mm 0 18mm; display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+      <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:38px; font-weight:700; color:#FFFFFF; letter-spacing:5px; line-height:1;">ACP</div>
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:300; color:#3498DB; letter-spacing:4px; text-transform:uppercase; margin-top:2px;">& ASOCIADOS</div>
+    </div>
+    <div style="background:#16A085; padding:5px 14px; border-radius:2px; margin-top:4px;">
+      <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; font-weight:600; color:#FFFFFF; letter-spacing:2px; text-transform:uppercase;">{{plan_label}}</span>
+    </div>
+  </div>
+
+  <!-- Línea separadora degradada -->
+  <div style="margin:8mm 14mm 0 18mm; height:1px; background:linear-gradient(90deg, #3498DB, #16A085, transparent);"></div>
+
+  <!-- Bloque central: empresa + sector -->
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 14mm 0 18mm;">
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; font-weight:400; color:#3498DB; letter-spacing:4px; text-transform:uppercase; margin-bottom:6mm;">Diagnóstico Empresarial Accionable</div>
+    <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:54px; font-weight:700; color:#FFFFFF; line-height:1.05; margin-bottom:4mm;">{{company}}</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:13px; font-weight:300; color:#ECF0F3; opacity:0.75; margin-bottom:10mm;">{{sector_label}}</div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <div style="width:56px; height:3px; background:#16A085;"></div>
+      <div style="width:24px; height:3px; background:#E67E22;"></div>
+      <div style="width:12px; height:3px; background:#3498DB;"></div>
+    </div>
+  </div>
+
+  <!-- Footer portada: datos cliente + fecha -->
+  <div style="margin:0 14mm 10mm 18mm; border:1px solid rgba(255,255,255,0.13); background:rgba(255,255,255,0.05); padding:7mm 8mm; display:flex; justify-content:space-between; align-items:flex-end;">
+    <div>
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#3498DB; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:3mm;">Elaborado para</div>
+      <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:600; color:#FFFFFF; margin-bottom:2mm;">{{name}}</div>
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:10px; color:#ECF0F3; opacity:0.65; margin-bottom:1mm;">{{email}}</div>
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:10px; color:#ECF0F3; opacity:0.65;">{{phone}}</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#3498DB; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:3mm;">Fecha de emisión</div>
+      <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:17px; color:#FFFFFF; margin-bottom:2mm;">{{date}}</div>
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; color:#ECF0F3; opacity:0.4; letter-spacing:1px;">REF. {{lead_id}}</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     PÁGINA 2 · RESUMEN EJECUTIVO
+════════════════════════════════════════════════════════════ -->
+<div style="width:210mm; height:297mm; background:#FFFFFF; display:flex; flex-direction:column; page-break-after:always; break-after:page; overflow:hidden;">
+
+  <!-- Header de página -->
+  <div style="background:#1B3B5C; padding:7mm 14mm 7mm 18mm; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:600; color:#FFFFFF; letter-spacing:1px;">Resumen Ejecutivo</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; font-weight:300; color:#3498DB; letter-spacing:3px; text-transform:uppercase;">{{company}}</div>
+  </div>
+  <div style="height:3px; background:linear-gradient(90deg, #3498DB, #16A085, #E67E22); flex-shrink:0;"></div>
+
+  <!-- Cuerpo -->
+  <div style="flex:1; padding:9mm 14mm 0 18mm; display:flex; flex-direction:column; gap:7mm;">
+
+    <!-- Tarjetas de métricas -->
+    <div style="display:flex; gap:5mm;">
+
+      <div style="flex:1; background:#ECF0F3; border-radius:3px; padding:6mm 5mm; border-top:3px solid #1B3B5C; text-align:center;">
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:#1B3B5C; letter-spacing:2px; text-transform:uppercase; margin-bottom:3mm;">Ventas Mensuales</div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:26px; font-weight:700; color:#3498DB; line-height:1;">{{monthly_sales}}</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#2C3E50; opacity:0.55; margin-top:1.5mm;">CLP</div>
+      </div>
+
+      <div style="flex:1; background:#ECF0F3; border-radius:3px; padding:6mm 5mm; border-top:3px solid #16A085; text-align:center;">
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:#16A085; letter-spacing:2px; text-transform:uppercase; margin-bottom:3mm;">Margen Estimado</div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:26px; font-weight:700; color:#16A085; line-height:1;">{{margin}}%</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#2C3E50; opacity:0.55; margin-top:1.5mm;">Sobre ventas</div>
+      </div>
+
+      <div style="flex:1; background:#ECF0F3; border-radius:3px; padding:6mm 5mm; border-top:3px solid #E67E22; text-align:center;">
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:#E67E22; letter-spacing:2px; text-transform:uppercase; margin-bottom:3mm;">Clientes Activos</div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:26px; font-weight:700; color:#E67E22; line-height:1;">{{active_clients}}</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#2C3E50; opacity:0.55; margin-top:1.5mm;">En cartera</div>
+      </div>
+
+    </div>
+
+    <!-- Resumen ejecutivo textual -->
+    <div>
+      <div style="display:flex; align-items:center; gap:4mm; margin-bottom:4mm;">
+        <div style="width:3px; height:18px; background:#1B3B5C; flex-shrink:0;"></div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; font-weight:600; color:#1B3B5C; letter-spacing:2.5px; text-transform:uppercase;">Diagnóstico General</div>
+      </div>
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:11px; font-weight:300; color:#2C3E50; line-height:1.75; text-align:justify;">{{summary}}</div>
+    </div>
+
+    <!-- Datos del informe -->
+    <div style="background:#ECF0F3; border-radius:3px; padding:5mm 6mm; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:#2C3E50; opacity:0.5; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1.5mm;">Sector</div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:15px; font-weight:600; color:#1B3B5C;">{{sector_label}}</div>
+      </div>
+      <div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:#2C3E50; opacity:0.5; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1.5mm;">Problema declarado</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:11px; color:#2C3E50;">{{main_problem}}</div>
+      </div>
+      <div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:#2C3E50; opacity:0.5; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1.5mm;">Meta 6 meses</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:11px; color:#2C3E50;">{{goal_6m}}</div>
+      </div>
+    </div>
+
+    <!-- Nota metodológica -->
+    <div style="border-left:3px solid #3498DB; padding:4mm 5mm; background:#f0f6ff;">
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; font-weight:600; color:#3498DB; margin-bottom:1.5mm;">Metodología</div>
+      <div style="font-family:'DM Sans',Arial,sans-serif; font-size:10px; font-weight:300; color:#2C3E50; line-height:1.6;">Este informe identifica las tres oportunidades de mayor impacto para el negocio, priorizadas según un modelo de cuatro variables: impacto en resultado, facilidad de implementación, velocidad de efecto y complejidad operativa. Las acciones están ordenadas para generar resultados en los primeros 90 días.</div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div style="margin:0 14mm 6mm 18mm; padding-top:4mm; border-top:1px solid #ECF0F3; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#1B3B5C; font-weight:600; letter-spacing:2px;">ACP &amp; ASOCIADOS</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#2C3E50; opacity:0.4;">Diagnóstico Empresarial Accionable · {{company}} · {{date}}</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#2C3E50; opacity:0.4;">2 / 4</div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     PÁGINA 3 · 3 OPORTUNIDADES DE MEJORA
+════════════════════════════════════════════════════════════ -->
+<div style="width:210mm; height:297mm; background:#FFFFFF; display:flex; flex-direction:column; page-break-after:always; break-after:page; overflow:hidden;">
+
+  <!-- Header de página -->
+  <div style="background:#1B3B5C; padding:7mm 14mm 7mm 18mm; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:600; color:#FFFFFF; letter-spacing:1px;">Oportunidades de Mejora</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; font-weight:300; color:#3498DB; letter-spacing:3px; text-transform:uppercase;">{{company}}</div>
+  </div>
+  <div style="height:3px; background:linear-gradient(90deg, #3498DB, #16A085, #E67E22); flex-shrink:0;"></div>
+
+  <!-- Cuerpo -->
+  <div style="flex:1; padding:7mm 14mm 0 18mm; display:flex; flex-direction:column; gap:5mm;">
+
+    <!-- ── OPORTUNIDAD 1 ── -->
+    <div style="border-left:4px solid #16A085; background:#ECF0F3; border-radius:0 3px 3px 0; padding:5mm 6mm; display:flex; flex-direction:column; gap:3mm;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:3mm;">
+          <div style="background:#16A085; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:10px; font-weight:600; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:17px; font-weight:700; color:#1B3B5C; line-height:1.2;">{{opp1_title}}</div>
+        </div>
+        <div style="display:flex; gap:2mm; flex-shrink:0; margin-left:4mm;">
+          <span style="background:#16A085; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; padding:2px 7px; border-radius:2px; letter-spacing:1px; text-transform:uppercase;">{{opp1_axis}}</span>
+          <span style="background:#1B3B5C; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:400; padding:2px 7px; border-radius:2px;">{{opp1_term}}</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:3mm;">
+        <div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#16A085; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1mm;">Hallazgo</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.55;">{{opp1_finding}}</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#16A085; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1mm;">Acción concreta</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.55;">{{opp1_action}}</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:5mm; padding-top:2mm; border-top:1px solid rgba(0,0,0,0.07);">
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">Impacto: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp1_impact}}</span>
+        </div>
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">KPI: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp1_kpi}}</span>
+        </div>
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">Complejidad: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp1_intervention}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPORTUNIDAD 2 ── -->
+    <div style="border-left:4px solid #3498DB; background:#ECF0F3; border-radius:0 3px 3px 0; padding:5mm 6mm; display:flex; flex-direction:column; gap:3mm;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:3mm;">
+          <div style="background:#3498DB; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:10px; font-weight:600; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">2</div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:17px; font-weight:700; color:#1B3B5C; line-height:1.2;">{{opp2_title}}</div>
+        </div>
+        <div style="display:flex; gap:2mm; flex-shrink:0; margin-left:4mm;">
+          <span style="background:#3498DB; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; padding:2px 7px; border-radius:2px; letter-spacing:1px; text-transform:uppercase;">{{opp2_axis}}</span>
+          <span style="background:#1B3B5C; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:400; padding:2px 7px; border-radius:2px;">{{opp2_term}}</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:3mm;">
+        <div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#3498DB; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1mm;">Hallazgo</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.55;">{{opp2_finding}}</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#3498DB; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1mm;">Acción concreta</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.55;">{{opp2_action}}</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:5mm; padding-top:2mm; border-top:1px solid rgba(0,0,0,0.07);">
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">Impacto: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp2_impact}}</span>
+        </div>
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">KPI: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp2_kpi}}</span>
+        </div>
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">Complejidad: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp2_intervention}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPORTUNIDAD 3 ── -->
+    <div style="border-left:4px solid #E67E22; background:#ECF0F3; border-radius:0 3px 3px 0; padding:5mm 6mm; display:flex; flex-direction:column; gap:3mm;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="display:flex; align-items:center; gap:3mm;">
+          <div style="background:#E67E22; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:10px; font-weight:600; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">3</div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:17px; font-weight:700; color:#1B3B5C; line-height:1.2;">{{opp3_title}}</div>
+        </div>
+        <div style="display:flex; gap:2mm; flex-shrink:0; margin-left:4mm;">
+          <span style="background:#E67E22; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; padding:2px 7px; border-radius:2px; letter-spacing:1px; text-transform:uppercase;">{{opp3_axis}}</span>
+          <span style="background:#1B3B5C; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:400; padding:2px 7px; border-radius:2px;">{{opp3_term}}</span>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:3mm;">
+        <div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#E67E22; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1mm;">Hallazgo</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.55;">{{opp3_finding}}</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#E67E22; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:1mm;">Acción concreta</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.55;">{{opp3_action}}</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:5mm; padding-top:2mm; border-top:1px solid rgba(0,0,0,0.07);">
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">Impacto: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp3_impact}}</span>
+        </div>
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">KPI: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp3_kpi}}</span>
+        </div>
+        <div>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:600; color:#2C3E50; opacity:0.55; text-transform:uppercase; letter-spacing:1px;">Complejidad: </span>
+          <span style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50;">{{opp3_intervention}}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div style="margin:4mm 14mm 6mm 18mm; padding-top:4mm; border-top:1px solid #ECF0F3; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#1B3B5C; font-weight:600; letter-spacing:2px;">ACP &amp; ASOCIADOS</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#2C3E50; opacity:0.4;">Diagnóstico Empresarial Accionable · {{company}} · {{date}}</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:#2C3E50; opacity:0.4;">3 / 4</div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     PÁGINA 4 · PLAN DE ACCIÓN + CIERRE
+════════════════════════════════════════════════════════════ -->
+<div style="width:210mm; height:297mm; background:#FFFFFF; display:flex; flex-direction:column; overflow:hidden;">
+
+  <!-- Header de página -->
+  <div style="background:#1B3B5C; padding:7mm 14mm 7mm 18mm; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:600; color:#FFFFFF; letter-spacing:1px;">Plan de Acción</div>
+    <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; font-weight:300; color:#3498DB; letter-spacing:3px; text-transform:uppercase;">{{company}}</div>
+  </div>
+  <div style="height:3px; background:linear-gradient(90deg, #3498DB, #16A085, #E67E22); flex-shrink:0;"></div>
+
+  <!-- Cuerpo -->
+  <div style="flex:1; padding:8mm 14mm 0 18mm; display:flex; flex-direction:column; gap:7mm;">
+
+    <!-- Timeline visual -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5mm;">
+
+      <!-- 30 días -->
+      <div style="display:flex; flex-direction:column;">
+        <div style="background:#16A085; padding:4mm 5mm; border-radius:3px 3px 0 0;">
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:rgba(255,255,255,0.7); letter-spacing:2px; text-transform:uppercase; margin-bottom:1mm;">Primeros</div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:26px; font-weight:700; color:#FFFFFF; line-height:1;">30 días</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:rgba(255,255,255,0.7); margin-top:1mm;">Impacto inmediato</div>
+        </div>
+        <div style="background:#ECF0F3; flex:1; padding:4mm 5mm; border-radius:0 0 3px 3px; border-top:2px solid #16A085;">
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.65;">{{plan_30}}</div>
+        </div>
+      </div>
+
+      <!-- 60 días -->
+      <div style="display:flex; flex-direction:column;">
+        <div style="background:#3498DB; padding:4mm 5mm; border-radius:3px 3px 0 0;">
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:rgba(255,255,255,0.7); letter-spacing:2px; text-transform:uppercase; margin-bottom:1mm;">Siguientes</div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:26px; font-weight:700; color:#FFFFFF; line-height:1;">60 días</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:rgba(255,255,255,0.7); margin-top:1mm;">Consolidación</div>
+        </div>
+        <div style="background:#ECF0F3; flex:1; padding:4mm 5mm; border-radius:0 0 3px 3px; border-top:2px solid #3498DB;">
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.65;">{{plan_60}}</div>
+        </div>
+      </div>
+
+      <!-- 90 días -->
+      <div style="display:flex; flex-direction:column;">
+        <div style="background:#E67E22; padding:4mm 5mm; border-radius:3px 3px 0 0;">
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:rgba(255,255,255,0.7); letter-spacing:2px; text-transform:uppercase; margin-bottom:1mm;">Hasta los</div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:26px; font-weight:700; color:#FFFFFF; line-height:1;">90 días</div>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:rgba(255,255,255,0.7); margin-top:1mm;">Escala</div>
+        </div>
+        <div style="background:#ECF0F3; flex:1; padding:4mm 5mm; border-radius:0 0 3px 3px; border-top:2px solid #E67E22;">
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#2C3E50; line-height:1.65;">{{plan_90}}</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Siguiente paso recomendado -->
+    <div style="background:#1B3B5C; border-radius:3px; padding:6mm 8mm; display:flex; align-items:center; gap:6mm;">
+      <div style="width:4px; height:44px; background:#16A085; flex-shrink:0; border-radius:2px;"></div>
+      <div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:#3498DB; letter-spacing:2px; text-transform:uppercase; margin-bottom:2mm;">Siguiente paso recomendado</div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:16px; font-weight:600; color:#FFFFFF; line-height:1.4;">Validar estas prioridades y definir si la implementación se realiza de forma autónoma o con acompañamiento mensual de ACP &amp; Asociados.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer de cierre -->
+  <div style="background:#2C3E50; margin-top:auto; padding:7mm 14mm 7mm 18mm; flex-shrink:0;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <!-- Marca -->
+      <div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:20px; font-weight:700; color:#FFFFFF; letter-spacing:3px;">ACP <span style="font-weight:300; font-size:16px; letter-spacing:1px;">&amp; Asociados</span></div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:300; color:#3498DB; letter-spacing:2.5px; text-transform:uppercase; margin-top:1mm;">Consultoría Empresarial</div>
+      </div>
+      <!-- Separador vertical -->
+      <div style="width:1px; height:36px; background:rgba(255,255,255,0.15);"></div>
+      <!-- Contacto -->
+      <div style="text-align:center;">
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:rgba(255,255,255,0.45); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:2mm;">Contacto</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:#FFFFFF;">contacto@acpasociados.cl</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9.5px; color:rgba(255,255,255,0.65); margin-top:1mm;">+56 9 XXXX XXXX</div>
+      </div>
+      <!-- Separador vertical -->
+      <div style="width:1px; height:36px; background:rgba(255,255,255,0.15);"></div>
+      <!-- Número de página + referencia -->
+      <div style="text-align:right;">
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; font-weight:600; color:rgba(255,255,255,0.45); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:2mm;">Referencia</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:9px; color:rgba(255,255,255,0.65);">{{lead_id}}</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:rgba(255,255,255,0.3); margin-top:1mm;">4 / 4</div>
+      </div>
+    </div>
+    <!-- Frase de cierre -->
+    <div style="margin-top:5mm; padding-top:5mm; border-top:1px solid rgba(255,255,255,0.08); text-align:center;">
+      <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:11px; font-style:italic; color:rgba(255,255,255,0.35); letter-spacing:0.5px;">Este informe es confidencial y fue elaborado exclusivamente para {{name}} · {{company}} · {{date}}</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
