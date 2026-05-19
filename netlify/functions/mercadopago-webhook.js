@@ -24,6 +24,7 @@ function verifyMpSignature(req, paymentId) {
 }
 
 export default async (req) => {
+  if (req.method === 'GET') return new Response('ok', { status: 200 });
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
   try {
