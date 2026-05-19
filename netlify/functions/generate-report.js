@@ -1,12 +1,10 @@
 import { readFile } from 'fs/promises';
-import { fileURLToPath } from 'url';
 import path from 'path';
 import { getStore } from '@netlify/blobs';
 import { buildReportPayload } from './_lib/report.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// El template se incluye en el bundle via netlify.toml → included_files = ["templates/**"]
-const TEMPLATE_PATH = path.join(__dirname, '..', '..', 'templates', 'diagnostic-report-template.html');
+// process.cwd() apunta a la raíz del proyecto en Netlify Functions — funciona en ESM y CJS
+const TEMPLATE_PATH = path.join(process.cwd(), 'templates', 'diagnostic-report-template.html');
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
