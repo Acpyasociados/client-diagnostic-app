@@ -1,8 +1,6 @@
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import chromium from '@sparticuz/chromium';
-import puppeteer from 'puppeteer-core';
 import { getStore } from '@netlify/blobs';
 import { buildReportPayload } from './_lib/report.js';
 
@@ -220,6 +218,11 @@ export default async (req) => {
   // 7. Generar PDF con Puppeteer + Sparticuz Chromium
   let browser;
   try {
+    const [chromium, puppeteer] = await Promise.all([
+      import('@sparticuz/chromium').then(m => m.default),
+      import('puppeteer-core').then(m => m.default)
+    ]);
+
     browser = await puppeteer.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
