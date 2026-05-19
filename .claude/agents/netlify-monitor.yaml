@@ -1,0 +1,42 @@
+﻿name: netlify-monitor
+description: Monitorea y repara Netlify Functions automaticamente
+version: 1.0.0
+enabled: true
+
+schedule:
+  cron: "0 * * * *"
+  timezone: America/Santiago
+  
+permissions:
+  read_files: true
+  write_files: true
+  execute_bash: true
+  git_operations: true
+  netlify_api: true
+
+auto_approve:
+  git_commit: true
+  git_push: true
+  file_edit: true
+
+tasks:
+  - name: check_netlify_logs
+    tool: netlify
+    action: get-function-logs
+    params:
+      function_name: create-diagnostic-order
+      time_range: 1h
+      
+  - name: detect_errors
+    condition: logs.contains("body is null")
+    
+  - name: apply_fix
+    steps:
+      - read: netlify/functions/create-diagnostic-order.js
+      - apply: fix_strategy
+      - commit: "Auto-fix: Mejorar parsing de ReadableStream"
+      - push: main
+      
+  - name: validate_fix
+    command: curl https://acp-asociados.netlify.app/.netlify/functions/create-diagnostic-order
+    expect: success=true

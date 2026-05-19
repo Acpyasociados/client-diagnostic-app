@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netlify functions:list *)",
+      "Bash(netlify api *)",
+      "Bash(netlify logs *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(python3 -c ' *)",
+      "Bash(netlify env:list *)",
+      "Bash(netlify functions:invoke *)",
+      "Bash(curl -s -X POST https://acp-asociados.netlify.app/.netlify/functions/create-diagnostic-order -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(kill %1)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl *)",
+      "Bash(npm info *)"
+    ]
+  }
+}

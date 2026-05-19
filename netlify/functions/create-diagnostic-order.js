@@ -3,7 +3,7 @@ import { sectorLabels } from './_lib/questions.js';
 import { sendAdvisorEmail } from './send-advisor-email.js';
 
 // Campos que REALMENTE envía el formulario HTML (después del mapeo)
-const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'margin', 'active_clients', 'top_costs', 'main_problem', 'goal_6m', 'plan'];
+const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'plan'];
 
 // Parse body - Netlify Functions v2 entrega un Request object (Web API)
 // El método .text() está en el Request mismo, no en request.body
