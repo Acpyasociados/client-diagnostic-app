@@ -1,15 +1,44 @@
+import crypto from 'crypto';
 import { getLead, saveLead } from './_lib/storage.js';
 import { sendEmail } from './_lib/email.js';
+
+function verifyMpSignature(req, paymentId) {
+  const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+  if (!secret) return true; // sin secreto configurado, pasar (modo dev)
+
+  const xSignature = req.headers.get('x-signature');
+  const xRequestId = req.headers.get('x-request-id');
+  if (!xSignature || !xRequestId) return false;
+
+  // formato: "ts=<timestamp>,v1=<hash>"
+  const parts = Object.fromEntries(xSignature.split(',').map(p => p.split('=')));
+  const ts = parts.ts;
+  const v1 = parts.v1;
+  if (!ts || !v1) return false;
+
+  const template = `id:${paymentId};request-id:${xRequestId};ts:${ts};`;
+  const expected = crypto.createHmac('sha256', secret).update(template).digest('hex');
+
+  if (v1.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(expected));
+}
 
 export default async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
   try {
-    const payload = JSON.parse(req.body || '{}');
+    // FIX 1: req.body es ReadableStream en Netlify v2 — usar req.text()
+    const rawBody = await req.text();
+    const payload = JSON.parse(rawBody || '{}');
     const paymentId = payload?.data?.id;
     const topic = payload?.type || payload?.topic;
-    if (!paymentId || (topic !== 'payment' && topic !== 'merchant_order')) {
+    if (!paymentId || topic !== 'payment') {
       return new Response('ok', { status: 200 });
+    }
+
+    // FIX 2: validar firma HMAC-SHA256 de Mercado Pago
+    if (!verifyMpSignature(req, paymentId)) {
+      return new Response('invalid signature', { status: 401 });
     }
 
     const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
@@ -27,7 +56,8 @@ export default async (req) => {
     if (!response.ok) return new Response('payment fetch failed', { status: 500 });
     if (payment.status !== 'approved') return new Response('ok', { status: 200 });
 
-    const leadId = payment.metadata?.lead_id;
+    // FIX 3: usar external_reference (campo de conciliación) en vez de metadata.lead_id
+    const leadId = payment.external_reference;
     if (!leadId) return new Response('ok', { status: 200 });
     const lead = await getLead(leadId);
     if (!lead) return new Response('lead not found', { status: 404 });
@@ -35,6 +65,7 @@ export default async (req) => {
 
     lead.payment_status = 'approved';
     lead.status = 'pagado';
+    lead.payment_id = paymentId;
     await saveLead(leadId, lead);
 
     const questionnaireUrl = `${siteUrl}/questionnaire.html?lead_id=${leadId}&token=${lead.client_token}`;
@@ -72,8 +103,8 @@ export default async (req) => {
           <p><strong>Plan:</strong> ${planLabel}</p>
           <p><strong>Monto:</strong> $${planPrice} CLP</p>
           <p><strong>Ventas mensuales:</strong> $${lead.monthly_sales?.toLocaleString('es-CL') || 'N/A'}</p>
-          <p><strong>Margen:</strong> ${lead.margin}%</p>
-          <p><strong>Problema principal:</strong> ${lead.main_problem}</p>
+          <p><strong>Margen:</strong> ${lead.margin || 'N/A'}%</p>
+          <p><strong>Problema principal:</strong> ${lead.main_problem || 'N/A'}</p>
           <hr/>
           <p>El cliente completará el cuestionario en los próximos minutos.</p>
           <p><a href="${siteUrl}/review.html?lead_id=${leadId}&token=${reviewerToken}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Ver caso en revisión</a></p>
