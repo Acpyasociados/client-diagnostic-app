@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import { getStore } from '@netlify/blobs';
 import { sectorLabels } from './_lib/questions.js';
 import { sendAdvisorEmail } from './send-advisor-email.js';
 
@@ -201,7 +200,8 @@ export default async (event, context) => {
   };
 
   try {
-    // Guardar en Netlify Blobs
+    // Guardar en Netlify Blobs — import dinámico para preservar ESM en bundle CJS
+    const { getStore } = await import('@netlify/blobs');
     const store = getStore('diagnostic-leads');
     await store.set(leadId, JSON.stringify(lead), { metadata: { email: lead.email } });
     console.log('Lead saved to Blobs:', leadId);

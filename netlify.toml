@@ -10,7 +10,8 @@
 
 [functions]
   directory = "netlify/functions"
-  node_bundler = "nft"
+  external_node_modules = ["@sendgrid/mail", "@netlify/blobs"]
+  node_bundler = "esbuild"
 
 [context.production.environment]
   # Secrets (MERCADO_PAGO_ACCESS_TOKEN, SENDGRID_API_KEY) are configured in Netlify UI
