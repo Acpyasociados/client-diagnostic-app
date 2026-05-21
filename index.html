@@ -493,7 +493,7 @@
 
         <!-- Form Card -->
         <div class="form-card">
-            <form id="diagnosticForm" onsubmit="return false;">
+            <form id="diagnosticForm">
                 <!-- SECCIÓN 1: INFORMACIÓN DE CONTACTO -->
                 <div class="section-title">1. Información de tu Empresa</div>
 
@@ -886,7 +886,25 @@
                 timestamp: new Date().toISOString(),
                 product: document.getElementById('plan_basico').checked ? 'diagnostico_basico' : 'diagnostico_premium',
                 price: document.getElementById('plan_basico').checked ? 49990 : 149990,
-                ...Object.fromEntries(formData),
+                
+                // Mapear campos del formulario a los nombres esperados por el backend
+                name: formData.get('contact_name'),
+                email: formData.get('contact_email'),
+                phone: formData.get('contact_phone'),
+                company: formData.get('company_name'),
+                rut: formData.get('rut'),
+                industry: formData.get('industry'),
+                annual_income: formData.get('annual_income'),
+                margin: formData.get('margin'),
+                active_clients: formData.get('active_clients'),
+                tax_regime: formData.get('tax_regime'),
+                main_costs: formData.get('main_costs'),
+                digital_presence: formData.get('digital_presence'),
+                accountant_name: formData.get('accountant_name'),
+                main_challenge: formData.get('main_challenge'),
+                objective_6m: formData.get('objective_6m'),
+                plan: formData.get('plan'),
+                
                 plataformas: plataformas || 'ninguna'
             };
 
