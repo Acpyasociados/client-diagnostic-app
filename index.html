@@ -999,6 +999,92 @@
                 otherChallengeInput.value = '';
             }
         });
+
+        // CUPÓN DE DESCUENTO
+        let appliedCoupon = null;
+        const couponInput = document.getElementById('coupon_code');
+        const validateCouponBtn = document.getElementById('validateCouponBtn');
+        const couponMessage = document.getElementById('couponMessage');
+        const couponDiscount = document.getElementById('couponDiscount');
+        const couponDetails = document.getElementById('couponDetails');
+
+        validateCouponBtn.addEventListener('click', async function() {
+            const couponCode = couponInput.value.trim();
+            const selectedPlan = document.getElementById('plan_basico').checked ? 'basico' : 'premium';
+
+            if (!couponCode) {
+                showCouponMessage('Por favor ingresa un código de cupón', 'error');
+                return;
+            }
+
+            validateCouponBtn.disabled = true;
+            validateCouponBtn.textContent = 'Validando...';
+
+            try {
+                const response = await fetch('/.netlify/functions/validate-coupon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ coupon: couponCode, plan: selectedPlan })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.valid) {
+                    appliedCoupon = result;
+                    couponDiscount.style.display = 'block';
+                    couponDetails.innerHTML = `<strong>${result.coupon_code}</strong> - ${result.discount_percentage}% descuento. Precio final: <strong>${result.final_price.toLocaleString('es-CL')}</strong>`;
+                    couponMessage.style.display = 'none';
+                    couponInput.disabled = true;
+                    validateCouponBtn.textContent = '? Aplicado';
+                    updateSubmitButtonPrice();
+                } else {
+                    showCouponMessage(result.error || 'Cupón inválido', 'error');
+                    appliedCoupon = null;
+                }
+            } catch (error) {
+                console.error('Error validando cupón:', error);
+                showCouponMessage('Error al validar cupón', 'error');
+                appliedCoupon = null;
+            } finally {
+                validateCouponBtn.disabled = false;
+                if (!appliedCoupon) {
+                    validateCouponBtn.textContent = 'Validar';
+                }
+            }
+        });
+
+        function showCouponMessage(message, type) {
+            couponMessage.style.display = 'block';
+            couponMessage.style.color = type === 'error' ? '#E74C3C' : '#16A085';
+            couponMessage.textContent = message;
+            couponDiscount.style.display = 'none';
+        }
+
+        function updateSubmitButtonPrice() {
+            let price;
+            if (appliedCoupon) {
+                price = `${appliedCoupon.final_price.toLocaleString('es-CL')}`;
+            } else {
+                price = document.getElementById('plan_basico').checked ? '$49.990' : '$149.990';
+            }
+            submitText.textContent = `Continuar al Pago (${price})`;
+        }
+
+        // Actualizar precio cuando cambia el plan
+        document.querySelectorAll('input[name="plan"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Reset cupón cuando cambia el plan
+                if (appliedCoupon) {
+                    appliedCoupon = null;
+                    couponInput.disabled = false;
+                    couponInput.value = '';
+                    validateCouponBtn.textContent = 'Validar';
+                    couponDiscount.style.display = 'none';
+                    couponMessage.style.display = 'none';
+                }
+                updateSubmitButtonPrice();
+            });
+        });
     </script>
 </body>
 </html>
