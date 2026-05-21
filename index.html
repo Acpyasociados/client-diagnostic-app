@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diagnóstico Inicial - ACP y Asociados</title>
@@ -467,13 +465,26 @@
             }
         }
     </style>
-</head>
+<style id="claude-agent-animation-styles">
+      @keyframes claude-pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+      #claude-agent-glow-border-inner {
+        animation: claude-pulse 2s ease-in-out infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #claude-agent-glow-border-inner {
+          animation: none;
+        }
+      }
+    </style></head>
 <body>
     <div class="container">
         <!-- Header Card -->
         <div class="header-card">
             <div class="header">
-                <div class="logo">ACP & ASOCIADOS</div>
+                <div class="logo">ACP &amp; ASOCIADOS</div>
                 <h1>Diagnóstico Inicial</h1>
                 <p class="tagline">Identificamos oportunidades de mejora en 3 +Ýreas clave de tu empresa</p>
             </div>
@@ -502,7 +513,7 @@
                         Nombre de la Empresa
                         <span class="required">*</span>
                     </label>
-                    <input type="text" id="company_name" name="company_name" placeholder="Ej: Mi Empresa SpA" required>
+                    <input type="text" id="company_name" name="company_name" placeholder="Ej: Mi Empresa SpA" required="">
                 </div>
 
                 <div class="form-group">
@@ -511,7 +522,7 @@
                         <span class="required">*</span>
                         <span class="label-hint">(formato: 12.345.678-9)</span>
                     </label>
-                    <input type="text" id="rut" name="rut" placeholder="12.345.678-9" required>
+                    <input type="text" id="rut" name="rut" placeholder="12.345.678-9" required="">
                 </div>
 
                 <div class="form-row">
@@ -520,14 +531,14 @@
                             Tu Nombre
                             <span class="required">*</span>
                         </label>
-                        <input type="text" id="contact_name" name="contact_name" placeholder="Juan P+«rez" required>
+                        <input type="text" id="contact_name" name="contact_name" placeholder="Juan P+«rez" required="">
                     </div>
                     <div class="form-group">
                         <label for="contact_phone">
                             WhatsApp
                             <span class="required">*</span>
                         </label>
-                        <input type="tel" id="contact_phone" name="contact_phone" placeholder="+56 9 1234 5678" required>
+                        <input type="tel" id="contact_phone" name="contact_phone" placeholder="+56 9 1234 5678" required="">
                     </div>
                 </div>
 
@@ -536,7 +547,7 @@
                         Email
                         <span class="required">*</span>
                     </label>
-                    <input type="email" id="contact_email" name="contact_email" placeholder="tu@email.com" required>
+                    <input type="email" id="contact_email" name="contact_email" placeholder="tu@email.com" required="">
                 </div>
 
                 <!-- SECCI+¶N 2: PERFIL DEL NEGOCIO -->
@@ -547,7 +558,7 @@
                         Rubro / Sector
                         <span class="required">*</span>
                     </label>
-                    <select id="industry" name="industry" required>
+                    <select id="industry" name="industry" required="">
                         <option value="">Selecciona tu rubro...</option>
                         <option value="servicios_profesionales">Servicios Profesionales (consultor+ías, asesor+ías, legales)</option>
                         <option value="comercio_ecommerce">Comercio / E-commerce</option>
@@ -577,14 +588,14 @@
                             Ingresos Mensuales (CLP)
                             <span class="required">*</span>
                         </label>
-                        <input type="text" id="annual_income" name="annual_income" placeholder="Ej: 23.000.000" required>
+                        <input type="text" id="annual_income" name="annual_income" placeholder="Ej: 23.000.000" required="">
                     </div>
                     <div class="form-group">
                         <label for="margin">
                             Margen de Ganancia (%)
                             <span class="required">*</span>
                         </label>
-                        <input type="number" id="margin" name="margin" placeholder="Ej: 15" min="0" max="100" required>
+                        <input type="number" id="margin" name="margin" placeholder="Ej: 15" min="0" max="100" required="">
                     </div>
                 </div>
 
@@ -594,14 +605,14 @@
                             Clientes Activos
                             <span class="required">*</span>
                         </label>
-                        <input type="number" id="active_clients" name="active_clients" placeholder="Ej: 50" min="0" required>
+                        <input type="number" id="active_clients" name="active_clients" placeholder="Ej: 50" min="0" required="">
                     </div>
                     <div class="form-group">
                         <label for="tax_regime">
                             R+«gimen Tributario
                             <span class="required">*</span>
                         </label>
-                        <select id="tax_regime" name="tax_regime" required>
+                        <select id="tax_regime" name="tax_regime" required="">
                             <option value="">Selecciona...</option>
                             <option value="general">R+«gimen General</option>
                             <option value="propyme">ProPyme</option>
@@ -620,7 +631,7 @@
                         Top 3 Costos Principales
                         <span class="required">*</span>
                     </label>
-                    <textarea id="main_costs" name="main_costs" placeholder="Ej: Combustible, personal, arriendo" required></textarea>
+                    <textarea id="main_costs" name="main_costs" placeholder="Ej: Combustible, personal, arriendo" required=""></textarea>
                 </div>
 
                 <div class="form-group">
@@ -630,11 +641,11 @@
                     </label>
                     <div class="radio-group">
                         <div class="radio-item">
-                            <input type="radio" id="digital_yes" name="digital_presence" value="si" required>
+                            <input type="radio" id="digital_yes" name="digital_presence" value="si" required="">
                             <label for="digital_yes">S+í, tengo presencia</label>
                         </div>
                         <div class="radio-item">
-                            <input type="radio" id="digital_no" name="digital_presence" value="no" required>
+                            <input type="radio" id="digital_no" name="digital_presence" value="no" required="">
                             <label for="digital_no">No, empezar+ía desde cero</label>
                         </div>
                     </div>
@@ -682,7 +693,7 @@
                         -+Cu+Ýl es tu mayor desaf+ío ahora?
                         <span class="required">*</span>
                     </label>
-                    <select id="main_challenge" name="main_challenge" required>
+                    <select id="main_challenge" name="main_challenge" required="">
                         <option value="">Selecciona...</option>
                         <option value="costos_altos">Costos operativos muy altos</option>
                         <option value="margen_bajo">Margen de ganancia bajo</option>
@@ -709,7 +720,7 @@
                         Objetivo a 6 Meses
                         <span class="required">*</span>
                     </label>
-                    <textarea id="objective_6m" name="objective_6m" placeholder="Ej: Aumentar ventas 20%, reducir costos, estabilizar margen..." required></textarea>
+                    <textarea id="objective_6m" name="objective_6m" placeholder="Ej: Aumentar ventas 20%, reducir costos, estabilizar margen..." required=""></textarea>
                 </div>
 
                 <!-- SECCI+¶N 5: PLAN SELECCIONADO -->
@@ -722,13 +733,13 @@
                     </label>
                     <div class="radio-group">
                         <div class="radio-item">
-                            <input type="radio" id="plan_basico" name="plan" value="basico" checked required>
+                            <input type="radio" id="plan_basico" name="plan" value="basico" checked="" required="">
                             <label for="plan_basico"><strong>B+Ýsico</strong> - $49.990 (Informe + 3 mejoras)</label>
                         </div>
                     </div>
                     <div class="radio-group">
                         <div class="radio-item">
-                            <input type="radio" id="plan_premium" name="plan" value="premium" required>
+                            <input type="radio" id="plan_premium" name="plan" value="premium" required="">
                             <label for="plan_premium"><strong>Premium</strong> - $149.990 (Plan 30/90/180 d+ías + seguimiento)</label>
                         </div>
                     </div>
@@ -737,13 +748,7 @@
                 <!-- Benefits -->
                 <div class="benefits" id="benefitsContainer">
                     <h3>Èú¶ Qu+« incluye tu Diagnóstico:</h3>
-                    <ul id="benefitsList">
-                        <li>An+Ýlisis de oportunidades de crecimiento personalizadas</li>
-                        <li>Reducci+ªn de costos operacionales identificada</li>
-                        <li>Estrategias de optimizaci+ªn tributaria aplicables</li>
-                        <li>Plan de acci+ªn 30 d+ías para implementar</li>
-                        <li>Informe profesional en HTML + PDF</li>
-                    </ul>
+                    <ul id="benefitsList"><li>An+Ýlisis de oportunidades de crecimiento personalizadas</li><li>Reducci+ªn de costos operacionales identificada</li><li>Estrategias de optimizaci+ªn tributaria aplicables</li><li>Plan de acci+ªn 30 d+ías para implementar</li><li>Informe profesional en HTML + PDF</li></ul>
                 </div>
 
                 <!-- Submit -->
@@ -761,7 +766,7 @@
         <!-- Footer -->
         <div class="footer">
             <p>
-                <strong>ACP & Asociados</strong><br>
+                <strong>ACP &amp; Asociados</strong><br>
                 Providencia, Santiago ÈÃ¾
                 <a href="https://acpasociados.cl/" target="_blank">acpasociados.cl</a><br>
                 WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a>
@@ -1000,5 +1005,6 @@
             }
         });
     </script>
-</body>
-</html>
+
+
+<div id="claude-agent-glow-border" style="position: fixed; inset: 0px; pointer-events: none; z-index: 2147483646; opacity: 1; transition: opacity 0.3s ease-in-out;"><div id="claude-agent-glow-border-inner" style="position: absolute; inset: 0px; will-change: opacity; box-shadow: rgba(217, 119, 87, 0.7) 0px 0px 15px inset, rgba(217, 119, 87, 0.5) 0px 0px 25px inset, rgba(217, 119, 87, 0.2) 0px 0px 35px inset;"></div></div><div id="claude-phantom-cursor" aria-hidden="true" style="position: fixed; top: 0px; left: 0px; pointer-events: none; z-index: 2147483646; transform: translate3d(278px, 443px, 0px); transition: transform 180ms cubic-bezier(0.2, 0, 0, 1); will-change: transform;"><svg id="claude-phantom-cursor-plain" width="20" height="26" viewBox="0 0 20 26" style="position: absolute; top: 0px; left: 0px; overflow: visible;"><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" stroke="white" stroke-width="3" stroke-linejoin="round" fill="white"></path><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" fill="#111"></path></svg><svg id="claude-phantom-cursor-styled" width="20" height="26" viewBox="0 0 20 26" style="position: absolute; top: 0px; left: 0px; overflow: visible; filter: drop-shadow(rgba(217, 119, 87, 0.9) 0px 0px 4px) drop-shadow(rgba(217, 119, 87, 0.45) 0px 0px 10px);"><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" stroke="#D97757" stroke-width="3" stroke-linejoin="round" fill="#D97757"></path><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" fill="#FAF9F5"></path></svg></div></body></html>
