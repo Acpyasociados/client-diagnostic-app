@@ -289,6 +289,7 @@ async function createMercadoPagoPreference(lead) {
       failure: `${siteUrl}/cancel.html?lead_id=${lead.lead_id}`,
       pending: `${siteUrl}/success.html?lead_id=${lead.lead_id}`
     },
+    external_reference: lead.lead_id,
     auto_return: 'approved',
     notification_url: `${siteUrl}/api/mercadopago-webhook`
   };
