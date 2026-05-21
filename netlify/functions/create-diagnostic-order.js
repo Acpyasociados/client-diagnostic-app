@@ -2,11 +2,11 @@ import crypto from 'crypto';
 import { sectorLabels } from './_lib/questions.js';
 import { sendAdvisorEmail } from './send-advisor-email.js';
 
-// Campos que REALMENTE envía el formulario HTML (después del mapeo)
+// Campos que REALMENTE envÃ­a el formulario HTML (despuÃ©s del mapeo)
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'plan'];
 
 // Parse body - Netlify Functions v2 entrega un Request object (Web API)
-// El método .text() está en el Request mismo, no en request.body
+// El mÃ©todo .text() estÃ¡ en el Request mismo, no en request.body
 async function parseBody(event) {
   console.log('=== parseBody START ===');
   console.log('event has .text() method (Request v2):', typeof event.text === 'function');
@@ -15,7 +15,7 @@ async function parseBody(event) {
 
   let bodyText = null;
 
-  // Caso 1: Netlify Functions v2 — event ES el Request object, tiene .text() directo
+  // Caso 1: Netlify Functions v2 â€” event ES el Request object, tiene .text() directo
   if (typeof event.text === 'function') {
     console.log('Using event.text() (Netlify Functions v2 Request object)');
     try {
@@ -84,7 +84,7 @@ async function parseBody(event) {
 
 export default async (event, context) => {
   // Netlify Functions v2: event es un Request object (Web API)
-  // Los métodos de Headers y body son distintos al v1 event-based
+  // Los mÃ©todos de Headers y body son distintos al v1 event-based
   const isRequestObject = typeof event.text === 'function';
 
   const method = (event.method || event.httpMethod || '').toUpperCase();
@@ -101,9 +101,9 @@ export default async (event, context) => {
   console.log('ContentType header:', contentType || 'MISSING');
   console.log('All headers keys:', headerKeys);
 
-  // Verificar método
+  // Verificar mÃ©todo
   if (method !== 'POST') {
-    return json(405, { error: 'Método no permitido' });
+    return json(405, { error: 'MÃ©todo no permitido' });
   }
 
   // Parse body
@@ -138,7 +138,7 @@ export default async (event, context) => {
   for (const [htmlName, backendName] of Object.entries(fieldMapping)) {
     if (body[htmlName] && !body[backendName]) {
       body[backendName] = body[htmlName];
-      console.log(`Mapped ${htmlName} → ${backendName}`);
+      console.log(`Mapped ${htmlName} â†’ ${backendName}`);
     }
   }
 
@@ -165,9 +165,9 @@ export default async (event, context) => {
   };
 
   const plan = body.plan || 'basico';
-  const discount = Number(body.discountPercentage || 0);
+  const discount = Number(body.discount_percentage || 0);
   const basePrice = prices[plan] || prices.basico;
-  const finalPrice = Number(body.finalPrice) || (basePrice * (100 - discount) / 100);
+  const finalPrice = Number(body.price) || (basePrice * (100 - discount) / 100);
 
   // Datos del lead
   const lead = {
@@ -200,7 +200,7 @@ export default async (event, context) => {
   };
 
   try {
-    // Guardar en Netlify Blobs — import dinámico para preservar ESM en bundle CJS
+    // Guardar en Netlify Blobs â€” import dinÃ¡mico para preservar ESM en bundle CJS
     const { getStore } = await import('@netlify/blobs');
     const store = getStore('diagnostic-leads');
     await store.set(leadId, JSON.stringify(lead), { metadata: { email: lead.email } });
@@ -273,7 +273,7 @@ async function createMercadoPagoPreference(lead) {
 
   const preferencePayload = {
     items: [{
-      title: `Diagnóstico ${lead.plan} - ${lead.company}`,
+      title: `DiagnÃ³stico ${lead.plan} - ${lead.company}`,
       quantity: 1,
       currency_id: 'CLP',
       unit_price: lead.final_price
