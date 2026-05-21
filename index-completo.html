@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnóstico de crecimiento y rentabilidad</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <section class="card">
+        <span class="badge">Diagnóstico + implementación</span>
+        <h1>Detecta dónde mejorar ventas, margen y operación en menos de 48 horas.</h1>
+        <p>El cliente completa un diagnóstico inicial, paga, responde un cuestionario sectorial y recibe un informe accionable con 3 mejoras priorizadas. El borrador se genera automáticamente y se valida con revisión humana.</p>
+        <div class="grid-3">
+          <div class="kpi"><strong>3 mejoras</strong><div class="small">corto, medio y largo plazo</div></div>
+          <div class="kpi"><strong>48 horas</strong><div class="small">plazo comprometido</div></div>
+          <div class="kpi"><strong>3 rubros</strong><div class="small">servicios, comercio y terreno</div></div>
+        </div>
+      </section>
+      <section class="card">
+        <h2>Diagnóstico inicial</h2>
+        <p class="small">Completa esta información. Luego serás enviado al pago y se activará el cuestionario específico de tu rubro.</p>
+        <div id="message" class="notice hidden"></div>
+        <form id="leadForm">
+          <div class="grid-2">
+            <div class="field"><label>Nombre</label><input name="name" required /></div>
+            <div class="field"><label>Email</label><input type="email" name="email" required /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Teléfono</label><input name="phone" required /></div>
+            <div class="field"><label>Empresa</label><input name="company" required /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label>Rubro</label>
+              <select name="sector" required>
+                <option value="">Selecciona</option>
+                <option value="servicios_profesionales">Servicios profesionales</option>
+                <option value="comercio_ecommerce">Comercio / e-commerce</option>
+                <option value="servicios_terreno">Servicios en terreno</option>
+              </select>
+            </div>
+            <div class="field"><label>Ventas mensuales (CLP)</label><input type="number" name="monthly_sales" min="0" required /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Margen estimado (%)</label><input type="number" name="margin" min="0" max="100" required /></div>
+            <div class="field"><label>Cantidad de clientes activos</label><input type="number" name="active_clients" min="0" required /></div>
+          </div>
+          <div class="field"><label>¿Cuál es tu mayor problema?</label><textarea name="main_problem" required></textarea></div>
+          <div class="field"><label>Objetivo a 6 meses</label><textarea name="goal_6m" required></textarea></div>
+          <div class="grid-3">
+            <div class="plan" data-plan="basico"><strong>Básico</strong><p>$49.990</p><p class="small">Análisis + 3 mejoras</p></div>
+            <div class="plan" data-plan="premium"><strong>Premium</strong><p>$149.990</p><p class="small">Plan 30/90/180 días</p></div>
+          </div>
+          <input type="hidden" name="plan" required />
+          
+          <div class="field" style="margin-top:1.5rem;">
+            <label>Código de Cupón (Opcional)</label>
+            <div style="display:flex;gap:10px;">
+              <input id="coupon_code" placeholder="TEST95" style="flex:1;">
+              <button type="button" id="validateCouponBtn">Validar</button>
+            </div>
+            <div id="couponMessage" style="display:none;margin-top:10px;color:#E74C3C;"></div>
+            <div id="couponDiscount" style="display:none;margin-top:10px;padding:12px;background:#E8F5F1;border-left:4px solid #16A085;border-radius:4px;"><span id="couponDetails"></span></div>
+          </div>
+          
+          <button type="submit">Continuar a pago</button>
+        </form>
+      </section>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById('leadForm');
+    const message = document.getElementById('message');
+    const button = form.querySelector('button[type="submit"]');
+    const planInput = form.querySelector('input[name="plan"]');
+    const plans = document.querySelectorAll('.plan');
+    
+    plans.forEach((plan) => {
+      plan.addEventListener('click', () => {
+        plans.forEach((p) => p.classList.remove('selected'));
+        plan.classList.add('selected');
+        planInput.value = plan.dataset.plan;
+      });
+    });
+    
+    window.appliedCoupon = null;
+    const validateCouponBtn = document.getElementById('validateCouponBtn');
+    if (validateCouponBtn) {
+      validateCouponBtn.addEventListener('click', async () => {
+        const couponInput = document.getElementById('coupon_code');
+        const couponMessage = document.getElementById('couponMessage');
+        const couponDiscount = document.getElementById('couponDiscount');
+        const couponDetails = document.getElementById('couponDetails');
+        const code = couponInput.value.trim();
+        const plan = planInput.value;
+        
+        if (!code) {
+          couponMessage.textContent = 'Ingresa un código de cupón';
+          couponMessage.style.display = 'block';
+          couponDiscount.style.display = 'none';
+          return;
+        }
+        
+        if (!plan) {
+          couponMessage.textContent = 'Selecciona un plan primero';
+          couponMessage.style.display = 'block';
+          couponDiscount.style.display = 'none';
+          return;
+        }
+        
+        validateCouponBtn.disabled = true;
+        validateCouponBtn.textContent = 'Validando...';
+        
+        try {
+          const response = await fetch('/.netlify/functions/validate-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coupon: code, plan: plan })
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.valid) {
+            window.appliedCoupon = data;
+            couponDiscount.style.display = 'block';
+            couponDetails.innerHTML = '<strong>' + data.coupon_code + '</strong> - ' + data.discount_percentage + '% descuento. Precio final: <strong>$' + data.final_price.toLocaleString('es-CL') + '</strong>';
+            couponMessage.style.display = 'none';
+            couponInput.disabled = true;
+            validateCouponBtn.textContent = '✓ Aplicado';
+          } else {
+            couponMessage.textContent = data.error || 'Cupón inválido';
+            couponMessage.style.display = 'block';
+            couponDiscount.style.display = 'none';
+            window.appliedCoupon = null;
+          }
+        } catch (error) {
+          console.error('Error validando cupón:', error);
+          couponMessage.textContent = 'Error al validar cupón';
+          couponMessage.style.display = 'block';
+          couponDiscount.style.display = 'none';
+          window.appliedCoupon = null;
+        } finally {
+          validateCouponBtn.disabled = false;
+          if (!window.appliedCoupon) {
+            validateCouponBtn.textContent = 'Validar';
+          }
+        }
+      });
+    }
+    
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      button.textContent = 'Procesando...';
+      message.className = 'notice hidden';
+      try {
+        let formData = Object.fromEntries(new FormData(form).entries());
+        const payload = window.appliedCoupon ? {
+          ...formData, 
+          coupon_code: window.appliedCoupon.coupon_code, 
+          discount_percentage: window.appliedCoupon.discount_percentage, 
+          price: window.appliedCoupon.final_price
+        } : formData;
+        
+        const response = await fetch('/api/submit-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No fue posible iniciar el proceso');
+        window.location.href = data.checkout_url;
+      } catch (error) {
+        message.textContent = error.message;
+        message.className = 'notice error';
+        button.disabled = false;
+        button.textContent = 'Continuar a pago';
+      }
+    });
+  </script>
+</body>
+</html>
