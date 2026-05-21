@@ -1,5 +1,5 @@
 /**
- * Función para validar cupones de descuento
+ * FunciÃ³n para validar cupones de descuento
  *
  * Uso: POST /api/validate-coupon
  * Body: { "coupon": "COUPON_CODE", "plan": "basico|premium" }
@@ -9,13 +9,13 @@
  *   "valid": true,
  *   "discount_percentage": 100,
  *   "final_price": 0,
- *   "message": "Cupón válido - 100% descuento"
+ *   "message": "CupÃ³n vÃ¡lido - 100% descuento"
  * }
  */
 
 export default async (req) => {
   if (req.method !== 'POST') {
-    return json(405, { error: 'Método no permitido' });
+    return json(405, { error: 'MÃ©todo no permitido' });
   }
 
   try {
@@ -63,10 +63,10 @@ export default async (req) => {
     const { coupon, plan } = parsedBody;
 
     if (!coupon || !plan) {
-      return json(400, { error: 'Falta cupón o plan' });
+      return json(400, { error: 'Falta cupÃ³n o plan' });
     }
 
-    // Validar cupón
+    // Validar cupÃ³n
     const result = validateCoupon(coupon, plan);
 
     if (!result.valid) {
@@ -81,12 +81,13 @@ export default async (req) => {
 };
 
 /**
- * Valida un cupón contra la base de cupones disponibles
+ * Valida un cupÃ³n contra la base de cupones disponibles
  */
 function validateCoupon(coupon, plan) {
   // Base de cupones disponibles (desarrollo)
-  // En producción, guardar en base de datos
+  // En producciÃ³n, guardar en base de datos
   const coupons = {
+    'TEST95': { valid: true, discount: 95, plans: ['basico', 'premium'] },
     // Cupones de prueba 100% descuento
     'TEST100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
     'DEMO100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
@@ -98,7 +99,7 @@ function validateCoupon(coupon, plan) {
     'DESC50': { valid: true, discount: 50, plans: ['basico', 'premium'] },
     'STARTUP30': { valid: true, discount: 30, plans: ['premium'] },
 
-    // Agregue más cupones aquí según necesite
+    // Agregue mÃ¡s cupones aquÃ­ segÃºn necesite
   };
 
   const couponKey = coupon.toUpperCase().trim();
@@ -107,14 +108,14 @@ function validateCoupon(coupon, plan) {
   if (!couponData) {
     return {
       valid: false,
-      error: 'Cupón inválido o expirado'
+      error: 'CupÃ³n invÃ¡lido o expirado'
     };
   }
 
   if (!couponData.plans.includes(plan)) {
     return {
       valid: false,
-      error: `Este cupón no aplica al plan ${plan.toUpperCase()}`
+      error: `Este cupÃ³n no aplica al plan ${plan.toUpperCase()}`
     };
   }
 
@@ -134,7 +135,7 @@ function validateCoupon(coupon, plan) {
     base_price: basePrice,
     discount_amount: discount,
     final_price: finalPrice,
-    message: `Cupón válido - ${couponData.discount}% descuento`,
+    message: `CupÃ³n vÃ¡lido - ${couponData.discount}% descuento`,
     coupon_code: couponKey
   };
 }
