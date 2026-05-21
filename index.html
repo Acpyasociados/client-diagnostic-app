@@ -1,9 +1,7 @@
-﻿﻿<!DOCTYPE html>
-<html lang="es">
-<head>
+<html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diagn├│stico Inicial - ACP y Asociados</title>
+    <title>Diagnóstico Inicial - ACP y Asociados</title>
     <style>
         * {
             margin: 0;
@@ -284,7 +282,7 @@
         }
 
         .benefits li:before {
-            content: "Ô£ô";
+            content: "Èú¶";
             position: absolute;
             left: 0;
             color: var(--accent-gold);
@@ -467,15 +465,28 @@
             }
         }
     </style>
-</head>
+<style id="claude-agent-animation-styles">
+      @keyframes claude-pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+      #claude-agent-glow-border-inner {
+        animation: claude-pulse 2s ease-in-out infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #claude-agent-glow-border-inner {
+          animation: none;
+        }
+      }
+    </style></head>
 <body>
     <div class="container">
         <!-- Header Card -->
         <div class="header-card">
             <div class="header">
-                <div class="logo">ACP & ASOCIADOS</div>
-                <h1>Diagn├│stico Inicial</h1>
-                <p class="tagline">Identificamos oportunidades de mejora en 3 ├íreas clave de tu empresa</p>
+                <div class="logo">ACP &amp; ASOCIADOS</div>
+                <h1>Diagnóstico Inicial</h1>
+                <p class="tagline">Identificamos oportunidades de mejora en 3 +Ýreas clave de tu empresa</p>
             </div>
 
             <div class="pricing-banner">
@@ -483,26 +494,26 @@
                     <span class="price">$49.990</span>
                     <span class="price-label">CLP</span>
                 </div>
-                <div class="price-note">Inversi├│n ├║nica ÔÇó Informe en 48 horas</div>
+                <div class="price-note">Inversi+ªn +ªnica ÈÃ¾ Informe en 48 horas</div>
             </div>
 
             <div class="info-strip">
-                ÔÅ▒´©Å <strong>5 minutos para completar</strong> ÔÇó An├ílisis profesional garantizado
+                È┼ª┤®┼ <strong>5 minutos para completar</strong> ÈÃ¾ An+Ýlisis profesional garantizado
             </div>
         </div>
 
         <!-- Form Card -->
         <div class="form-card">
             <form id="diagnosticForm" onsubmit="return false;">
-                <!-- SECCI├ôN 1: INFORMACI├ôN DE CONTACTO -->
-                <div class="section-title">1. Informaci├│n de tu Empresa</div>
+                <!-- SECCI+¶N 1: INFORMACI+¶N DE CONTACTO -->
+                <div class="section-title">1. Informaci+ªn de tu Empresa</div>
 
                 <div class="form-group">
                     <label for="company_name">
                         Nombre de la Empresa
                         <span class="required">*</span>
                     </label>
-                    <input type="text" id="company_name" name="company_name" placeholder="Ej: Mi Empresa SpA" required>
+                    <input type="text" id="company_name" name="company_name" placeholder="Ej: Mi Empresa SpA" required="">
                 </div>
 
                 <div class="form-group">
@@ -511,7 +522,7 @@
                         <span class="required">*</span>
                         <span class="label-hint">(formato: 12.345.678-9)</span>
                     </label>
-                    <input type="text" id="rut" name="rut" placeholder="12.345.678-9" required>
+                    <input type="text" id="rut" name="rut" placeholder="12.345.678-9" required="">
                 </div>
 
                 <div class="form-row">
@@ -520,14 +531,14 @@
                             Tu Nombre
                             <span class="required">*</span>
                         </label>
-                        <input type="text" id="contact_name" name="contact_name" placeholder="Juan P├®rez" required>
+                        <input type="text" id="contact_name" name="contact_name" placeholder="Juan P+«rez" required="">
                     </div>
                     <div class="form-group">
                         <label for="contact_phone">
                             WhatsApp
                             <span class="required">*</span>
                         </label>
-                        <input type="tel" id="contact_phone" name="contact_phone" placeholder="+56 9 1234 5678" required>
+                        <input type="tel" id="contact_phone" name="contact_phone" placeholder="+56 9 1234 5678" required="">
                     </div>
                 </div>
 
@@ -536,10 +547,10 @@
                         Email
                         <span class="required">*</span>
                     </label>
-                    <input type="email" id="contact_email" name="contact_email" placeholder="tu@email.com" required>
+                    <input type="email" id="contact_email" name="contact_email" placeholder="tu@email.com" required="">
                 </div>
 
-                <!-- SECCI├ôN 2: PERFIL DEL NEGOCIO -->
+                <!-- SECCI+¶N 2: PERFIL DEL NEGOCIO -->
                 <div class="section-title" style="margin-top: 2rem;">2. Perfil de tu Negocio</div>
 
                 <div class="form-group">
@@ -547,16 +558,16 @@
                         Rubro / Sector
                         <span class="required">*</span>
                     </label>
-                    <select id="industry" name="industry" required>
+                    <select id="industry" name="industry" required="">
                         <option value="">Selecciona tu rubro...</option>
-                        <option value="servicios_profesionales">Servicios Profesionales (consultor├¡as, asesor├¡as, legales)</option>
+                        <option value="servicios_profesionales">Servicios Profesionales (consultor+ías, asesor+ías, legales)</option>
                         <option value="comercio_ecommerce">Comercio / E-commerce</option>
-                        <option value="servicios_terreno">Servicios en Terreno (transporte, mantenci├│n, log├¡stica)</option>
-                        <option value="construccion">Construcci├│n y Obras</option>
-                        <option value="gastronomia">Gastronom├¡a y Alimentos</option>
+                        <option value="servicios_terreno">Servicios en Terreno (transporte, mantenci+ªn, log+ística)</option>
+                        <option value="construccion">Construcci+ªn y Obras</option>
+                        <option value="gastronomia">Gastronom+ía y Alimentos</option>
                         <option value="salud_belleza">Salud y Belleza</option>
-                        <option value="tecnologia">Tecnolog├¡a y Software</option>
-                        <option value="educacion">Educaci├│n y Capacitaci├│n</option>
+                        <option value="tecnologia">Tecnolog+ía y Software</option>
+                        <option value="educacion">Educaci+ªn y Capacitaci+ªn</option>
                         <option value="manufactura">Manufactura e Industria</option>
                         <option value="otro">Otro</option>
                     </select>
@@ -577,14 +588,14 @@
                             Ingresos Mensuales (CLP)
                             <span class="required">*</span>
                         </label>
-                        <input type="text" id="annual_income" name="annual_income" placeholder="Ej: 23.000.000" required>
+                        <input type="text" id="annual_income" name="annual_income" placeholder="Ej: 23.000.000" required="">
                     </div>
                     <div class="form-group">
                         <label for="margin">
                             Margen de Ganancia (%)
                             <span class="required">*</span>
                         </label>
-                        <input type="number" id="margin" name="margin" placeholder="Ej: 15" min="0" max="100" required>
+                        <input type="number" id="margin" name="margin" placeholder="Ej: 15" min="0" max="100" required="">
                     </div>
                 </div>
 
@@ -594,54 +605,54 @@
                             Clientes Activos
                             <span class="required">*</span>
                         </label>
-                        <input type="number" id="active_clients" name="active_clients" placeholder="Ej: 50" min="0" required>
+                        <input type="number" id="active_clients" name="active_clients" placeholder="Ej: 50" min="0" required="">
                     </div>
                     <div class="form-group">
                         <label for="tax_regime">
-                            R├®gimen Tributario
+                            R+«gimen Tributario
                             <span class="required">*</span>
                         </label>
-                        <select id="tax_regime" name="tax_regime" required>
+                        <select id="tax_regime" name="tax_regime" required="">
                             <option value="">Selecciona...</option>
-                            <option value="general">R├®gimen General</option>
+                            <option value="general">R+«gimen General</option>
                             <option value="propyme">ProPyme</option>
-                            <option value="simplificado">R├®gimen Simplificado</option>
+                            <option value="simplificado">R+«gimen Simplificado</option>
                             <option value="no_se">No estoy seguro</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- SECCI├ôN 3: INFORMACI├ôN OPERACIONAL -->
-                <div class="section-title" style="margin-top: 2rem;">3. Informaci├│n Operacional</div>
-                <div class="section-subtitle">Datos que nos ayudan a personalizar tu diagn├│stico</div>
+                <!-- SECCI+¶N 3: INFORMACI+¶N OPERACIONAL -->
+                <div class="section-title" style="margin-top: 2rem;">3. Informaci+ªn Operacional</div>
+                <div class="section-subtitle">Datos que nos ayudan a personalizar tu Diagnóstico</div>
 
                 <div class="form-group">
                     <label for="main_costs">
                         Top 3 Costos Principales
                         <span class="required">*</span>
                     </label>
-                    <textarea id="main_costs" name="main_costs" placeholder="Ej: Combustible, personal, arriendo" required></textarea>
+                    <textarea id="main_costs" name="main_costs" placeholder="Ej: Combustible, personal, arriendo" required=""></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>
-                        ┬┐Tienes Presencia Digital?
+                        -+Tienes Presencia Digital?
                         <span class="required">*</span>
                     </label>
                     <div class="radio-group">
                         <div class="radio-item">
-                            <input type="radio" id="digital_yes" name="digital_presence" value="si" required>
-                            <label for="digital_yes">S├¡, tengo presencia</label>
+                            <input type="radio" id="digital_yes" name="digital_presence" value="si" required="">
+                            <label for="digital_yes">S+í, tengo presencia</label>
                         </div>
                         <div class="radio-item">
-                            <input type="radio" id="digital_no" name="digital_presence" value="no" required>
-                            <label for="digital_no">No, empezar├¡a desde cero</label>
+                            <input type="radio" id="digital_no" name="digital_presence" value="no" required="">
+                            <label for="digital_no">No, empezar+ía desde cero</label>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group" id="platforms_group" style="display: none;">
-                    <label>┬┐En cu├íles plataformas? (Opcional)</label>
+                    <label>-+En cu+Ýles plataformas? (Opcional)</label>
                     <div class="checkbox-group">
                         <div class="checkbox-item">
                             <input type="checkbox" id="plat_facebook" name="plataformas" value="facebook">
@@ -671,23 +682,23 @@
                         Nombre del Contador o Asesor Tributario
                         <span class="label-hint">(Opcional)</span>
                     </label>
-                    <input type="text" id="accountant_name" name="accountant_name" placeholder="Ej: Juan Garc├¡a, Gestor├¡a XYZ">
+                    <input type="text" id="accountant_name" name="accountant_name" placeholder="Ej: Juan Garc+ía, Gestor+ía XYZ">
                 </div>
 
-                <!-- SECCI├ôN 4: SITUACI├ôN ACTUAL -->
-                <div class="section-title" style="margin-top: 2rem;">4. Tu Situaci├│n Actual</div>
+                <!-- SECCI+¶N 4: SITUACI+¶N ACTUAL -->
+                <div class="section-title" style="margin-top: 2rem;">4. Tu Situaci+ªn Actual</div>
 
                 <div class="form-group">
                     <label for="main_challenge">
-                        ┬┐Cu├íl es tu mayor desaf├¡o ahora?
+                        -+Cu+Ýl es tu mayor desaf+ío ahora?
                         <span class="required">*</span>
                     </label>
-                    <select id="main_challenge" name="main_challenge" required>
+                    <select id="main_challenge" name="main_challenge" required="">
                         <option value="">Selecciona...</option>
                         <option value="costos_altos">Costos operativos muy altos</option>
                         <option value="margen_bajo">Margen de ganancia bajo</option>
                         <option value="falta_clientes">Falta de nuevos clientes</option>
-                        <option value="control_gestion">Falta de control de gesti├│n</option>
+                        <option value="control_gestion">Falta de control de gesti+ªn</option>
                         <option value="impuestos_altos">Impuestos elevados</option>
                         <option value="flujo_caja">Problemas de flujo de caja</option>
                         <option value="crecimiento">Dificultad para crecer</option>
@@ -695,13 +706,13 @@
                     </select>
                 </div>
 
-                <!-- Campo condicional: Especifica tu desaf├¡o -->
+                <!-- Campo condicional: Especifica tu desaf+ío -->
                 <div id="other_challenge_group" class="form-group" style="display: none;">
                     <label for="other_challenge">
-                        Especifica tu desaf├¡o
+                        Especifica tu desaf+ío
                         <span class="required">*</span>
                     </label>
-                    <input type="text" id="other_challenge" name="other_challenge" placeholder="Describe tu desaf├¡o principal">
+                    <input type="text" id="other_challenge" name="other_challenge" placeholder="Describe tu desaf+ío principal">
                 </div>
 
                 <div class="form-group">
@@ -709,41 +720,35 @@
                         Objetivo a 6 Meses
                         <span class="required">*</span>
                     </label>
-                    <textarea id="objective_6m" name="objective_6m" placeholder="Ej: Aumentar ventas 20%, reducir costos, estabilizar margen..." required></textarea>
+                    <textarea id="objective_6m" name="objective_6m" placeholder="Ej: Aumentar ventas 20%, reducir costos, estabilizar margen..." required=""></textarea>
                 </div>
 
-                <!-- SECCI├ôN 5: PLAN SELECCIONADO -->
+                <!-- SECCI+¶N 5: PLAN SELECCIONADO -->
                 <div class="section-title" style="margin-top: 2rem;">5. Elige tu Plan</div>
 
                 <div class="form-group">
                     <label>
-                        Tipo de Diagn├│stico
+                        Tipo de Diagnóstico
                         <span class="required">*</span>
                     </label>
                     <div class="radio-group">
                         <div class="radio-item">
-                            <input type="radio" id="plan_basico" name="plan" value="basico" checked required>
-                            <label for="plan_basico"><strong>B├ísico</strong> - $49.990 (Informe + 3 mejoras)</label>
+                            <input type="radio" id="plan_basico" name="plan" value="basico" checked="" required="">
+                            <label for="plan_basico"><strong>B+Ýsico</strong> - $49.990 (Informe + 3 mejoras)</label>
                         </div>
                     </div>
                     <div class="radio-group">
                         <div class="radio-item">
-                            <input type="radio" id="plan_premium" name="plan" value="premium" required>
-                            <label for="plan_premium"><strong>Premium</strong> - $149.990 (Plan 30/90/180 d├¡as + seguimiento)</label>
+                            <input type="radio" id="plan_premium" name="plan" value="premium" required="">
+                            <label for="plan_premium"><strong>Premium</strong> - $149.990 (Plan 30/90/180 d+ías + seguimiento)</label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Benefits -->
                 <div class="benefits" id="benefitsContainer">
-                    <h3>Ô£ô Qu├® incluye tu diagn├│stico:</h3>
-                    <ul id="benefitsList">
-                        <li>An├ílisis de oportunidades de crecimiento personalizadas</li>
-                        <li>Reducci├│n de costos operacionales identificada</li>
-                        <li>Estrategias de optimizaci├│n tributaria aplicables</li>
-                        <li>Plan de acci├│n 30 d├¡as para implementar</li>
-                        <li>Informe profesional en HTML + PDF</li>
-                    </ul>
+                    <h3>Èú¶ Qu+« incluye tu Diagnóstico:</h3>
+                    <ul id="benefitsList"><li>An+Ýlisis de oportunidades de crecimiento personalizadas</li><li>Reducci+ªn de costos operacionales identificada</li><li>Estrategias de optimizaci+ªn tributaria aplicables</li><li>Plan de acci+ªn 30 d+ías para implementar</li><li>Informe profesional en HTML + PDF</li></ul>
                 </div>
 
                 <!-- Submit -->
@@ -752,7 +757,7 @@
                         <span id="submitText">Continuar al Pago ($49.990)</span>
                     </button>
                     <p class="submit-note">
-                        Ser├ís redirigido a Mercado Pago para completar el pago de forma segura
+                        Ser+Ýs redirigido a Mercado Pago para completar el pago de forma segura
                     </p>
                 </div>
             </form>
@@ -761,8 +766,8 @@
         <!-- Footer -->
         <div class="footer">
             <p>
-                <strong>ACP & Asociados</strong><br>
-                Providencia, Santiago ÔÇó
+                <strong>ACP &amp; Asociados</strong><br>
+                Providencia, Santiago ÈÃ¾
                 <a href="https://acpasociados.cl/" target="_blank">acpasociados.cl</a><br>
                 WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a>
             </p>
@@ -772,14 +777,14 @@
     <!-- Success Overlay -->
     <div class="success-overlay" id="successOverlay">
         <div class="success-card">
-            <div class="success-icon">Ô£ô</div>
-            <h2>┬íRegistro Exitoso!</h2>
+            <div class="success-icon">Èú¶</div>
+            <h2>-ÝRegistro Exitoso!</h2>
             <p>
-                Hemos guardado tu informaci├│n.<br>
-                Ahora ser├ís redirigido a Mercado Pago para completar el pago.
+                Hemos guardado tu informaci+ªn.<br>
+                Ahora ser+Ýs redirigido a Mercado Pago para completar el pago.
             </p>
             <p style="font-size: 0.9rem; color: var(--text-secondary);">
-                Una vez confirmado el pago, recibir├ís tu diagn├│stico personalizado por email en las pr├│ximas 48 horas.
+                Una vez confirmado el pago, recibir+Ýs tu Diagnóstico personalizado por email en las pr+ªximas 48 horas.
             </p>
             <button class="btn-close" onclick="closeSuccessAndRedirect()">Ir a Mercado Pago</button>
         </div>
@@ -795,7 +800,7 @@
 
         let mercadoPagoLink = '';
 
-        // Mostrar/ocultar opciones de plataformas seg├║n selecci├│n
+        // Mostrar/ocultar opciones de plataformas seg+ªn selecci+ªn
         digitalPresenceRadios.forEach(radio => {
             radio.addEventListener('change', function() {
                 if (this.value === 'si') {
@@ -810,16 +815,16 @@
             });
         });
 
-        // Definir contenido din├ímico por plan
+        // Definir contenido din+Ýmico por plan
         const PLAN_CONTENT = {
             basico: {
                 price: 49990,
                 priceText: '$49.990',
                 benefits: [
-                    'An├ílisis de oportunidades de crecimiento personalizadas',
-                    'Reducci├│n de costos operacionales identificada',
-                    'Estrategias de optimizaci├│n tributaria aplicables',
-                    'Plan de acci├│n 30 d├¡as para implementar',
+                    'An+Ýlisis de oportunidades de crecimiento personalizadas',
+                    'Reducci+ªn de costos operacionales identificada',
+                    'Estrategias de optimizaci+ªn tributaria aplicables',
+                    'Plan de acci+ªn 30 d+ías para implementar',
                     'Informe profesional en HTML + PDF'
                 ]
             },
@@ -827,22 +832,22 @@
                 price: 149990,
                 priceText: '$149.990',
                 benefits: [
-                    'An├ílisis de oportunidades de crecimiento personalizadas',
-                    'Reducci├│n de costos operacionales identificada',
-                    'Estrategias de optimizaci├│n tributaria aplicables',
-                    'Plan de acci├│n 30 d├¡as para implementar',
+                    'An+Ýlisis de oportunidades de crecimiento personalizadas',
+                    'Reducci+ªn de costos operacionales identificada',
+                    'Estrategias de optimizaci+ªn tributaria aplicables',
+                    'Plan de acci+ªn 30 d+ías para implementar',
                     'Informe profesional en HTML + PDF',
-                    'Plan de implementaci├│n 30/90/180 d├¡as detallado',
-                    'Seguimiento y consultor├¡a por WhatsApp durante 3 meses',
+                    'Plan de implementaci+ªn 30/90/180 d+ías detallado',
+                    'Seguimiento y consultor+ía por WhatsApp durante 3 meses',
                     '5 casos de empresas comparables que crecieron en tu sector',
-                    'An├ílisis de competencia sectorial',
+                    'An+Ýlisis de competencia sectorial',
                     'Proyecciones financieras a 12 meses',
-                    'Sesi├│n 1:1 de 30 minutos con asesor'
+                    'Sesi+ªn 1:1 de 30 minutos con asesor'
                 ]
             }
         };
 
-        // Funci├│n para actualizar beneficios
+        // Funci+ªn para actualizar beneficios
         function updatePlanContent(planType) {
             const plan = PLAN_CONTENT[planType];
             const benefitsList = document.getElementById('benefitsList');
@@ -852,18 +857,18 @@
                 .map(benefit => `<li>${benefit}</li>`)
                 .join('');
 
-            // Actualizar texto del bot├│n
+            // Actualizar texto del bot+ªn
             submitText.textContent = `Continuar al Pago (${plan.priceText})`;
         }
 
-        // Actualizar texto del bot├│n seg├║n plan seleccionado
+        // Actualizar texto del bot+ªn seg+ªn plan seleccionado
         document.querySelectorAll('input[name="plan"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 updatePlanContent(this.value);
             });
         });
 
-        // Inicializar con plan B├ísico
+        // Inicializar con plan B+Ýsico
         updatePlanContent('basico');
 
         // Form submission
@@ -920,7 +925,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o cont├íctanos por WhatsApp al +56 9 4401 8594.');
+                alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o cont+Ýctanos por WhatsApp al +56 9 4401 8594.');
 
                 submitBtn.disabled = false;
                 const price = document.getElementById('plan_basico').checked ? '$49.990' : '$149.990';
@@ -975,3 +980,31 @@
         const otherChallengeInput = document.getElementById('other_challenge');
 
         // Show/hide "Especifica tu rubro" when
+
+        // Show/hide "Especifica tu rubro" when industry is "otro"
+        industrySelect.addEventListener('change', function() {
+            if (this.value === 'otro') {
+                otherIndustryGroup.style.display = 'block';
+                otherIndustryInput.required = true;
+            } else {
+                otherIndustryGroup.style.display = 'none';
+                otherIndustryInput.required = false;
+                otherIndustryInput.value = '';
+            }
+        });
+
+        // Show/hide "Especifica tu desafÝo" when challenge is "otro"
+        mainChallengeSelect.addEventListener('change', function() {
+            if (this.value === 'otro') {
+                otherChallengeGroup.style.display = 'block';
+                otherChallengeInput.required = true;
+            } else {
+                otherChallengeGroup.style.display = 'none';
+                otherChallengeInput.required = false;
+                otherChallengeInput.value = '';
+            }
+        });
+    </script>
+
+
+<div id="claude-agent-glow-border" style="position: fixed; inset: 0px; pointer-events: none; z-index: 2147483646; opacity: 1; transition: opacity 0.3s ease-in-out;"><div id="claude-agent-glow-border-inner" style="position: absolute; inset: 0px; will-change: opacity; box-shadow: rgba(217, 119, 87, 0.7) 0px 0px 15px inset, rgba(217, 119, 87, 0.5) 0px 0px 25px inset, rgba(217, 119, 87, 0.2) 0px 0px 35px inset;"></div></div><div id="claude-phantom-cursor" aria-hidden="true" style="position: fixed; top: 0px; left: 0px; pointer-events: none; z-index: 2147483646; transform: translate3d(278px, 443px, 0px); transition: transform 180ms cubic-bezier(0.2, 0, 0, 1); will-change: transform;"><svg id="claude-phantom-cursor-plain" width="20" height="26" viewBox="0 0 20 26" style="position: absolute; top: 0px; left: 0px; overflow: visible;"><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" stroke="white" stroke-width="3" stroke-linejoin="round" fill="white"></path><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" fill="#111"></path></svg><svg id="claude-phantom-cursor-styled" width="20" height="26" viewBox="0 0 20 26" style="position: absolute; top: 0px; left: 0px; overflow: visible; filter: drop-shadow(rgba(217, 119, 87, 0.9) 0px 0px 4px) drop-shadow(rgba(217, 119, 87, 0.45) 0px 0px 10px);"><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" stroke="#D97757" stroke-width="3" stroke-linejoin="round" fill="#D97757"></path><path d="M0 0 L0 18 L4.5 14 L7.5 21.5 L11 20 L8 13 L14 13 Z" fill="#FAF9F5"></path></svg></div></body></html>
