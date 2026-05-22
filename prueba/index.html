@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario Servicios en Terreno - Prueba Completa | ACP & Asociados</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1B3B5C 0%, #2C3E50 100%);
+            color: #2C3E50;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1B3B5C 0%, #16A085 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .info-box {
+            background: #ECF0F3;
+            border-left: 4px solid #16A085;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        
+        .info-box h2 {
+            color: #1B3B5C;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #2C3E50;
+            line-height: 1.6;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #1B3B5C 0%, #2C3E50 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-header .icon {
+            font-size: 24px;
+        }
+        
+        .section-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .section-header .count {
+            margin-left: auto;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .question {
+            background: #FFFFFF;
+            border: 2px solid #ECF0F3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .question:hover {
+            border-color: #16A085;
+            box-shadow: 0 4px 12px rgba(22,160,133,0.1);
+        }
+        
+        .question-number {
+            display: inline-block;
+            background: #16A085;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .question label {
+            font-weight: 600;
+            color: #1B3B5C;
+            font-size: 16px;
+            display: block;
+            margin-bottom: 12px;
+        }
+        
+        .question input[type="number"],
+        .question input[type="text"],
+        .question select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ECF0F3;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        .question input:focus,
+        .question select:focus {
+            outline: none;
+            border-color: #16A085;
+            box-shadow: 0 0 0 3px rgba(22,160,133,0.1);
+        }
+        
+        .question select {
+            cursor: pointer;
+            background-color: white;
+        }
+        
+        .question .optional {
+            color: #95A5A6;
+            font-size: 13px;
+            font-weight: 400;
+            margin-left: 5px;
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .phase-critical {
+            background: #FFE5E5;
+            color: #E74C3C;
+        }
+        
+        .phase-important {
+            background: #FFF3E0;
+            color: #F39C12;
+        }
+        
+        .phase-useful {
+            background: #E8F5F0;
+            color: #16A085;
+        }
+        
+        .submit-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #ECF0F3;
+            text-align: center;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #16A085 0%, #1B3B5C 100%);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(22,160,133,0.3);
+        }
+        
+        .footer {
+            background: #1B3B5C;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #16A085;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ACP & ASOCIADOS</div>
+            <h1>Cuestionario Sectorial</h1>
+            <p>Servicios en Terreno (Transporte, Mantención, Logística)</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <h2>📋 Instrucciones</h2>
+                <p>Este cuestionario contiene <strong>13 preguntas específicas</strong> para empresas de servicios en terreno. Las respuestas nos permitirán identificar oportunidades concretas de mejora en tu operación.</p>
+                <p style="margin-top: 10px;"><strong>Tiempo estimado:</strong> 5-7 minutos</p>
+            </div>
+            
+            <!-- EXISTENTES (6 preguntas originales) -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="icon">✅</span>
+                    <h3>Preguntas Operacionales Básicas</h3>
+                    <span class="count">6 preguntas</span>
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">1</span>
+                        Trabajos por día
+                    </label>
+                    <input type="number" placeholder="Ej: 8" min="0">
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">2</span>
+                        Horas muertas por día
+                    </label>
+                    <input type="number" placeholder="Ej: 2" min="0" step="0.5">
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">3</span>
+                        Gasto mensual de combustible (CLP)
+                    </label>
+                    <input type="number" placeholder="Ej: 1500000" min="0">
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">4</span>
+                        Tasa de repetición de clientes (%)
+                    </label>
+                    <input type="number" placeholder="Ej: 60" min="0" max="100">
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">5</span>
+                        Tiempo de respuesta promedio (horas)
+                    </label>
+                    <input type="number" placeholder="Ej: 4" min="0" step="0.5">
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">6</span>
+                        Presupuestos aceptados (%)
+                    </label>
+                    <input type="number" placeholder="Ej: 45" min="0" max="100">
+                </div>
+            </div>
+            
+            <!-- FASE 1 - CRÍTICAS (2 preguntas) -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="icon">🚨</span>
+                    <h3>FASE 1 - Preguntas Críticas</h3>
+                    <span class="count">2 preguntas</span>
+                </div>
+                
+                <span class="phase-badge phase-critical">🚨 CRÍTICA - Alto Impacto</span>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">7</span>
+                        ¿Cómo llegan la mayoría de tus clientes?
+                    </label>
+                    <select>
+                        <option value="">Selecciona una opción</option>
+                        <option value="Principalmente por referidos/recomendaciones">Principalmente por referidos/recomendaciones</option>
+                        <option value="Marketing activo (anuncios, redes sociales)">Marketing activo (anuncios, redes sociales)</option>
+                        <option value="Mix balanceado (50/50)">Mix balanceado (50/50)</option>
+                        <option value="Base de clientes antiguos/recurrentes">Base de clientes antiguos/recurrentes</option>
+                        <option value="Licitaciones/contratos">Licitaciones/contratos</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">8</span>
+                        ¿Cómo compras el combustible?
+                    </label>
+                    <select>
+                        <option value="">Selecciona una opción</option>
+                        <option value="En bomba/estación de servicio (precio público)">En bomba/estación de servicio (precio público)</option>
+                        <option value="Contrato con distribuidor (precio preferencial)">Contrato con distribuidor (precio preferencial)</option>
+                        <option value="Mix (algunos vehículos con contrato, otros en bomba)">Mix (algunos vehículos con contrato, otros en bomba)</option>
+                        <option value="Tarjetas corporativas con descuento">Tarjetas corporativas con descuento</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- FASE 2 - IMPORTANTES (2 preguntas) -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="icon">🟡</span>
+                    <h3>FASE 2 - Preguntas Importantes</h3>
+                    <span class="count">2 preguntas</span>
+                </div>
+                
+                <span class="phase-badge phase-important">🟡 IMPORTANTE - Mejora Operacional</span>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">9</span>
+                        ¿Los viajes de vuelta van cargados o vacíos?
+                    </label>
+                    <select>
+                        <option value="">Selecciona una opción</option>
+                        <option value="Siempre vacíos (100% de los retornos)">Siempre vacíos (100% de los retornos)</option>
+                        <option value="Generalmente vacíos (más del 70%)">Generalmente vacíos (más del 70%)</option>
+                        <option value="Mix (50% cargados, 50% vacíos)">Mix (50% cargados, 50% vacíos)</option>
+                        <option value="Generalmente cargados (más del 70%)">Generalmente cargados (más del 70%)</option>
+                        <option value="Casi siempre cargados (más del 90%)">Casi siempre cargados (más del 90%)</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">10</span>
+                        ¿Cómo llevas el control de tus operaciones?
+                    </label>
+                    <select>
+                        <option value="">Selecciona una opción</option>
+                        <option value="No llevo control formal, todo de memoria/mental">No llevo control formal, todo de memoria/mental</option>
+                        <option value="Excel/Google Sheets">Excel/Google Sheets</option>
+                        <option value="Software especializado de transporte">Software especializado de transporte</option>
+                        <option value="Software de gestión general (ERP)">Software de gestión general (ERP)</option>
+                        <option value="Sistema propio/desarrollado internamente">Sistema propio/desarrollado internamente</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- FASE 3 - ÚTILES (3 preguntas opcionales) -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="icon">🟢</span>
+                    <h3>FASE 3 - Preguntas Útiles</h3>
+                    <span class="count">3 preguntas (opcionales)</span>
+                </div>
+                
+                <span class="phase-badge phase-useful">🟢 ÚTIL - Contexto Adicional</span>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">11</span>
+                        Costo promedio por viaje (CLP)
+                        <span class="optional">(Opcional - estimado)</span>
+                    </label>
+                    <input type="number" placeholder="Ej: 150000" min="0">
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">12</span>
+                        ¿Qué porcentaje de tus ingresos viene de contratos fijos vs. servicios puntuales?
+                        <span class="optional">(Opcional)</span>
+                    </label>
+                    <select>
+                        <option value="">Selecciona una opción</option>
+                        <option value="Más del 80% contratos fijos">Más del 80% contratos fijos</option>
+                        <option value="Más del 60% contratos fijos">Más del 60% contratos fijos</option>
+                        <option value="Mix balanceado (50/50)">Mix balanceado (50/50)</option>
+                        <option value="Más del 60% servicios puntuales">Más del 60% servicios puntuales</option>
+                        <option value="Más del 80% servicios puntuales">Más del 80% servicios puntuales</option>
+                    </select>
+                </div>
+                
+                <div class="question">
+                    <label>
+                        <span class="question-number">13</span>
+                        Nombre del Contador o Asesor Tributario
+                        <span class="optional">(Opcional)</span>
+                    </label>
+                    <input type="text" placeholder="Ej: Juan García, Gestoría XYZ">
+                </div>
+            </div>
+            
+            <div class="submit-section">
+                <button class="btn-submit" onclick="alert('✅ En producción, este cuestionario se enviaría al sistema ACP y generaría tu diagnóstico personalizado.')">
+                    Enviar Cuestionario
+                </button>
+                <p style="margin-top: 15px; color: #95A5A6; font-size: 14px;">
+                    ⏱️ Tiempo estimado de respuesta del diagnóstico: 48 horas
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>ACP & Asociados</strong> | Asesorías Financieras y de Negocios</p>
+            <p style="margin-top: 10px;">
+                <a href="https://acpasociados.cl">acpasociados.cl</a> | 
+                <a href="https://wa.me/56944018594">+56 9 4401 8594</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
