@@ -906,15 +906,10 @@
 
                 const result = await response.json();
 
-                if (response.ok && result.mercadoPagoUrl) {
-                    // Store MercadoPago link
-                    mercadoPagoLink = result.mercadoPagoUrl;
-
-                    // Show success overlay
-                    successOverlay.classList.add('show');
-
-                    // Reset form
-                    form.reset();
+                if (response.ok && result.checkout_url) {
+                    // Redirigir directamente a Mercado Pago
+                    console.log('✅ Redirigiendo a Mercado Pago:', result.checkout_url);
+                    window.location.href = result.checkout_url;
                 } else {
                     throw new Error(result.error || 'Error al procesar');
                 }
@@ -975,4 +970,5 @@
         const otherChallengeInput = document.getElementById('other_challenge');
 
         // Show/hide "Especifica tu rubro" when
+
 
