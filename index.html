@@ -480,7 +480,7 @@
 
             <div class="pricing-banner">
                 <div class="price-item">
-                    <span class="price">$49.990</span>
+                    <span class="price">$1</span>
                     <span class="price-label">CLP</span>
                 </div>
                 <div class="price-note">Inversión única • Informe en 48 horas</div>
@@ -723,13 +723,13 @@
                     <div class="radio-group">
                         <div class="radio-item">
                             <input type="radio" id="plan_basico" name="plan" value="basico" checked required>
-                            <label for="plan_basico"><strong>Básico</strong> - $49.990 (Informe + 3 mejoras)</label>
+                            <label for="plan_basico"><strong>Básico</strong> - $1 (Informe + 3 mejoras)</label>
                         </div>
                     </div>
                     <div class="radio-group">
                         <div class="radio-item">
                             <input type="radio" id="plan_premium" name="plan" value="premium" required>
-                            <label for="plan_premium"><strong>Premium</strong> - $149.990 (Plan 30/90/180 días + seguimiento)</label>
+                            <label for="plan_premium"><strong>Premium</strong> - $11 (Plan 30/90/180 días + seguimiento)</label>
                         </div>
                     </div>
                 </div>
@@ -749,7 +749,7 @@
                 <!-- Submit -->
                 <div class="submit-section">
                     <button type="submit" class="btn-submit" id="submitBtn">
-                        <span id="submitText">Continuar al Pago ($49.990)</span>
+                        <span id="submitText">Continuar al Pago ($1)</span>
                     </button>
                     <p class="submit-note">
                         Serás redirigido a Mercado Pago para completar el pago de forma segura
@@ -813,8 +813,8 @@
         // Definir contenido dinámico por plan
         const PLAN_CONTENT = {
             basico: {
-                price: 49990,
-                priceText: '$49.990',
+                price: 1,
+                priceText: '$1',
                 benefits: [
                     'Análisis de oportunidades de crecimiento personalizadas',
                     'Reducción de costos operacionales identificada',
@@ -824,8 +824,8 @@
                 ]
             },
             premium: {
-                price: 149990,
-                priceText: '$149.990',
+                price: 11,
+                priceText: '$11',
                 benefits: [
                     'Análisis de oportunidades de crecimiento personalizadas',
                     'Reducción de costos operacionales identificada',
@@ -885,7 +885,7 @@
             const data = {
                 timestamp: new Date().toISOString(),
                 product: document.getElementById('plan_basico').checked ? 'diagnostico_basico' : 'diagnostico_premium',
-                price: document.getElementById('plan_basico').checked ? 49990 : 149990,
+                price: document.getElementById('plan_basico').checked ? 1 : 11,
                 ...Object.fromEntries(formData),
                 plataformas: plataformas || 'ninguna'
             };
@@ -923,7 +923,7 @@
                 alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o contáctanos por WhatsApp al +56 9 4401 8594.');
 
                 submitBtn.disabled = false;
-                const price = document.getElementById('plan_basico').checked ? '$49.990' : '$149.990';
+                const price = document.getElementById('plan_basico').checked ? '$1' : '$11';
                 submitText.textContent = `Continuar al Pago (${price})`;
             }
         });
@@ -935,7 +935,7 @@
                 // Fallback: just close overlay
                 successOverlay.classList.remove('show');
                 submitBtn.disabled = false;
-                const price = document.getElementById('plan_basico').checked ? '$49.990' : '$149.990';
+                const price = document.getElementById('plan_basico').checked ? '$1' : '$11';
                 submitText.textContent = `Continuar al Pago (${price})`;
             }
         }
