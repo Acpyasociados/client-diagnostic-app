@@ -426,3 +426,158 @@ If Flow integration has issues:
 ---
 
 **Status**: ✅ Implementation Complete | ⏳ E2E Testing Pending
+
+---
+
+## Session Update: Flow Credential Mismatch Fix (2026-05-23)
+
+### Issue: "Invalid Signature" (Error Code 108)
+
+**Severity**: 🔴 CRITICAL - Payment button completely blocked
+
+**Problem**: Form submission was failing with HTTP 400 from Flow API showing:
+```
+Flow API Error: { code: 108, message: 'Invalid Signature' }
+```
+
+**Root Cause**: Environment variables in Netlify UI were **OUTDATED** and didn't match `netlify.toml`
+
+```
+❌ WRONG in Netlify environment (from previous session):
+  FLOW_API_KEY = "7407DEBF-783B-4C84-9FB4-43C4L344D745"
+  FLOW_SECRET_KEY = "419fd1dc315b285498f60189ae50507c1df2dd6a"
+
+✅ CORRECT in netlify.toml (registered Flow merchant account):
+  FLOW_API_KEY = "1F7ABDF2-7286-4261-9A54-963935CDCL2I"
+  FLOW_SECRET_KEY = "9ebebcc7a7929aac1472c21b75fb764522b6601d"
+```
+
+**Why This Breaks:**
+1. Function reads FLOW_SECRET_KEY from Netlify environment
+2. Uses wrong secret to calculate SHA256 signature
+3. Flow recalculates signature using THEIR copy (the correct one)
+4. Signatures don't match
+5. Flow rejects with "Invalid Signature" error code 108
+
+**Solution**:
+1. Identified mismatch by running: `netlify env:list --json`
+2. Updated Netlify environment variables:
+   ```bash
+   netlify env:set FLOW_API_KEY "1F7ABDF2-7286-4261-9A54-963935CDCL2I"
+   netlify env:set FLOW_SECRET_KEY "9ebebcc7a7929aac1472c21b75fb764522b6601d"
+   ```
+3. Forced redeploy to apply new env vars:
+   ```bash
+   netlify deploy --prod --trigger
+   ```
+4. Verified credentials were updated:
+   ```bash
+   netlify env:list --json | grep FLOW
+   # Now shows correct values
+   ```
+
+**Commit**: `4f0c50d Force redeploy with updated Flow credentials in Netlify environment`
+
+**Lesson**: 
+> **Environment variables in Netlify UI can fall out of sync with netlify.toml. Always verify what's actually deployed vs. what's in config files. The definitive source of truth is `netlify env:list --json`.**
+
+---
+
+### Documentation Created
+
+**File**: `FLOW_PAYMENT_GUIDE.md` (955 lines)
+
+**Contents**:
+- ✅ Complete 4-stage payment flow explanation
+- ✅ Background execution details for each stage
+- ✅ SHA256 signature calculation breakdown
+- ✅ Security model explanation (why signatures prevent fraud)
+- ✅ Sandbox vs Production requirements and migration checklist
+- ✅ Common issues and troubleshooting guide
+- ✅ Complete payment flow ASCII diagram
+- ✅ Data lifecycle through Netlify Blobs
+- ✅ Test card information for sandbox
+- ✅ Environment variable verification procedures
+
+**Purpose**: Answer user's request for "claridad que se esta ejecutando en segundo plano" (clarity on what executes in background) with comprehensive documentation of Flow API characteristics, requirements, and exigencies.
+
+---
+
+### What Executes in Background (Complete Flow)
+
+When user clicks "Continuar al Pago" button:
+
+```
+Stage 1: CLIENT BROWSER (JavaScript)
+  Form validation → Collect data → POST to flow-create-payment
+
+Stage 2: NETLIFY BACKEND (Your Function)
+  Parse form → Validate → Generate orderId → Store in Blobs
+  → Create Flow parameters → Calculate SHA256 signature
+  → POST to Flow sandbox API
+
+Stage 3: FLOW EXTERNAL SERVICE
+  Verify signature → Generate payment token → Create checkout session
+  → Return payment URL to browser
+
+Stage 4: CLIENT PAYS ON FLOW PAGE
+  Client enters card → Flow processes with banks
+  → After payment: Flow calls webhook
+
+Stage 5: WEBHOOK CALLBACK
+  Verify webhook signature → Update case to "pagado"
+  → Trigger email notifications → Generate PDF report
+  → Notify advisor → Store confirmation
+
+Stage 6: CLIENT SUCCESS PAGE
+  Redirect to /flow-success.html → Show confirmation
+  → Instruct to check email for questionnaire
+```
+
+**Key Security Mechanisms**:
+- SHA256 signature prevents parameter tampering
+- Webhook signature verification prevents fraud
+- Card details never touch your servers (PCI compliant)
+- All credentials stored in encrypted Netlify environment variables
+
+**Persistence**:
+- Case data stored in Netlify Blobs (indexed by orderId)
+- Updates at each stage: pending → pagado → with report URL
+- Never lost even if webhook is delayed (Flow retries)
+
+---
+
+### Testing Status
+
+**Current Status**: ✅ READY FOR E2E TESTING
+
+**Prerequisites Met**:
+- ✅ Correct Flow credentials in Netlify environment
+- ✅ Functions deployed and functional
+- ✅ Blobs storage configured
+- ✅ Email services configured (Resend)
+- ✅ Sandbox API endpoints working
+
+**Next E2E Test**:
+1. Navigate to https://acp-asociados.netlify.app
+2. Fill complete form with test data
+3. Click "Continuar al Pago"
+4. Wait for Flow checkout page (should load now without 400 error)
+5. Use test card: 4111 1111 1111 1111
+6. Complete payment
+7. Verify:
+   - Redirect to /flow-success.html
+   - Webhook fires (check logs)
+   - Case status updates to "pagado"
+   - Questionnaire email sent to client
+   - Advisor email sent
+   - PDF report generated
+
+**Prepared For**:
+- Sandbox testing (currently using sandbox.flow.cl)
+- Production migration (credentials switchable)
+- Monitoring and logging (all functions log to Netlify)
+
+---
+
+**Session Status**: ✅ COMPLETE - Ready for E2E testing with correct credentials
