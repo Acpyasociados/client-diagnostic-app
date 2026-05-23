@@ -25,7 +25,7 @@
   NODE_ENV = "production"
   PRICE_BASIC_CLP = "1000"
   PRICE_PREMIUM_CLP = "11000"
-  # Flow Payment Gateway Credentials (Sandbox)
-  # IMPORTANT: Using original registered credentials from Flow account
-  FLOW_API_KEY = "7407DEBF-783B-4C84-9FB4-43C4L344D745"
-  FLOW_SECRET_KEY = "419fd1dc315b285498f60189ae50507c1df2dd6a"
+  # Flow Payment Gateway Credentials (Production)
+  # IMPORTANT: Using real production credentials from Flow account
+  FLOW_API_KEY = "1F7ABDF2-7286-4261-9A54-963935CDCL21"
+  FLOW_SECRET_KEY = "0d11403f33bbddd3125e537ea7ef044ef390e65f"
