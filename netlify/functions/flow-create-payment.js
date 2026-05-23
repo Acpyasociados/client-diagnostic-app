@@ -45,10 +45,10 @@ export default async (event, context) => {
   try {
     if (!FLOW_API_KEY || !FLOW_SECRET_KEY) {
       console.error('Missing Flow API credentials');
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'Missing Flow API configuration' })
-      };
+      return new Response(
+        JSON.stringify({ error: 'Missing Flow API configuration' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const formData = await parseBody(event);
@@ -59,10 +59,10 @@ export default async (event, context) => {
 
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields);
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Missing required fields', missing: missingFields })
-      };
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields', missing: missingFields }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const priceBasic = parseInt(process.env.PRICE_BASIC_CLP) || 1000;
@@ -109,26 +109,26 @@ export default async (event, context) => {
 
     if (!flowResponse.ok || flowData.status !== 'SUCCESS') {
       console.error('Flow API Error:', flowData);
-      return {
-        statusCode: flowResponse.status || 400,
-        body: JSON.stringify({ error: 'Failed to create payment in Flow', details: flowData.message || 'Unknown error' })
-      };
+      return new Response(
+        JSON.stringify({ error: 'Failed to create payment in Flow', details: flowData.message || 'Unknown error' }),
+        { status: flowResponse.status || 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     caseData.flow_token = flowData.token;
     caseData.payment_created = new Date().toISOString();
     await store.setJSON(orderId, caseData);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ success: true, orderId: orderId, paymentUrl: flowData.url, token: flowData.token })
-    };
+    return new Response(
+      JSON.stringify({ success: true, orderId: orderId, paymentUrl: flowData.url, token: flowData.token }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Flow Create Payment Error:', { message: error.message, stack: error.stack });
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error while creating Flow payment', message: error.message })
-    };
+    return new Response(
+      JSON.stringify({ error: 'Internal server error while creating Flow payment', message: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 };
