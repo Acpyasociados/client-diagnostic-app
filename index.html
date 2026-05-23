@@ -661,26 +661,28 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
     // Collect data
     const formData = new FormData(form);
     const data = {
-      timestamp: new Date().toISOString(),
-      product: document.getElementById('plan_basico').checked ? 'diagnostico_basico' : 'diagnostico_premium',
-      price: document.getElementById('plan_basico').checked ? 1000 : 11000,
-      company_name: formData.get('company_name'),
-      rut: formData.get('rut'),
-      contact_name: formData.get('contact_name'),
-      contact_phone: formData.get('contact_phone'),
-      contact_email: formData.get('contact_email'),
-      industry: formData.get('industry'),
-      other_industry: formData.get('other_industry') || '',
-      annual_income: formData.get('annual_income'),
-      margin: formData.get('margin'),
+      // Required fields for Flow payment
+      name: formData.get('contact_name'),
+      email: formData.get('contact_email'),
+      phone: formData.get('contact_phone'),
+      company: formData.get('company_name'),
+      sector: formData.get('industry'),
+      plan: formData.get('plan'),
+      amount: formData.get('plan') === 'premium' ? 11000 : 1000,
+
+      // Additional business info
+      monthly_sales: formData.get('annual_income'),
+      profit_margin: formData.get('margin'),
       active_clients: formData.get('active_clients'),
       tax_regime: formData.get('tax_regime'),
-      main_costs: formData.get('main_costs'),
+      top_costs: formData.get('main_costs'),
       digital_presence: formData.get('digital_presence'),
-      accountant_name: formData.get('accountant_name') || '',
+      tax_advisor: formData.get('accountant_name') || '',
       main_challenge: formData.get('main_challenge'),
-      objective_6m: formData.get('objective_6m'),
-      plan: formData.get('plan')
+      objectives_6m: formData.get('objective_6m'),
+
+      // Metadata
+      timestamp: new Date().toISOString()
     };
 
     console.log('📦 Data to send:', data);
