@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard del Asesor — ACP & Asociados</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'DM Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    :root {
+      --acp-primary: #1B3B5C;
+      --acp-secondary: #16A085;
+      --acp-accent: #E67E22;
+      --acp-info: #3498DB;
+      --acp-text: #2C3E50;
+      --acp-light: #ECF0F3;
+    }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: var(--acp-text);
+    }
+    .navbar-acp {
+      background: linear-gradient(135deg, var(--acp-primary) 0%, var(--acp-secondary) 100%);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .navbar-acp .navbar-brand {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    .logo-sub {
+      font-size: 10px;
+      letter-spacing: 2px;
+      opacity: 0.8;
+    }
+    .header-kpis {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .kpi-card {
+      text-align: center;
+      padding: 15px;
+      border-radius: 6px;
+      background: var(--acp-light);
+      border-left: 4px solid var(--acp-secondary);
+    }
+    .kpi-value {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--acp-secondary);
+      margin: 10px 0;
+    }
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .filter-section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .filter-section h5 {
+      font-weight: 600;
+      color: var(--acp-primary);
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--acp-secondary);
+      padding-bottom: 10px;
+    }
+    .search-box {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .search-box:focus {
+      outline: none;
+      border-color: var(--acp-secondary);
+      box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+    }
+    .btn-filter {
+      background: var(--acp-secondary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn-filter:hover {
+      background: #0F8B6B;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(22, 160, 133, 0.3);
+    }
+    .btn-filter:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .cases-table {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table thead {
+      background: var(--acp-primary);
+      color: white;
+    }
+    table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--acp-secondary);
+    }
+    table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--acp-light);
+    }
+    table tbody tr:hover {
+      background: #f9f9f9;
+    }
+    .sector-badge {
+      display: inline-block;
+      background: var(--acp-light);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--acp-primary);
+    }
+    .plan-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .plan-badge.premium {
+      background: linear-gradient(135deg, #FFB347 0%, #FFA500 100%);
+      color: white;
+    }
+    .plan-badge.basic {
+      background: #95a5a6;
+      color: white;
+    }
+    .amount {
+      font-weight: 700;
+      color: var(--acp-secondary);
+      font-size: 14px;
+    }
+    .btn-action {
+      padding: 6px 12px;
+      margin: 2px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action-primary {
+      background: var(--acp-secondary);
+      color: white;
+    }
+    .btn-action-primary:hover {
+      background: #0F8B6B;
+      transform: translateY(-2px);
+    }
+    .btn-action-secondary {
+      background: var(--acp-info);
+      color: white;
+    }
+    .btn-action-secondary:hover {
+      background: #2980B9;
+      transform: translateY(-2px);
+    }
+    .btn-action-danger {
+      background: #e74c3c;
+      color: white;
+    }
+    .btn-action-danger:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+    }
+    .modal-content {
+      border-radius: 8px;
+      border: none;
+    }
+    .modal-header {
+      background: linear-gradient(135deg, var(--acp-primary) 0%, var(--acp-secondary) 100%);
+      color: white;
+      border: none;
+      padding: 20px;
+    }
+    .modal-header .btn-close {
+      filter: brightness(0) invert(1);
+    }
+    .modal-body {
+      padding: 25px;
+    }
+    .detail-label {
+      font-weight: 600;
+      color: var(--acp-primary);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+    .detail-value {
+      color: var(--acp-text);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .notes-section {
+      background: var(--acp-light);
+      border-left: 4px solid var(--acp-secondary);
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .note-item {
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      border-left: 3px solid var(--acp-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .note-text {
+      flex: 1;
+      padding-right: 10px;
+    }
+    .note-time {
+      font-size: 11px;
+      color: #999;
+    }
+    .note-actions {
+      display: flex;
+      gap: 5px;
+    }
+    textarea.note-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+    }
+    textarea.note-input:focus {
+      outline: none;
+      border-color: var(--acp-secondary);
+      box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+    }
+    .pagination-info {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-size: 13px;
+    }
+    .login-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .login-card {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-card h2 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 32px;
+      color: var(--acp-primary);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .login-card .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .login-card .logo img {
+      height: 60px;
+    }
+    .hidden { display: none; }
+    .loading { opacity: 0.6; pointer-events: none; }
+    .error-message {
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 4px;
+      padding: 12px;
+      color: #c33;
+      margin-bottom: 15px;
+      font-size: 13px;
+    }
+    .success-message {
+      background: #efe;
+      border: 1px solid #cfc;
+      border-radius: 4px;
+      padding: 12px;
+      color: #3c3;
+      margin-bottom: 15px;
+      font-size: 13px;
+    }
+    @media (max-width: 768px) {
+      .header-kpis {
+        margin-bottom: 20px;
+      }
+      table {
+        font-size: 12px;
+      }
+      table th, table td {
+        padding: 8px;
+      }
+      .btn-action {
+        padding: 4px 8px;
+        font-size: 11px;
+        margin: 1px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-acp navbar-expand-lg">
+  <div class="container-fluid">
+    <span class="navbar-brand">
+      ACP<br><span class="logo-sub">& ASOCIADOS</span>
+    </span>
+    <span class="navbar-text text-white ms-auto">
+      🔒 Dashboard del Asesor <span id="token-status">-</span>
+    </span>
+  </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container-fluid py-4">
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="login-modal">
+    <div class="login-card">
+      <div class="logo">
+        <div style="font-size: 32px; color: var(--acp-primary); font-family: 'Cormorant Garamond', serif; font-weight: 700; letter-spacing: 2px;">ACP & ASOCIADOS</div>
+      </div>
+      <h2>Dashboard</h2>
+      <div id="loginError" class="error-message hidden"></div>
+      <div class="mb-3">
+        <label for="tokenInput" class="form-label">Token de Acceso</label>
+        <input
+          type="password"
+          class="form-control"
+          id="tokenInput"
+          placeholder="Ingresa tu token de acceso"
+          style="border-radius: 4px; padding: 10px 12px;"
+        >
+      </div>
+      <button id="loginBtn" class="btn-filter" style="width: 100%; padding: 12px;">
+        Acceder
+      </button>
+      <div style="text-align: center; margin-top: 15px; font-size: 12px; color: #999;">
+        Sistema seguro - Tu sesión no se guardará
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div id="dashboardContent" class="hidden">
+
+    <!-- Header KPIs -->
+    <div class="header-kpis">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="kpi-card">
+            <div class="kpi-label">Total de Casos</div>
+            <div class="kpi-value" id="kpiCases">0</div>
+            <div style="font-size: 12px; color: #999;">pagados</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card" style="border-left-color: var(--acp-info);">
+            <div class="kpi-label">Ingresos Acumulados</div>
+            <div class="kpi-value" id="kpiRevenue" style="color: var(--acp-info);">$0</div>
+            <div style="font-size: 12px; color: #999;">CLP</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card" style="border-left-color: var(--acp-accent);">
+            <div class="kpi-label">Ticket Promedio</div>
+            <div class="kpi-value" id="kpiAverage" style="color: var(--acp-accent);">$0</div>
+            <div style="font-size: 12px; color: #999;">por venta</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="kpi-card" style="border-left-color: #9b59b6;">
+            <div class="kpi-label">Tasa Conversión</div>
+            <div class="kpi-value" id="kpiRate" style="color: #9b59b6;">0%</div>
+            <div style="font-size: 12px; color: #999;">reportes generados</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filter-section">
+      <h5>🔍 Buscar y Filtrar</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label small" style="font-weight: 600;">Buscar cliente/empresa</label>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-box"
+            placeholder="Nombre, email o empresa..."
+          >
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small" style="font-weight: 600;">Sector</label>
+          <select id="sectorFilter" class="search-box">
+            <option value="all">Todos</option>
+            <option value="servicios_profesionales">Servicios Prof.</option>
+            <option value="comercio_ecommerce">Comercio</option>
+            <option value="servicios_terreno">Servicios</option>
+            <option value="construccion">Construcción</option>
+            <option value="gastronomia">Gastronomía</option>
+            <option value="salud_belleza">Salud & Belleza</option>
+            <option value="tecnologia">Tecnología</option>
+            <option value="educacion">Educación</option>
+            <option value="manufactura">Manufactura</option>
+            <option value="otro">Otros</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small" style="font-weight: 600;">Plan</label>
+          <select id="planFilter" class="search-box">
+            <option value="all">Todos</option>
+            <option value="premium">Premium</option>
+            <option value="basico">Básico</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small" style="font-weight: 600;"></label>
+          <button id="resetBtn" class="btn-filter" style="width: 100%;">Limpiar filtros</button>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small" style="font-weight: 600;"></label>
+          <button id="logoutBtn" class="btn-filter" style="width: 100%; background: #e74c3c;">Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cases Table -->
+    <div id="messageContainer"></div>
+
+    <div class="cases-table">
+      <table id="casesTable">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Empresa</th>
+            <th>Sector</th>
+            <th>Plan</th>
+            <th>Monto</th>
+            <th>Fecha de Pago</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="casesTableBody">
+          <tr><td colspan="8" style="text-align: center; padding: 40px; color: #999;">Cargando casos...</td></tr>
+        </tbody>
+      </table>
+      <div class="pagination-info">
+        <span id="paginationInfo">-</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalles del Caso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="detailsContent">
+        Cargando...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const API_BASE = '/.netlify/functions';
+let currentToken = localStorage.getItem('advisorToken') || null;
+let currentPage = 1;
+let currentFilters = {};
+
+// ========================
+// UTILITIES
+// ========================
+
+function formatCLP(amount) {
+  return '$' + amount.toLocaleString('es-CL');
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('es-CL');
+}
+
+function showMessage(message, type = 'error') {
+  const container = document.getElementById('messageContainer');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+  messageDiv.textContent = message;
+  container.innerHTML = '';
+  container.appendChild(messageDiv);
+  setTimeout(() => messageDiv.remove(), 5000);
+}
+
+async function apiCall(endpoint, params = {}) {
+  const url = new URL(endpoint, window.location.origin);
+  if (currentToken) {
+    params.token = currentToken;
+  }
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== null && v !== '') url.searchParams.append(k, v);
+  });
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Error en la solicitud');
+    }
+    return data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
+
+// ========================
+// AUTHENTICATION
+// ========================
+
+function showLogin() {
+  document.getElementById('loginModal').classList.remove('hidden');
+  document.getElementById('dashboardContent').classList.add('hidden');
+}
+
+function hideLogin() {
+  document.getElementById('loginModal').classList.add('hidden');
+  document.getElementById('dashboardContent').classList.remove('hidden');
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const token = document.getElementById('tokenInput').value;
+  if (!token) {
+    document.getElementById('loginError').textContent = 'Por favor ingresa un token';
+    document.getElementById('loginError').classList.remove('hidden');
+    return;
+  }
+
+  currentToken = token;
+  localStorage.setItem('advisorToken', token);
+  document.getElementById('loginError').classList.add('hidden');
+  document.getElementById('tokenStatus').textContent = '✓ Conectado';
+
+  hideLogin();
+  loadCases();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  currentToken = null;
+  localStorage.removeItem('advisorToken');
+  showLogin();
+});
+
+// ========================
+// LOAD CASES
+// ========================
+
+async function loadCases(page = 1) {
+  try {
+    const params = {
+      page,
+      limit: 50,
+      ...currentFilters
+    };
+
+    const data = await apiCall(API_BASE + '/get-advisor-cases', params);
+
+    if (!data.success) {
+      showMessage(data.error || 'Error al cargar casos');
+      return;
+    }
+
+    // Update KPIs
+    document.getElementById('kpiCases').textContent = data.kpis.total_cases;
+    document.getElementById('kpiRevenue').textContent = formatCLP(data.kpis.total_revenue);
+    document.getElementById('kpiAverage').textContent = formatCLP(data.kpis.average_transaction);
+
+    // Render table
+    const tbody = document.getElementById('casesTableBody');
+    if (data.cases.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #999;">No hay casos que coincidan con los filtros</td></tr>';
+    } else {
+      tbody.innerHTML = data.cases.map(c => `
+        <tr>
+          <td>${c.name}</td>
+          <td>${c.company}</td>
+          <td><span class="sector-badge">${c.sector_label}</span></td>
+          <td><span class="plan-badge ${c.plan.toLowerCase()}">${c.plan}</span></td>
+          <td class="amount">${formatCLP(c.amount)}</td>
+          <td>${formatDate(c.paid_at)}</td>
+          <td>${c.has_report ? '✓ Reportado' : 'Pendiente'}</td>
+          <td>
+            <button class="btn-action btn-action-primary" onclick="showDetails('${c.order_id}')">Ver</button>
+            ${c.has_report ? `<button class="btn-action btn-action-secondary" onclick="downloadPDF('${c.order_id}')">PDF</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Update pagination
+    document.getElementById('paginationInfo').textContent =
+      `Página ${data.pagination.page} de ${data.pagination.total_pages} (${data.pagination.total} casos)`;
+
+    currentPage = page;
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+// ========================
+// FILTERS & SEARCH
+// ========================
+
+document.getElementById('searchInput').addEventListener('change', (e) => {
+  currentFilters.search = e.target.value;
+  loadCases(1);
+});
+
+document.getElementById('sectorFilter').addEventListener('change', (e) => {
+  currentFilters.sector = e.target.value === 'all' ? null : e.target.value;
+  loadCases(1);
+});
+
+document.getElementById('planFilter').addEventListener('change', (e) => {
+  currentFilters.plan = e.target.value === 'all' ? null : e.target.value;
+  loadCases(1);
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('sectorFilter').value = 'all';
+  document.getElementById('planFilter').value = 'all';
+  currentFilters = {};
+  loadCases(1);
+});
+
+// ========================
+// CASE DETAILS
+// ========================
+
+async function showDetails(orderId) {
+  try {
+    const data = await apiCall(API_BASE + '/get-case-details', { order_id: orderId });
+    if (!data.success) {
+      showMessage(data.error);
+      return;
+    }
+
+    const c = data.case;
+    let html = `
+      <div class="row">
+        <div class="col-md-6">
+          <div class="detail-label">Nombre del Cliente</div>
+          <div class="detail-value">${c.client.name}</div>
+
+          <div class="detail-label">Email</div>
+          <div class="detail-value">${c.client.email}</div>
+
+          <div class="detail-label">Teléfono</div>
+          <div class="detail-value">${c.client.phone || '-'}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="detail-label">Empresa</div>
+          <div class="detail-value">${c.company}</div>
+
+          <div class="detail-label">Sector</div>
+          <div class="detail-value">${c.sector_label}</div>
+
+          <div class="detail-label">Plan</div>
+          <div class="detail-value"><span class="plan-badge ${c.plan.toLowerCase()}">${c.plan}</span></div>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="detail-label">Monto Pagado</div>
+          <div class="detail-value" style="color: var(--acp-secondary); font-weight: 700; font-size: 18px;">${formatCLP(c.amount)}</div>
+
+          <div class="detail-label">Fecha de Pago</div>
+          <div class="detail-value">${formatDate(c.payment_info.paid_at)}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="detail-label">Ventas Mensuales</div>
+          <div class="detail-value">${c.diagnostics.monthly_sales || '-'}</div>
+
+          <div class="detail-label">Margen de Ganancia</div>
+          <div class="detail-value">${c.diagnostics.profit_margin || '-'}</div>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="detail-label">Clientes Activos</div>
+          <div class="detail-value">${c.diagnostics.active_clients || '-'}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="detail-label">Desafío Principal</div>
+          <div class="detail-value">${c.diagnostics.main_challenge || '-'}</div>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="detail-label">Reporte</div>
+          <div class="detail-value">${c.report.has_report ? '✓ Generado el ' + formatDate(c.report.generated_at) : '⏳ Pendiente'}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="detail-label">Cuestionario</div>
+          <div class="detail-value">${c.questionnaire.sent_at ? '✓ Enviado' : '⏳ Pendiente'}</div>
+        </div>
+      </div>
+
+      <div class="notes-section">
+        <h6 style="margin-bottom: 12px; font-weight: 600; color: var(--acp-primary);">📝 Notas Privadas</h6>
+    `;
+
+    if (c.notes && c.notes.length > 0) {
+      html += c.notes.map(note => `
+        <div class="note-item">
+          <div class="note-text">
+            <div>${note.text}</div>
+            <div class="note-time">Actualizada: ${formatDate(note.updated_at)}</div>
+          </div>
+          <div class="note-actions">
+            <button class="btn-action btn-action-danger" style="padding: 3px 6px;" onclick="deleteNote('${orderId}', '${note.id}')">✕</button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      html += '<div style="color: #999; font-size: 13px; margin-bottom: 12px;">No hay notas aún</div>';
+    }
+
+    html += `
+        <textarea class="note-input" id="newNote" placeholder="Agregar nueva nota..."></textarea>
+        <button class="btn-filter" style="margin-top: 8px; width: 100%;" onclick="saveNote('${orderId}')">Guardar nota</button>
+      </div>
+    `;
+
+    document.getElementById('detailsContent').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function saveNote(orderId) {
+  const text = document.getElementById('newNote').value.trim();
+  if (!text) {
+    showMessage('Por favor escribe una nota');
+    return;
+  }
+
+  try {
+    const response = await fetch(API_BASE + '/save-case-notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: currentToken,
+        order_id: orderId,
+        note: { text, action: 'create' }
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+
+    showMessage('Nota guardada exitosamente', 'success');
+    document.getElementById('newNote').value = '';
+
+    // Refresh details
+    setTimeout(() => showDetails(orderId), 500);
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function deleteNote(orderId, noteId) {
+  if (!confirm('¿Eliminar esta nota?')) return;
+
+  try {
+    const response = await fetch(API_BASE + '/save-case-notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: currentToken,
+        order_id: orderId,
+        note: { id: noteId, action: 'delete' }
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+
+    showMessage('Nota eliminada', 'success');
+    setTimeout(() => showDetails(orderId), 500);
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+// ========================
+// PDF DOWNLOAD
+// ========================
+
+async function downloadPDF(orderId) {
+  try {
+    const data = await apiCall(API_BASE + '/get-case-pdf', { order_id: orderId });
+
+    if (data.report_url) {
+      window.open(data.report_url, '_blank');
+    } else {
+      showMessage('No se pudo obtener el PDF. Intenta más tarde.');
+    }
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+// ========================
+// INITIALIZATION
+// ========================
+
+window.addEventListener('load', () => {
+  if (currentToken) {
+    document.getElementById('tokenStatus').textContent = '✓ Conectado';
+    hideLogin();
+    loadCases();
+  } else {
+    showLogin();
+  }
+});
+</script>
+
+</body>
+</html>
