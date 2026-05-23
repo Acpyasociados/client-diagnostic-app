@@ -103,11 +103,16 @@ export default async (event, context) => {
 
     flowParams.s = generateFlowSignature(flowParams, FLOW_SECRET_KEY);
 
+    console.log('Flow Parameters:', JSON.stringify(flowParams, null, 2));
+    const urlEncodedBody = new URLSearchParams(flowParams).toString();
+    console.log('URL Encoded Body:', urlEncodedBody);
+    console.log('FLOW_API_KEY value:', FLOW_API_KEY);
+    console.log('FLOW_SECRET_KEY value:', FLOW_SECRET_KEY);
     console.log('Calling Flow API endpoint: /payment/create');
     const flowResponse = await fetch(`${FLOW_API_URL}/payment/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-      body: new URLSearchParams(flowParams).toString()
+      body: urlEncodedBody
     });
 
     const flowData = await flowResponse.json();
