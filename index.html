@@ -543,13 +543,13 @@ padding: 1.5rem 1.25rem;
 <div class="radio-group">
 <div class="radio-item">
 <input type="radio" id="plan_basico" name="plan" value="basico" checked required>
-<label for="plan_basico"><strong>Básico</strong> - $1 (Informe + 3 mejoras)</label>
+<label for="plan_basico"><strong>Básico</strong> - $1.000 (Informe + 3 mejoras)</label>
 </div>
 </div>
 <div class="radio-group">
 <div class="radio-item">
 <input type="radio" id="plan_premium" name="plan" value="premium" required>
-<label for="plan_premium"><strong>Premium</strong> - $11 (Plan 30/90/180 días + seguimiento)</label>
+<label for="plan_premium"><strong>Premium</strong> - $11.000 (Plan 30/90/180 días + seguimiento)</label>
 </div>
 </div>
 </div>
@@ -639,7 +639,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
   // Update button text based on plan
   document.querySelectorAll('input[name="plan"]').forEach(radio => {
     radio.addEventListener('change', function() {
-      const price = this.value === 'basico' ? '$1' : '$11';
+      const price = this.value === 'basico' ? '$1.000' : '$11.000';
       submitText.textContent = `Continuar al Pago (${price})`;
     });
   });
@@ -716,7 +716,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
       alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o contáctanos por WhatsApp al +56 9 4401 8594.\n\nError: ' + error.message);
 
       submitBtn.disabled = false;
-      const price = document.getElementById('plan_basico').checked ? '$1' : '$11';
+      const price = document.getElementById('plan_basico').checked ? '$1.000' : '$11.000';
       submitText.textContent = `Continuar al Pago (${price})`;
     }
   });
