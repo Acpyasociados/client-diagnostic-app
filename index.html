@@ -569,7 +569,7 @@ padding: 1.5rem 1.25rem;
 <button type="submit" class="btn-submit" id="submitBtn">
 <span id="submitText">Continuar al Pago ($1.000)</span>
 </button>
-<p class="submit-note">Serás redirigido a Mercado Pago para completar el pago de forma segura</p>
+<p class="submit-note">Serás redirigido a Flow para completar el pago de forma segura</p>
 </div>
 </form>
 </div>
@@ -708,7 +708,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
       console.log('📨 Response data:', result);
 
       if (response.ok && result.paymentUrl) {
-        console.log('✅ Redirigiendo a Mercado Pago:', result.paymentUrl);
+        console.log('✅ Redirigiendo a Flow:', result.paymentUrl);
         window.location.href = result.paymentUrl;
       } else {
         throw new Error(result.error || 'Error al procesar');
