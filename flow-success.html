@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago Procesado - Diagnóstico ACP</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .container { background: white; border-radius: 10px; padding: 40px; max-width: 500px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; }
+        .success-icon { width: 80px; height: 80px; margin: 0 auto 20px; background: #4CAF50; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 48px; }
+        h1 { color: #333; margin-bottom: 15px; font-size: 28px; }
+        .status-text { color: #666; margin-bottom: 30px; line-height: 1.6; font-size: 16px; }
+        .order-details { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; font-size: 14px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .info-box { background: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; border-radius: 4px; margin-bottom: 20px; text-align: left; font-size: 14px; color: #1565c0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>¡Pago Procesado!</h1>
+        <div class="status-text">
+            <p>Tu pago ha sido recibido exitosamente. Recibirás un email con las próximas instrucciones y el cuestionario específico para tu sector.</p>
+        </div>
+        <div class="order-details">
+            <div class="detail-row"><span>Orden:</span> <span id="orderId">-</span></div>
+            <div class="detail-row"><span>Monto:</span> <span id="amount">-</span></div>
+            <div class="detail-row"><span>Moneda:</span> <span>CLP</span></div>
+            <div class="detail-row"><span>Fecha:</span> <span id="date">-</span></div>
+        </div>
+        <div class="info-box">📧 Revisa tu email (incluyendo SPAM) para recibir el cuestionario de diagnóstico.</div>
+        <a href="/" class="btn btn-primary">Volver al Inicio</a>
+    </div>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const orderId = params.get('orderId');
+        if (orderId) {
+            document.getElementById('orderId').textContent = orderId;
+            fetch(`/.netlify/functions/get-order-details?orderId=${orderId}`).then(r=>r.json()).then(d=>{
+                if (d.success && d.data) {
+                    document.getElementById('amount').textContent = `$${d.data.amount.toLocaleString('es-CL')}`;
+                    document.getElementById('date').textContent = new Date(d.data.created_at).toLocaleDateString('es-CL');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

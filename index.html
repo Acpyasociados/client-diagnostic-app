@@ -692,7 +692,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
     try {
       console.log('🚀 Sending request to Netlify Function...');
       
-      const response = await fetch('/.netlify/functions/create-diagnostic-order', {
+      const response = await fetch('/.netlify/functions/flow-create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -705,9 +705,9 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
       const result = await response.json();
       console.log('📨 Response data:', result);
 
-      if (response.ok && result.checkout_url) {
-        console.log('✅ Redirigiendo a Mercado Pago:', result.checkout_url);
-        window.location.href = result.checkout_url;
+      if (response.ok && result.paymentUrl) {
+        console.log('✅ Redirigiendo a Mercado Pago:', result.paymentUrl);
+        window.location.href = result.paymentUrl;
       } else {
         throw new Error(result.error || 'Error al procesar');
       }
