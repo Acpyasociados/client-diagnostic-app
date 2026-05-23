@@ -154,3 +154,143 @@ netlify functions:invoke mercadopago-webhook --payload '{
 **Documento Creado:** 2026-05-23  
 **Próxima Revisión:** Después de próxima iteración del proyecto
 **Mantenedor:** Claude Code AI Assistant
+
+---
+
+## Session 2026-05-23: Price Update & End-to-End Testing
+
+### Issue 1: ❌ Multiple Hardcoded Price Values (CRITICAL)
+**Severity**: 🔴 CRITICAL
+
+**Problem**: Prices hardcoded in FIVE separate locations instead of using single source of truth:
+- Line 546: HTML label for basic plan `$1` 
+- Line 552: HTML label for premium plan `$11`
+- Line 570: Button text initial value `Continuar al Pago ($1)`
+- Line 666: Form submission price value `price: 1 : 11` ⚠️ **MOST CRITICAL**
+- Line 719: Error handler fallback prices
+
+**Symptom**: Updated button display to $1.000 but Mercado Pago still showed $1 due to form submission using old hardcoded values.
+
+**Root Cause**: No centralized price constant. Each developer location used its own value.
+
+**Solution**:
+1. Located ALL price occurrences with grep
+2. Updated each location: 1→1000, 11→11000
+3. Verified changes in git diff before committing
+4. Tested end-to-end to confirm backend received correct value
+
+**Commits**:
+- `afbfaf4`: Updated HTML labels and button text
+- `00d6534`: Fixed button initial text
+- `6b3fdc8`: **CRITICAL FIX** - Corrected form submission prices (1000/11000)
+
+**Lesson**: 
+> **ALWAYS search for ALL occurrences of a value using grep before updating. One missed location can break the entire flow.**
+
+---
+
+### Issue 2: ⚠️ Form Validation: Digital Presence Radio Button
+**Severity**: 🟠 MEDIUM
+
+**Problem**: Form `checkValidity()` returned false because `digital_presence` radio button wasn't registering.
+
+**Symptom**: Form wouldn't submit even though field was clicked.
+
+**Root Cause**: Simple `.click()` doesn't trigger validation events on radio buttons.
+
+**Solution**:
+```javascript
+// Before (didn't work):
+radioButton.click()
+
+// After (works):
+radioButton.checked = true;
+radioButton.dispatchEvent(new Event('change', { bubbles: true }));
+```
+
+**Lesson**:
+> **When setting radio/checkbox values programmatically, dispatch change events explicitly for validation to register.**
+
+---
+
+### Issue 3: ⚠️ Browser Cache Blocking JavaScript Updates
+**Severity**: 🟡 LOW
+
+**Problem**: Updated JavaScript prices to 1000/11000 but browser still served old cached version (1/11).
+
+**Solution**: Hard refresh with Ctrl+Shift+R (not just F5).
+
+**Lesson**:
+> **After code updates, always use Ctrl+Shift+R hard refresh. Regular F5 may serve cached JavaScript.**
+
+---
+
+### Issue 4: ⚠️ Environment Variables Not Taking Effect Immediately  
+**Severity**: 🟡 LOW
+
+**Problem**: Set PRICE_BASIC_CLP=1000 via `netlify env:set` but function still used old value.
+
+**Root Cause**: Environment variable changes require a redeploy to take effect.
+
+**Solution**:
+```bash
+netlify env:set PRICE_BASIC_CLP 1000
+netlify env:set PRICE_PREMIUM_CLP 11000
+netlify deploy --prod --trigger  # Force redeploy
+```
+
+**Lesson**:
+> **Environment variable changes don't take effect without a redeploy. Use --trigger to force immediate rebuild.**
+
+---
+
+## End-to-End Test Results
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Form Section 1 (Company Info) | ✅ Pass | All 5 fields filled and validated |
+| Form Section 2 (Business Profile) | ✅ Pass | Dropdowns and numbers working |
+| Form Section 3 (Operations) | ✅ Pass | Text area and radio buttons validated |
+| Form Section 4 (Current Situation) | ✅ Pass | Challenge dropdown and objective textarea |
+| Form Section 5 (Plan Selection) | ✅ Pass | Plan choice, button price display |
+| Form Submission | ✅ Pass | All validation passed, sent to backend |
+| Mercado Pago Redirect | ✅ Pass | Payment gateway loaded successfully |
+| Price Verification | ✅ Pass | $1.000 CLP sent to backend (1000 in code) |
+
+---
+
+## Code Quality Improvements Made
+
+✅ Consolidated price values from 5 locations to consistent 1000/11000
+✅ Verified prices propagated through entire payment flow
+✅ Fixed form validation to properly handle radio buttons
+✅ Documented environment variable requirements
+✅ Tested browser cache handling
+
+---
+
+## Prevention for Future Sessions
+
+### Checklist Before Updating Values
+- [ ] Search entire codebase for all occurrences: `grep -r "old_value" .`
+- [ ] Update ALL locations, not just the obvious ones
+- [ ] Test each location to confirm change took effect
+- [ ] Verify in multiple places (UI, network request, backend logs)
+
+### Browser Testing Checklist
+- [ ] Hard refresh with Ctrl+Shift+R after code changes
+- [ ] Open DevTools Network tab to verify fresh files loaded
+- [ ] Check response headers for cache info (should not be cached)
+- [ ] Test in Incognito/Private mode if regular caching persists
+
+### Environment Variable Checklist
+- [ ] Define in both netlify.toml AND Netlify UI (backup)
+- [ ] Add validation in serverless function to catch missing vars
+- [ ] Force redeploy after changing vars: `--trigger` flag
+- [ ] Verify in function logs that correct values loaded
+
+---
+
+**Session Status**: ✅ COMPLETE
+**All Prices Updated**: 1 → 1.000 CLP, 11 → 11.000 CLP
+**Next Review**: Monitor production payments for pricing accuracy
