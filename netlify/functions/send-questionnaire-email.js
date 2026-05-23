@@ -223,9 +223,57 @@ function getQuestionnaireHtml(caseData, sector) {
   return questionnairesBySetor[sector] || questionnairesBySetor.otro;
 }
 
+function getSectorPersonalization(sector) {
+  const personalizations = {
+    servicios_profesionales: {
+      icon: '⚖️',
+      message: 'Nos enfocaremos en tu estructura de costos, gestión de clientes y oportunidades de escalabilidad'
+    },
+    comercio_ecommerce: {
+      icon: '🛒',
+      message: 'Analizaremos tus canales de venta, logística y estrategia de retención de clientes'
+    },
+    servicios_terreno: {
+      icon: '🔧',
+      message: 'Revisaremos tu coordinación operativa, seguimiento de proyectos y gestión de recursos'
+    },
+    construccion: {
+      icon: '🏗️',
+      message: 'Evaluaremos gestión de proyectos, control de costos y seguridad en obra'
+    },
+    gastronomia: {
+      icon: '🍽️',
+      message: 'Analizaremos gestión de inventario, recetas y experiencia del cliente'
+    },
+    salud_belleza: {
+      icon: '💅',
+      message: 'Revisaremos gestión de citas, inventario y retención de clientes'
+    },
+    tecnologia: {
+      icon: '💻',
+      message: 'Evaluaremos tu metodología de desarrollo, gestión de clientes y escalabilidad'
+    },
+    educacion: {
+      icon: '📚',
+      message: 'Analizaremos gestión de estudiantes, programas y recursos educativos'
+    },
+    manufactura: {
+      icon: '⚙️',
+      message: 'Revisaremos procesos de producción, control de calidad e inventario'
+    },
+    otro: {
+      icon: '📊',
+      message: 'Realizaremos un diagnóstico integral adaptado a tu modelo de negocio'
+    }
+  };
+  return personalizations[sector] || personalizations.otro;
+}
+
 function getEmailHtml(caseData, sector) {
   const sectorLabel = SECTOR_LABELS[sector] || sector;
   const questionnaire = getQuestionnaireHtml(caseData, sector);
+  const personalization = getSectorPersonalization(sector);
+  const siteUrl = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
 
   return `
     <!DOCTYPE html>
@@ -234,69 +282,124 @@ function getEmailHtml(caseData, sector) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
+        * { margin: 0; padding: 0; }
         body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: 'DM Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           line-height: 1.6;
           color: #2C3E50;
           background: #f5f5f5;
-          margin: 0;
-          padding: 20px;
         }
         .container {
           max-width: 700px;
           margin: 0 auto;
           background: white;
-          border-radius: 12px;
+          border-radius: 0;
           overflow: hidden;
           box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         .header {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #1B3B5C 0%, #16A085 100%);
           color: white;
-          padding: 40px 20px;
+          padding: 50px 30px;
           text-align: center;
         }
+        .header .logo {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 32px;
+          font-weight: 700;
+          letter-spacing: 3px;
+          margin-bottom: 15px;
+        }
+        .header .logo-sub {
+          font-size: 11px;
+          letter-spacing: 2px;
+          color: #3498DB;
+          font-weight: 300;
+        }
         .header h1 {
-          margin: 0 0 10px 0;
+          margin: 20px 0 10px 0;
           font-size: 28px;
+          font-weight: 600;
         }
         .header p {
           margin: 0;
           font-size: 16px;
-          opacity: 0.95;
+          opacity: 0.9;
         }
         .content {
           padding: 40px;
         }
         .greeting {
-          font-size: 16px;
-          margin-bottom: 20px;
+          font-size: 18px;
+          margin-bottom: 15px;
+          line-height: 1.6;
         }
         .greeting strong {
-          color: #667eea;
+          color: #1B3B5C;
         }
-        .info-box {
-          background: #F8F9FA;
-          border-left: 4px solid #667eea;
-          padding: 20px;
-          margin: 30px 0;
+        .progress-bar {
+          background: #ECF0F3;
+          border-radius: 20px;
+          padding: 2px;
+          margin: 25px 0;
+          height: 8px;
+        }
+        .progress-fill {
+          background: linear-gradient(90deg, #16A085 0%, #3498DB 100%);
+          height: 100%;
+          border-radius: 20px;
+          width: 40%;
+        }
+        .progress-text {
+          font-size: 12px;
+          color: #666;
+          margin-top: 8px;
+          text-align: center;
+          font-weight: 600;
+        }
+        .summary-box {
+          background: linear-gradient(135deg, #f0f6ff 0%, #f0fff0 100%);
+          border-left: 4px solid #16A085;
+          padding: 25px;
+          margin: 25px 0;
           border-radius: 6px;
         }
-        .info-box table {
-          width: 100%;
-          border-collapse: collapse;
+        .summary-box h3 {
+          color: #1B3B5C;
+          margin-top: 0;
+          margin-bottom: 12px;
+          font-size: 16px;
         }
-        .info-box td {
-          padding: 10px 0;
-          border-bottom: 1px solid #E0E0E0;
+        .summary-box p {
+          margin: 0;
+          font-size: 15px;
+          line-height: 1.7;
+          color: #2C3E50;
         }
-        .info-box td:first-child {
+        .info-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+          margin: 25px 0;
+        }
+        .info-card {
+          background: #ECF0F3;
+          padding: 15px;
+          border-radius: 6px;
+          border-top: 3px solid #16A085;
+        }
+        .info-card .label {
+          font-size: 12px;
           font-weight: 600;
-          color: #667eea;
-          width: 140px;
+          color: #16A085;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          margin-bottom: 5px;
         }
-        .info-box tr:last-child td {
-          border-bottom: none;
+        .info-card .value {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1B3B5C;
         }
         .questionnaire {
           background: #FFFFFF;
@@ -306,10 +409,11 @@ function getEmailHtml(caseData, sector) {
           border-radius: 8px;
         }
         .questionnaire h3 {
-          color: #667eea;
+          color: #1B3B5C;
           margin-top: 0;
-          border-bottom: 2px solid #667eea;
-          padding-bottom: 10px;
+          border-bottom: 3px solid #16A085;
+          padding-bottom: 12px;
+          font-size: 18px;
         }
         .questionnaire ol {
           padding-left: 20px;
@@ -317,58 +421,129 @@ function getEmailHtml(caseData, sector) {
         .questionnaire li {
           margin-bottom: 20px;
           line-height: 1.8;
-        }
-        .questionnaire strong {
           color: #2C3E50;
         }
+        .questionnaire strong {
+          color: #1B3B5C;
+        }
         .instructions {
-          background: #E3F2FD;
-          border-left: 4px solid #2196F3;
-          padding: 20px;
+          background: linear-gradient(135deg, #fff3e0 0%, #fff9c4 100%);
+          border-left: 4px solid #E67E22;
+          padding: 25px;
           margin: 30px 0;
           border-radius: 6px;
         }
         .instructions h3 {
           margin-top: 0;
-          color: #1565C0;
+          color: #D97706;
+          font-size: 16px;
+        }
+        .instructions ol {
+          margin: 15px 0;
+          padding-left: 20px;
+        }
+        .instructions li {
+          margin-bottom: 10px;
+          line-height: 1.6;
+        }
+        .button-group {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin: 30px 0;
         }
         .btn {
           display: block;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white !important;
           padding: 16px 32px;
           text-decoration: none;
-          border-radius: 8px;
+          border-radius: 6px;
           font-weight: 600;
-          font-size: 16px;
+          font-size: 15px;
           text-align: center;
-          margin: 30px auto;
-          max-width: 300px;
+          transition: all 0.3s ease;
         }
-        .btn:hover {
+        .btn-primary {
+          background: linear-gradient(135deg, #16A085 0%, #1B3B5C 100%);
+        }
+        .btn-primary:hover {
           opacity: 0.9;
-          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(22, 160, 133, 0.3);
+        }
+        .btn-secondary {
+          background: #3498DB;
+          padding: 14px 28px;
+          font-size: 14px;
+        }
+        .btn-secondary:hover {
+          opacity: 0.9;
+        }
+        .timeline {
+          margin: 25px 0;
+          padding: 20px;
+          background: #f9f9f9;
+          border-radius: 6px;
+          border-left: 4px solid #3498DB;
+        }
+        .timeline h4 {
+          margin: 0 0 12px 0;
+          color: #1B3B5C;
+          font-size: 14px;
+        }
+        .timeline-step {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 12px;
+          font-size: 14px;
+        }
+        .timeline-step:last-child {
+          margin-bottom: 0;
+        }
+        .timeline-number {
+          background: #16A085;
+          color: white;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          flex-shrink: 0;
         }
         .footer {
           border-top: 1px solid #E0E0E0;
-          padding-top: 20px;
+          padding: 25px;
           margin-top: 30px;
-          font-size: 12px;
-          color: #999;
+          background: #f9f9f9;
           text-align: center;
+          font-size: 13px;
+        }
+        .footer p {
+          margin: 8px 0;
+          color: #666;
+        }
+        .footer .brand {
+          color: #1B3B5C;
+          font-weight: 600;
+          margin-top: 12px;
         }
         .divider {
           border: 0;
-          border-top: 2px solid #E0E0E0;
-          margin: 30px 0;
+          border-top: 1px solid #E0E0E0;
+          margin: 25px 0;
         }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h1>📋 Tu Cuestionario Diagnóstico</h1>
-          <p>Paso 2 de tu diagnóstico ACP Asociados</p>
+          <div class="logo">
+            ACP
+            <div class="logo-sub">& ASOCIADOS</div>
+          </div>
+          <h1>Tu Cuestionario Diagnóstico</h1>
+          <p>Paso 2 de 3: Recopilación de información</p>
         </div>
 
         <div class="content">
@@ -377,29 +552,37 @@ function getEmailHtml(caseData, sector) {
           </div>
 
           <p>
-            Tu pago ha sido confirmado exitosamente. A continuación, encontrarás el cuestionario específico para tu sector: <strong>${sectorLabel}</strong>.
+            Tu pago ha sido confirmado y tu diagnóstico está en marcha. El siguiente paso es completar el cuestionario específico para tu sector para que podamos personalizar nuestro análisis.
           </p>
 
-          <div class="info-box">
-            <h3 style="margin-top: 0; margin-bottom: 15px;">📌 Datos de tu Solicitud</h3>
-            <table>
-              <tr>
-                <td>Empresa:</td>
-                <td><strong>${caseData.company}</strong></td>
-              </tr>
-              <tr>
-                <td>Sector:</td>
-                <td>${sectorLabel}</td>
-              </tr>
-              <tr>
-                <td>Plan:</td>
-                <td><strong>${caseData.plan === 'premium' ? 'Premium' : 'Básico'}</strong></td>
-              </tr>
-              <tr>
-                <td>Orden:</td>
-                <td><code>${caseData.id}</code></td>
-              </tr>
-            </table>
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+          <div class="progress-text">Progreso: 40% completado</div>
+
+          <div class="summary-box">
+            <h3>📌 Lo que haremos con tus respuestas</h3>
+            <p><strong>${personalization.icon} ${sectorLabel}</strong><br/>
+            ${personalization.message}</p>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-card">
+              <div class="label">Empresa</div>
+              <div class="value">${caseData.company}</div>
+            </div>
+            <div class="info-card">
+              <div class="label">Sector</div>
+              <div class="value">${sectorLabel}</div>
+            </div>
+            <div class="info-card">
+              <div class="label">Plan</div>
+              <div class="value">${caseData.plan === 'premium' ? '✓ Premium' : '✓ Básico'}</div>
+            </div>
+            <div class="info-card">
+              <div class="label">Orden</div>
+              <div class="value" style="font-family: monospace; font-size: 12px;">${caseData.id}</div>
+            </div>
           </div>
 
           <hr class="divider">
@@ -409,31 +592,49 @@ function getEmailHtml(caseData, sector) {
           </div>
 
           <div class="instructions">
-            <h3>📝 Instrucciones</h3>
+            <h3>📝 Consejos para mejores resultados</h3>
             <ol>
-              <li><strong>Responde con detalle</strong> - Tus respuestas son la base del diagnóstico personalizado</li>
-              <li><strong>Sé específico</strong> - Incluye números, porcentajes y ejemplos concretos cuando sea posible</li>
-              <li><strong>No hay respuestas incorrectas</strong> - Queremos entender tu situación actual tal como es</li>
-              <li><strong>Tiempo estimado</strong> - Tarda aproximadamente 15-20 minutos en completarse</li>
+              <li><strong>Responde con detalle</strong> - La precisión es clave para un diagnóstico personalizado</li>
+              <li><strong>Datos concretos</strong> - Incluye números, porcentajes y ejemplos reales</li>
+              <li><strong>Sé honesto</strong> - Nos interesa tu situación actual, no la ideal</li>
+              <li><strong>Tiempo estimado</strong> - 15-20 minutos para completar todas las preguntas</li>
             </ol>
           </div>
 
-          <p style="text-align: center; margin: 30px 0;">
-            <strong>¿Listo para continuar?</strong>
+          <div class="timeline">
+            <h4>⏱️ Cronograma del diagnóstico</h4>
+            <div class="timeline-step">
+              <div class="timeline-number">1</div>
+              <div><strong>Hoy:</strong> Completa este cuestionario</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-number">2</div>
+              <div><strong>En 2-3 días:</strong> Recibirás tu reporte diagnóstico</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-number">3</div>
+              <div><strong>Próxima semana:</strong> Sesión de revisión con nuestro asesor</div>
+            </div>
+          </div>
+
+          <div class="button-group">
+            <a href="${siteUrl}/responder-cuestionario?orderId=${caseData.id}" class="btn btn-primary">
+              ➜ Completar Cuestionario Ahora
+            </a>
+          </div>
+
+          <p style="font-size: 13px; color: #666; text-align: center; margin: 20px 0;">
+            O copia este enlace en tu navegador:<br>
+            <code style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${siteUrl}/responder-cuestionario?orderId=${caseData.id}</code>
           </p>
 
-          <a href="${process.env.SITE_URL || 'https://acp-asociados.netlify.app'}/responder-cuestionario?orderId=${caseData.id}" class="btn">
-            ➜ Completar Cuestionario
-          </a>
-
           <div class="footer">
-            <p>
-              Si tienes preguntas, contacta a nuestro equipo:<br>
-              <strong>${process.env.ADVISOR_EMAIL || 'asesor.pac@gmail.com'}</strong>
+            <p><strong>¿Tienes preguntas?</strong></p>
+            <p>Contacta a nuestro equipo en: <strong>${process.env.ADVISOR_EMAIL || 'asesor.pac@gmail.com'}</strong></p>
+            <p style="font-size: 12px; margin-top: 15px; color: #999;">
+              Este es un email automático. Por favor no respondas a esta dirección.
             </p>
-            <p style="margin-top: 15px; color: #ccc;">
-              ACP Asociados - Diagnóstico Integral de Negocios
-            </p>
+            <p class="brand">ACP Asociados - Diagnóstico Integral de Negocios</p>
           </div>
         </div>
       </div>

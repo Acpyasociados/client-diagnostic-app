@@ -15,8 +15,9 @@ const SECTOR_LABELS = {
 
 function getAdvisorEmailHtml(caseData, orderId, flowToken) {
   const sectorLabel = SECTOR_LABELS[caseData.sector] || caseData.sector;
-  const planLabel = caseData.plan === 'premium' ? 'Premium ($11.000 CLP)' : 'Básico ($1.000 CLP)';
+  const planLabel = caseData.plan === 'premium' ? 'Premium' : 'Básico';
   const paymentDate = new Date(caseData.paid_at).toLocaleString('es-CL');
+  const amountDisplay = caseData.amount ? `$${Number(caseData.amount).toLocaleString('es-CL')} CLP` : 'N/A';
 
   return `
     <!DOCTYPE html>
@@ -25,42 +26,55 @@ function getAdvisorEmailHtml(caseData, orderId, flowToken) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
+        * { margin: 0; padding: 0; }
         body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: 'DM Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           line-height: 1.6;
           color: #2C3E50;
           background: #f5f5f5;
-          margin: 0;
-          padding: 20px;
         }
         .container {
           max-width: 700px;
           margin: 0 auto;
           background: white;
-          border-radius: 12px;
+          border-radius: 0;
           overflow: hidden;
           box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         .header {
-          background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+          background: linear-gradient(135deg, #1B3B5C 0%, #27AE60 100%);
           color: white;
-          padding: 40px 20px;
+          padding: 50px 30px;
           text-align: center;
         }
+        .header .logo {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 32px;
+          font-weight: 700;
+          letter-spacing: 3px;
+          margin-bottom: 15px;
+        }
+        .header .logo-sub {
+          font-size: 11px;
+          letter-spacing: 2px;
+          color: #3498DB;
+          font-weight: 300;
+        }
         .header h1 {
-          margin: 0 0 10px 0;
+          margin: 20px 0 10px 0;
           font-size: 28px;
+          font-weight: 600;
         }
         .header p {
           margin: 0;
           font-size: 16px;
-          opacity: 0.95;
+          opacity: 0.9;
         }
         .content {
           padding: 40px;
         }
         .info-box {
-          background: #F0F8F5;
+          background: #f0fff0;
           border-left: 4px solid #27AE60;
           padding: 25px;
           margin: 25px 0;
@@ -68,54 +82,63 @@ function getAdvisorEmailHtml(caseData, orderId, flowToken) {
         }
         .info-box h3 {
           margin-top: 0;
-          color: #27AE60;
-          border-bottom: 2px solid #27AE60;
+          color: #1B3B5C;
+          border-bottom: 3px solid #27AE60;
           padding-bottom: 10px;
+          font-size: 16px;
         }
         .info-box table {
           width: 100%;
           border-collapse: collapse;
+          font-size: 14px;
         }
         .info-box td {
           padding: 12px 0;
-          border-bottom: 1px solid #D5E8D4;
+          border-bottom: 1px solid #ddd;
         }
         .info-box td:first-child {
           font-weight: 600;
-          color: #27AE60;
+          color: #1B3B5C;
           width: 140px;
         }
         .info-box tr:last-child td {
           border-bottom: none;
         }
-        .payment-summary {
-          background: linear-gradient(135deg, #E8F8F5 0%, #F0F8F5 100%);
+        .payment-box {
+          background: linear-gradient(135deg, #e8f8f5 0%, #f0fff0 100%);
           border: 2px solid #27AE60;
           border-radius: 8px;
-          padding: 25px;
+          padding: 30px;
           margin: 30px 0;
           text-align: center;
         }
-        .payment-summary .amount {
-          font-size: 32px;
+        .payment-box .amount {
+          font-size: 42px;
           font-weight: 700;
           color: #27AE60;
           margin: 15px 0;
+          font-family: 'DM Mono', monospace;
         }
-        .payment-summary .currency {
-          font-size: 14px;
+        .payment-box .label {
+          font-size: 13px;
           color: #666;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 1px;
         }
         .next-steps {
-          background: #E3F2FD;
-          border-left: 4px solid #2196F3;
-          padding: 20px;
+          background: linear-gradient(135deg, #e3f2fd 0%, #f0f6ff 100%);
+          border-left: 4px solid #3498DB;
+          padding: 25px;
           margin: 25px 0;
           border-radius: 6px;
         }
         .next-steps h3 {
           margin-top: 0;
-          color: #1565C0;
+          color: #1B3B5C;
+          border-bottom: 2px solid #3498DB;
+          padding-bottom: 10px;
+          font-size: 16px;
         }
         .next-steps ol {
           padding-left: 20px;
