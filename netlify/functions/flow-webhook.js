@@ -64,7 +64,7 @@ export default async (event, context) => {
 
       // Paso 2: Disparar generación de reporte
       try {
-        const reportResponse = await fetch('/.netlify/functions/generate-report', {
+        const reportResponse = await fetch('/.netlify/functions/generate-enhanced-report', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId, caseData })
