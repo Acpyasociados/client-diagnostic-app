@@ -663,7 +663,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
     const data = {
       timestamp: new Date().toISOString(),
       product: document.getElementById('plan_basico').checked ? 'diagnostico_basico' : 'diagnostico_premium',
-      price: document.getElementById('plan_basico').checked ? 1 : 11,
+      price: document.getElementById('plan_basico').checked ? 1000 : 11000,
       company_name: formData.get('company_name'),
       rut: formData.get('rut'),
       contact_name: formData.get('contact_name'),
