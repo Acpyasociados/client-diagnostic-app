@@ -1,27 +1,27 @@
 import { getStore } from '@netlify/blobs';
 
-export default async (event, context) => {
+function json(statusCode, body) {
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export default async (req) => {
   console.log('=== Save Case Notes Handler START ===');
 
   try {
-    if (event.httpMethod !== 'POST') {
-      return {
-        statusCode: 405,
-        body: JSON.stringify({ error: 'Método HTTP no permitido' })
-      };
+    if (req.method !== 'POST') {
+      return json(405, { error: 'Método HTTP no permitido' });
     }
 
     // Parse body
     let data;
-    if (typeof event.body === 'string') {
-      data = JSON.parse(event.body);
-    } else if (event.body && typeof event.body === 'object') {
-      data = event.body;
-    } else {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Body inválido' })
-      };
+    try {
+      const bodyText = await req.text();
+      data = JSON.parse(bodyText);
+    } catch (e) {
+      return json(400, { error: 'Body inválido' });
     }
 
     const { token, order_id, note } = data;
@@ -30,25 +30,16 @@ export default async (event, context) => {
     // Validate token
     if (!token || token !== adminToken) {
       console.error('Invalid or missing token');
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ error: 'Token inválido o faltante' })
-      };
+      return json(401, { error: 'Token inválido o faltante' });
     }
 
     // Validate order_id and note
     if (!order_id) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Falta order_id' })
-      };
+      return json(400, { error: 'Falta order_id' });
     }
 
     if (!note || !note.action) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Falta note con action (create|update|delete)' })
-      };
+      return json(400, { error: 'Falta note con action (create|update|delete)' });
     }
 
     const casesStore = getStore('cases');
@@ -56,10 +47,7 @@ export default async (event, context) => {
     // Get current case
     const caseDataJson = await casesStore.get(order_id);
     if (!caseDataJson) {
-      return {
-        statusCode: 404,
-        body: JSON.stringify({ error: 'Caso no encontrado' })
-      };
+      return json(404, { error: 'Caso no encontrado' });
     }
 
     const caseData = JSON.parse(caseDataJson);
@@ -88,10 +76,7 @@ export default async (event, context) => {
       // Update existing note
       const noteIndex = updatedNotes.findIndex(n => n.id === note.id);
       if (noteIndex === -1) {
-        return {
-          statusCode: 404,
-          body: JSON.stringify({ error: 'Nota no encontrada' })
-        };
+        return json(404, { error: 'Nota no encontrada' });
       }
       updatedNotes[noteIndex] = {
         ...updatedNotes[noteIndex],
@@ -106,10 +91,7 @@ export default async (event, context) => {
       console.log('Note deleted:', note.id);
 
     } else {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Action inválida (debe ser create|update|delete)' })
-      };
+      return json(400, { error: 'Action inválida (debe ser create|update|delete)' });
     }
 
     // Update case with new notes
@@ -121,14 +103,11 @@ export default async (event, context) => {
 
     console.log('Case notes saved:', order_id);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        success: true,
-        message: `Nota ${note.action}da exitosamente`,
-        notes: updatedNotes
-      })
-    };
+    return json(200, {
+      success: true,
+      message: `Nota ${note.action}da exitosamente`,
+      notes: updatedNotes
+    });
 
   } catch (error) {
     console.error('Save Case Notes Error:', {
@@ -136,12 +115,9 @@ export default async (event, context) => {
       stack: error.stack
     });
 
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: 'Error interno al guardar notas',
-        message: error.message
-      })
-    };
+    return json(500, {
+      error: 'Error interno al guardar notas',
+      message: error.message
+    });
   }
 };

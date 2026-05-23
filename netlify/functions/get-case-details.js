@@ -13,30 +13,32 @@ const SECTOR_LABELS = {
   otro: 'Otro'
 };
 
-export default async (event, context) => {
+function json(statusCode, body) {
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export default async (req) => {
   console.log('=== Get Case Details Handler START ===');
 
   try {
-    const token = event.queryStringParameters?.token;
-    const orderId = event.queryStringParameters?.order_id;
+    const url = new URL(req.url);
+    const token = url.searchParams.get('token');
+    const orderId = url.searchParams.get('order_id');
     const adminToken = process.env.ADMIN_REVIEW_TOKEN;
 
     // Validate token
     if (!token || token !== adminToken) {
       console.error('Invalid or missing token');
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ error: 'Token inválido o faltante' })
-      };
+      return json(401, { error: 'Token inválido o faltante' });
     }
 
     // Validate order_id
     if (!orderId) {
       console.error('Missing order_id');
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Falta order_id' })
-      };
+      return json(400, { error: 'Falta order_id' });
     }
 
     const casesStore = getStore('cases');
@@ -46,10 +48,7 @@ export default async (event, context) => {
     const caseDataJson = await casesStore.get(orderId);
     if (!caseDataJson) {
       console.error('Case not found:', orderId);
-      return {
-        statusCode: 404,
-        body: JSON.stringify({ error: 'Caso no encontrado' })
-      };
+      return json(404, { error: 'Caso no encontrado' });
     }
 
     const caseData = JSON.parse(caseDataJson);
@@ -57,10 +56,7 @@ export default async (event, context) => {
     // Check if paid
     if (caseData.status !== 'pagado') {
       console.warn('Case not paid:', orderId, caseData.status);
-      return {
-        statusCode: 403,
-        body: JSON.stringify({ error: 'Este caso no ha sido pagado' })
-      };
+      return json(403, { error: 'Este caso no ha sido pagado' });
     }
 
     // Get lead data if available (for questionnaire responses)
@@ -119,10 +115,7 @@ export default async (event, context) => {
 
     console.log('Successfully fetched case details:', orderId);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(response)
-    };
+    return json(200, response);
 
   } catch (error) {
     console.error('Get Case Details Error:', {
@@ -130,12 +123,9 @@ export default async (event, context) => {
       stack: error.stack
     });
 
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: 'Error interno al obtener detalles del caso',
-        message: error.message
-      })
-    };
+    return json(500, {
+      error: 'Error interno al obtener detalles del caso',
+      message: error.message
+    });
   }
 };

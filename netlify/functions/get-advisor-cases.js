@@ -13,27 +13,30 @@ const SECTOR_LABELS = {
   otro: 'Otro'
 };
 
-export default async (event, context) => {
+function json(statusCode, body) {
+  return new Response(JSON.stringify(body), {
+    status: statusCode,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export default async (req) => {
   console.log('=== Get Advisor Cases Handler START ===');
 
   try {
-    const token = event.queryStringParameters?.token;
+    const url = new URL(req.url);
+    const token = url.searchParams.get('token');
     const adminToken = process.env.ADMIN_REVIEW_TOKEN;
 
     if (!token || token !== adminToken) {
       console.error('Invalid or missing token');
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ error: 'Token inválido o faltante' })
-      };
+      return json(401, { error: 'Token inválido o faltante' });
     }
 
     // Get all cases from Flow store
     const casesStore = getStore('cases');
-    const leadsStore = getStore('diagnostic-leads');
 
     const allCases = [];
-    let pageSize = 0;
 
     try {
       for await (const { key } of casesStore.list()) {
@@ -44,43 +47,43 @@ export default async (event, context) => {
         if (caseData.status === 'pagado') {
           allCases.push({ orderId: key, ...caseData });
         }
-        pageSize++;
       }
     } catch (e) {
       console.error('Error reading cases store:', e.message);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'Error leyendo casos' })
-      };
+      return json(500, { error: 'Error leyendo casos' });
     }
 
     // Apply filters from query params
-    const query = event.queryStringParameters || {};
     let filteredCases = [...allCases];
 
     // Filter by sector
-    if (query.sector && query.sector !== 'all') {
-      filteredCases = filteredCases.filter(c => c.sector === query.sector);
+    const sector = url.searchParams.get('sector');
+    if (sector && sector !== 'all') {
+      filteredCases = filteredCases.filter(c => c.sector === sector);
     }
 
     // Filter by plan
-    if (query.plan && query.plan !== 'all') {
-      filteredCases = filteredCases.filter(c => c.plan === query.plan);
+    const plan = url.searchParams.get('plan');
+    if (plan && plan !== 'all') {
+      filteredCases = filteredCases.filter(c => c.plan === plan);
     }
 
     // Filter by date range
-    if (query.date_from) {
-      const dateFrom = new Date(query.date_from);
-      filteredCases = filteredCases.filter(c => new Date(c.paid_at) >= dateFrom);
+    const dateFrom = url.searchParams.get('date_from');
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      filteredCases = filteredCases.filter(c => new Date(c.paid_at) >= from);
     }
-    if (query.date_to) {
-      const dateTo = new Date(query.date_to);
-      filteredCases = filteredCases.filter(c => new Date(c.paid_at) <= dateTo);
+    const dateTo = url.searchParams.get('date_to');
+    if (dateTo) {
+      const to = new Date(dateTo);
+      filteredCases = filteredCases.filter(c => new Date(c.paid_at) <= to);
     }
 
     // Search by name, email, company
-    if (query.search && query.search.trim()) {
-      const searchTerm = query.search.toLowerCase();
+    const search = url.searchParams.get('search');
+    if (search && search.trim()) {
+      const searchTerm = search.toLowerCase();
       filteredCases = filteredCases.filter(c =>
         (c.name && c.name.toLowerCase().includes(searchTerm)) ||
         (c.email && c.email.toLowerCase().includes(searchTerm)) ||
@@ -92,8 +95,10 @@ export default async (event, context) => {
     filteredCases.sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at));
 
     // Pagination
-    const page = parseInt(query.page || '1', 10);
-    const limit = parseInt(query.limit || '50', 10);
+    const pageStr = url.searchParams.get('page') || '1';
+    const limitStr = url.searchParams.get('limit') || '50';
+    const page = parseInt(pageStr, 10);
+    const limit = parseInt(limitStr, 10);
     const offset = (page - 1) * limit;
     const paginatedCases = filteredCases.slice(offset, offset + limit);
 
@@ -121,31 +126,28 @@ export default async (event, context) => {
 
     console.log('Successfully fetched advisor cases:', cases.length);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        success: true,
-        pagination: {
-          page,
-          limit,
-          total: totalCases,
-          total_pages: Math.ceil(totalCases / limit)
-        },
-        kpis: {
-          total_cases: totalCases,
-          total_revenue: totalRevenue,
-          average_transaction: totalCases > 0 ? Math.round(totalRevenue / totalCases) : 0
-        },
-        filters: {
-          sector: query.sector || 'all',
-          plan: query.plan || 'all',
-          date_from: query.date_from || null,
-          date_to: query.date_to || null,
-          search: query.search || null
-        },
-        cases
-      })
-    };
+    return json(200, {
+      success: true,
+      pagination: {
+        page,
+        limit,
+        total: totalCases,
+        total_pages: Math.ceil(totalCases / limit)
+      },
+      kpis: {
+        total_cases: totalCases,
+        total_revenue: totalRevenue,
+        average_transaction: totalCases > 0 ? Math.round(totalRevenue / totalCases) : 0
+      },
+      filters: {
+        sector: sector || 'all',
+        plan: plan || 'all',
+        date_from: dateFrom || null,
+        date_to: dateTo || null,
+        search: search || null
+      },
+      cases
+    });
 
   } catch (error) {
     console.error('Get Advisor Cases Error:', {
@@ -153,12 +155,9 @@ export default async (event, context) => {
       stack: error.stack
     });
 
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: 'Error interno al obtener casos',
-        message: error.message
-      })
-    };
+    return json(500, {
+      error: 'Error interno al obtener casos',
+      message: error.message
+    });
   }
 };
