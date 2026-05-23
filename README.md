@@ -85,3 +85,6 @@ Solo debes intervenir en 2 puntos:
 - Credenciales sensibles (API keys, tokens) se configuran únicamente en Netlify UI
 - - Nunca commit credentials a GitHub
   - - Rotación de credenciales: 4 de mayo de 2026
+Redeployment triggered at Fri May 22 22:05:45 HSP 2026
+
+<!-- Redeployment triggered: 2026-05-23T02:05:50Z -->
