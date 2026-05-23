@@ -23,5 +23,5 @@
   ADVISOR_EMAIL = "asesor.pac@gmail.com"
   SITE_URL = "https://acp-asociados.netlify.app"
   NODE_ENV = "production"
-  PRICE_BASIC_CLP = "49900"
-  PRICE_PREMIUM_CLP = "149900"
+  PRICE_BASIC_CLP = "1000"
+  PRICE_PREMIUM_CLP = "11000"
