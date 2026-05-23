@@ -48,6 +48,53 @@ export default async (event, context) => {
       await store.setJSON(orderId, caseData);
       console.log('Payment confirmed for case:', orderId);
 
+      // Paso 1: Disparar envío de cuestionario
+      try {
+        const questionnaireResponse = await fetch('/.netlify/functions/send-questionnaire-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, caseData })
+        });
+        const questionnaireResult = await questionnaireResponse.json();
+        console.log('Questionnaire email sent:', questionnaireResult);
+      } catch (e) {
+        console.error('Error sending questionnaire:', e.message);
+        // No fallar el webhook por error de email
+      }
+
+      // Paso 2: Disparar generación de reporte
+      try {
+        const reportResponse = await fetch('/.netlify/functions/generate-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, caseData })
+        });
+        const reportResult = await reportResponse.json();
+        console.log('Report generated:', reportResult);
+
+        // Actualizar caseData con información del reporte
+        caseData.report_generated_at = new Date().toISOString();
+        caseData.report_url = reportResult.reportUrl || null;
+        await store.setJSON(orderId, caseData);
+      } catch (e) {
+        console.error('Error generating report:', e.message);
+        // No fallar el webhook si falla el reporte
+      }
+
+      // Paso 3: Notificar al asesor sobre el pago
+      try {
+        const advisorResponse = await fetch('/.netlify/functions/send-advisor-payment-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, caseData, flowToken: params.token })
+        });
+        const advisorResult = await advisorResponse.json();
+        console.log('Advisor notification sent:', advisorResult);
+      } catch (e) {
+        console.error('Error sending advisor notification:', e.message);
+        // No fallar el webhook
+      }
+
       return {
         statusCode: 200,
         body: JSON.stringify({ success: true, message: 'Payment processed successfully', orderId: orderId })
