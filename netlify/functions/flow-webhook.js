@@ -20,7 +20,7 @@ export default async (event, context) => {
     const signature = params.s;
     if (!signature || !verifyFlowSignature(params, signature, FLOW_SECRET_KEY)) {
       console.error('Invalid Flow webhook signature');
-      return { statusCode: 401, body: JSON.stringify({ error: 'Invalid signature' }) };
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     console.log('Signature verified successfully');
@@ -28,7 +28,7 @@ export default async (event, context) => {
     const orderId = params.commerceOrder;
     if (!orderId) {
       console.error('Missing commerceOrder in webhook');
-      return { statusCode: 400, body: JSON.stringify({ error: 'Missing commerceOrder' }) };
+      return new Response(JSON.stringify({ error: 'Missing commerceOrder' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     const store = getStore('cases');
@@ -36,7 +36,7 @@ export default async (event, context) => {
 
     if (!caseData) {
       console.error('Case not found:', orderId);
-      return { statusCode: 404, body: JSON.stringify({ error: 'Case not found' }) };
+      return new Response(JSON.stringify({ error: 'Case not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
 
     console.log('Case found:', orderId);
@@ -95,10 +95,10 @@ export default async (event, context) => {
         // No fallar el webhook
       }
 
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ success: true, message: 'Payment processed successfully', orderId: orderId })
-      };
+      return new Response(
+        JSON.stringify({ success: true, message: 'Payment processed successfully', orderId: orderId }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     } else {
       console.warn(`Payment status: ${params.status} for order: ${orderId}`);
       caseData.status = 'payment_failed';
@@ -106,17 +106,17 @@ export default async (event, context) => {
       caseData.failed_at = new Date().toISOString();
       await store.setJSON(orderId, caseData);
 
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ success: false, message: 'Payment not completed', status: params.status, orderId: orderId })
-      };
+      return new Response(
+        JSON.stringify({ success: false, message: 'Payment not completed', status: params.status, orderId: orderId }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
   } catch (error) {
     console.error('Flow Webhook Error:', { message: error.message, stack: error.stack });
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error processing webhook', message: error.message })
-    };
+    return new Response(
+      JSON.stringify({ error: 'Internal server error processing webhook', message: error.message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 };
