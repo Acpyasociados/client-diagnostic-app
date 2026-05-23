@@ -52,7 +52,10 @@ export default async (event, context) => {
     }
 
     const formData = await parseBody(event);
-    console.log('Form data received:', { name: formData.name, email: formData.email, plan: formData.plan });
+    console.log('Form data received:', { name: formData?.name, email: formData?.email, plan: formData?.plan });
+    console.log('Full form data:', formData);
+    console.log('Event body type:', typeof event.body);
+    console.log('Event body keys:', Object.keys(formData || {}));
 
     const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'plan'];
     const missingFields = requiredFields.filter(field => !formData[field]);
