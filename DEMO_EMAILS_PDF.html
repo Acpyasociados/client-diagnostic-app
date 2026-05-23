@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo: Emails y PDF - ACP Diagnóstico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1B3B5C;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 32px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover {
+            color: #1B3B5C;
+        }
+        .tab-btn.active {
+            color: #1B3B5C;
+            border-bottom-color: #3498DB;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .email-preview {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .email-header {
+            background: #f9f9f9;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+        }
+        .email-body {
+            padding: 0;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        iframe {
+            width: 100%;
+            border: none;
+            display: block;
+            min-height: 800px;
+        }
+        .pdf-preview {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .pdf-pages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .pdf-page {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .pdf-page h3 {
+            color: #1B3B5C;
+            margin-bottom: 10px;
+        }
+        .pdf-page p {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .info-box {
+            background: #E3F2FD;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .info-box strong {
+            color: #1565C0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3498DB;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1B3B5C;
+        }
+        .flow-diagram {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .flow-step-number {
+            background: #3498DB;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+        .flow-step-text {
+            flex: 1;
+            color: #2C3E50;
+        }
+        .arrow {
+            text-align: center;
+            color: #3498DB;
+            margin: 10px 0;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Demo: Emails + PDF - Sistema ACP Diagnóstico</h1>
+
+        <div class="info-box">
+            <strong>ℹ️ Información:</strong> Esta página muestra ejemplos de cómo se verían los emails y el PDF generados automáticamente después de que un cliente realiza un pago en Flow.
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('email-questionnaire')">📧 Email Cuestionario</button>
+            <button class="tab-btn" onclick="showTab('email-advisor')">💰 Email Asesor (Pago)</button>
+            <button class="tab-btn" onclick="showTab('pdf-report')">📄 Reporte PDF</button>
+            <button class="tab-btn" onclick="showTab('flow-diagram')">🔄 Flujo Automático</button>
+        </div>
+
+        <!-- TAB 1: EMAIL CUESTIONARIO -->
+        <div id="email-questionnaire" class="tab-content active">
+            <div class="email-preview">
+                <div class="email-header">
+                    <strong>De:</strong> informes@acpasociados.cl<br>
+                    <strong>Para:</strong> contacto@empresa-tech.cl<br>
+                    <strong>Asunto:</strong> 📋 Tu cuestionario diagnóstico - Tecnología<br>
+                    <strong>Fecha:</strong> 23 de mayo de 2026, 14:30
+                </div>
+                <div class="email-body">
+                    <iframe srcdoc='<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #2C3E50;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+}
+.header h1 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+}
+.header p {
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.95;
+}
+.content {
+    padding: 40px;
+}
+.greeting {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+.greeting strong {
+    color: #667eea;
+}
+.info-box {
+    background: #F8F9FA;
+    border-left: 4px solid #667eea;
+    padding: 20px;
+    margin: 30px 0;
+    border-radius: 6px;
+}
+.info-box table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.info-box td {
+    padding: 10px 0;
+    border-bottom: 1px solid #E0E0E0;
+}
+.info-box td:first-child {
+    font-weight: 600;
+    color: #667eea;
+    width: 140px;
+}
+.questionnaire {
+    background: #FFFFFF;
+    border: 2px solid #E0E0E0;
+    padding: 25px;
+    margin: 30px 0;
+    border-radius: 8px;
+}
+.questionnaire h3 {
+    color: #667eea;
+    margin-top: 0;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+.questionnaire ol {
+    padding-left: 20px;
+}
+.questionnaire li {
+    margin-bottom: 20px;
+    line-height: 1.8;
+}
+.instructions {
+    background: #E3F2FD;
+    border-left: 4px solid #2196F3;
+    padding: 20px;
+    margin: 30px 0;
+    border-radius: 6px;
+}
+.btn {
+    display: block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white !important;
+    padding: 16px 32px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    margin: 30px auto;
+    max-width: 300px;
+}
+.footer {
+    border-top: 1px solid #E0E0E0;
+    padding-top: 20px;
+    margin-top: 30px;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📋 Tu Cuestionario Diagnóstico</h1>
+        <p>Paso 2 de tu diagnóstico ACP Asociados</p>
+    </div>
+    <div class="content">
+        <div class="greeting">
+            ¡Hola <strong>Juan García</strong>!
+        </div>
+        <p>Tu pago ha sido confirmado exitosamente. A continuación, encontrarás el cuestionario específico para tu sector: <strong>Tecnología</strong>.</p>
+
+        <div class="info-box">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">📌 Datos de tu Solicitud</h3>
+            <table>
+                <tr>
+                    <td>Empresa:</td>
+                    <td><strong>TechSolutions SpA</strong></td>
+                </tr>
+                <tr>
+                    <td>Sector:</td>
+                    <td>Tecnología</td>
+                </tr>
+                <tr>
+                    <td>Plan:</td>
+                    <td><strong>Básico</strong></td>
+                </tr>
+                <tr>
+                    <td>Orden:</td>
+                    <td><code>ACP-1716475400-a3f2b1</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="questionnaire">
+            <h3>Cuestionario para Tecnología</h3>
+            <ol>
+                <li><strong>Desarrollo y sprints</strong><br/>
+                    ¿Cuál es su metodología de desarrollo? ¿Cuál es la duración típica de un sprint?
+                </li>
+                <li><strong>Gestión de clientes / Proyectos</strong><br/>
+                    ¿Cómo trackean el progreso de proyectos? ¿Cuál es el nivel de scope creep?
+                </li>
+                <li><strong>Infraestructura y DevOps</strong><br/>
+                    ¿Cómo manejan la infraestructura? ¿Cuál es el tiempo promedio de downtime?
+                </li>
+                <li><strong>Reclutamiento y retención de talento</strong><br/>
+                    ¿Cuál es su principal desafío en la búsqueda de talento técnico?
+                </li>
+                <li><strong>Innovación y roadmap</strong><br/>
+                    ¿Cómo definen su roadmap de producto? ¿Cómo priorizan features?
+                </li>
+            </ol>
+        </div>
+
+        <div class="instructions">
+            <h3>📝 Instrucciones</h3>
+            <ol>
+                <li><strong>Responde con detalle</strong> - Tus respuestas son la base del diagnóstico personalizado</li>
+                <li><strong>Sé específico</strong> - Incluye números, porcentajes y ejemplos concretos cuando sea posible</li>
+                <li><strong>No hay respuestas incorrectas</strong> - Queremos entender tu situación actual tal como es</li>
+                <li><strong>Tiempo estimado</strong> - Tarda aproximadamente 15-20 minutos en completarse</li>
+            </ol>
+        </div>
+
+        <p style="text-align: center; margin: 30px 0;">
+            <strong>¿Listo para continuar?</strong>
+        </p>
+
+        <a href="#" class="btn">
+            ➜ Completar Cuestionario
+        </a>
+
+        <div class="footer">
+            <p>
+                Si tienes preguntas, contacta a nuestro equipo:<br>
+                <strong>asesor.pac@gmail.com</strong>
+            </p>
+            <p style="margin-top: 15px; color: #ccc;">
+                ACP Asociados - Diagnóstico Integral de Negocios
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>'></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: EMAIL ASESOR -->
+        <div id="email-advisor" class="tab-content">
+            <div class="email-preview">
+                <div class="email-header">
+                    <strong>De:</strong> informes@acpasociados.cl<br>
+                    <strong>Para:</strong> asesor.pac@gmail.com<br>
+                    <strong>Asunto:</strong> 💰 Pago confirmado: TechSolutions SpA (Básico) - $1,000 CLP<br>
+                    <strong>Fecha:</strong> 23 de mayo de 2026, 14:30
+                </div>
+                <div class="email-body">
+                    <iframe srcdoc='<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #2C3E50;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+.header {
+    background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+}
+.header h1 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+}
+.info-box {
+    background: #F0F8F5;
+    border-left: 4px solid #27AE60;
+    padding: 25px;
+    margin: 25px 0;
+    border-radius: 6px;
+}
+.info-box h3 {
+    margin-top: 0;
+    color: #27AE60;
+    border-bottom: 2px solid #27AE60;
+    padding-bottom: 10px;
+}
+.info-box table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.info-box td {
+    padding: 12px 0;
+    border-bottom: 1px solid #D5E8D4;
+}
+.info-box td:first-child {
+    font-weight: 600;
+    color: #27AE60;
+    width: 140px;
+}
+.payment-summary {
+    background: linear-gradient(135deg, #E8F8F5 0%, #F0F8F5 100%);
+    border: 2px solid #27AE60;
+    border-radius: 8px;
+    padding: 25px;
+    margin: 30px 0;
+    text-align: center;
+}
+.payment-summary .amount {
+    font-size: 32px;
+    font-weight: 700;
+    color: #27AE60;
+    margin: 15px 0;
+}
+.next-steps {
+    background: #E3F2FD;
+    border-left: 4px solid #2196F3;
+    padding: 20px;
+    margin: 25px 0;
+    border-radius: 6px;
+}
+.next-steps h3 {
+    margin-top: 0;
+    color: #1565C0;
+}
+.next-steps ol {
+    padding-left: 20px;
+    margin: 0;
+}
+.btn-group {
+    display: flex;
+    gap: 12px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+.btn {
+    flex: 1;
+    min-width: 160px;
+    padding: 14px 24px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    transition: all 0.3s;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+    color: white;
+}
+.btn-secondary {
+    background: #F0F0F0;
+    color: #2C3E50;
+    border: 1px solid #DDD;
+}
+.content {
+    padding: 40px;
+}
+.status-badge {
+    display: inline-block;
+    background: #27AE60;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 10px 0;
+}
+.footer {
+    border-top: 1px solid #E0E0E0;
+    padding-top: 20px;
+    margin-top: 30px;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💰 Pago Confirmado</h1>
+        <p>Nueva venta de diagnóstico ACP</p>
+    </div>
+    <div class="content">
+        <p><strong>Hola,</strong></p>
+        <p>Se ha confirmado un nuevo pago en el sistema. Los detalles se encuentran a continuación:</p>
+
+        <div class="info-box">
+            <h3>👤 Información del Cliente</h3>
+            <table>
+                <tr>
+                    <td>Nombre:</td>
+                    <td><strong>Juan García</strong></td>
+                </tr>
+                <tr>
+                    <td>Empresa:</td>
+                    <td><strong>TechSolutions SpA</strong></td>
+                </tr>
+                <tr>
+                    <td>Email:</td>
+                    <td><a href="mailto:juan@techsolutions.cl">juan@techsolutions.cl</a></td>
+                </tr>
+                <tr>
+                    <td>Teléfono:</td>
+                    <td>+56 9 8765 4321</td>
+                </tr>
+                <tr>
+                    <td>Sector:</td>
+                    <td>Tecnología</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="info-box">
+            <h3>💳 Detalles del Pago</h3>
+            <table>
+                <tr>
+                    <td>Plan:</td>
+                    <td><strong>Básico ($1.000 CLP)</strong></td>
+                </tr>
+                <tr>
+                    <td>Monto:</td>
+                    <td><strong style="font-size: 18px;">$1.000 CLP</strong></td>
+                </tr>
+                <tr>
+                    <td>Estado:</td>
+                    <td><span class="status-badge">✓ PAGADO</span></td>
+                </tr>
+                <tr>
+                    <td>Fecha de pago:</td>
+                    <td>23 de mayo de 2026, 14:30</td>
+                </tr>
+                <tr>
+                    <td>Orden ID:</td>
+                    <td><code>ACP-1716475400-a3f2b1</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="payment-summary">
+            <div style="color: #666; font-size: 14px;">Monto pagado</div>
+            <div class="amount">$1.000</div>
+            <div style="color: #666; font-size: 14px;">Pesos Chilenos (CLP)</div>
+        </div>
+
+        <div class="next-steps">
+            <h3>📋 Próximos Pasos Automáticos</h3>
+            <ol>
+                <li><strong>Cuestionario enviado</strong> - El cliente recibirá el cuestionario específico para su sector</li>
+                <li><strong>Reporte generado</strong> - Se estará generando el diagnóstico preliminar</li>
+                <li><strong>Tu acción</strong> - Revisa los detalles y el reporte cuando esté disponible</li>
+                <li><strong>Respuestas del cliente</strong> - Espera las respuestas del cuestionario para refinar el diagnóstico</li>
+            </ol>
+        </div>
+
+        <p><strong>Información adicional del cliente:</strong></p>
+        <div class="info-box" style="border-left-color: #3498DB; background: #E3F2FD;">
+            <table style="font-size: 13px;">
+                <tr>
+                    <td>Ventas mensuales:</td>
+                    <td>$8.500.000</td>
+                </tr>
+                <tr>
+                    <td>Margen de ganancia:</td>
+                    <td>28%</td>
+                </tr>
+                <tr>
+                    <td>Clientes activos:</td>
+                    <td>12</td>
+                </tr>
+                <tr>
+                    <td>Régimen tributario:</td>
+                    <td>Régimen Simplificado</td>
+                </tr>
+                <tr>
+                    <td>Problema principal:</td>
+                    <td>Retención de talento técnico</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="btn-group">
+            <a href="#" class="btn btn-primary">Ver caso completo</a>
+            <a href="#" class="btn btn-secondary">Contactar cliente</a>
+        </div>
+
+        <div class="footer">
+            <p>Sistema Automático de Diagnóstico ACP<br/>
+            Pago confirmado a través de Flow Payment Gateway</p>
+            <p style="margin-top: 15px; color: #ccc;">Este es un email automático. No responder a esta dirección.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>'></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: REPORTE PDF -->
+        <div id="pdf-report" class="tab-content">
+            <h2 style="color: #1B3B5C; margin-bottom: 20px;">📄 Estructura del Reporte PDF</h2>
+
+            <div class="pdf-preview">
+                <div class="pdf-pages">
+                    <!-- PAGE 1 -->
+                    <div class="pdf-page">
+                        <h3>📖 Página 1: Portada</h3>
+                        <div style="background: #1B3B5C; color: white; padding: 40px 20px; border-radius: 6px; margin-bottom: 15px; text-align: left;">
+                            <div style="font-size: 32px; font-weight: 700; margin-bottom: 5px; letter-spacing: 5px;">ACP</div>
+                            <div style="font-size: 12px; margin-bottom: 30px;">& ASOCIADOS</div>
+                            <div style="font-size: 36px; font-weight: 700; margin-bottom: 10px;">TechSolutions SpA</div>
+                            <div style="font-size: 14px; opacity: 0.8; margin-bottom: 20px;">Tecnología</div>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
+                                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">ELABORADO PARA</div>
+                                <div style="font-size: 16px; font-weight: 600;">Juan García</div>
+                                <div style="font-size: 12px; opacity: 0.7;">juan@techsolutions.cl</div>
+                            </div>
+                        </div>
+                        <p><strong>Contenido:</strong> Logo ACP, nombre empresa, sector, datos contacto, fecha emisión</p>
+                    </div>
+
+                    <!-- PAGE 2 -->
+                    <div class="pdf-page">
+                        <h3>📊 Página 2: Resumen Ejecutivo</h3>
+                        <div style="margin-bottom: 15px;">
+                            <div style="background: #ECF0F3; padding: 15px; border-radius: 4px; margin-bottom: 10px; text-align: center; border-top: 3px solid #1B3B5C;">
+                                <div style="font-size: 11px; color: #1B3B5C; font-weight: 600; margin-bottom: 5px;">VENTAS MENSUALES</div>
+                                <div style="font-size: 20px; color: #3498DB; font-weight: 700;">$8.5M</div>
+                            </div>
+                            <div style="background: #ECF0F3; padding: 15px; border-radius: 4px; margin-bottom: 10px; text-align: center; border-top: 3px solid #16A085;">
+                                <div style="font-size: 11px; color: #16A085; font-weight: 600; margin-bottom: 5px;">MARGEN ESTIMADO</div>
+                                <div style="font-size: 20px; color: #16A085; font-weight: 700;">28%</div>
+                            </div>
+                            <div style="background: #ECF0F3; padding: 15px; border-radius: 4px; text-align: center; border-top: 3px solid #E67E22;">
+                                <div style="font-size: 11px; color: #E67E22; font-weight: 600; margin-bottom: 5px;">CLIENTES ACTIVOS</div>
+                                <div style="font-size: 20px; color: #E67E22; font-weight: 700;">12</div>
+                            </div>
+                        </div>
+                        <p style="text-align: left; font-size: 12px; line-height: 1.6; background: #f9f9f9; padding: 10px; border-radius: 4px;">
+                            <strong>Diagnóstico General:</strong> TechSolutions opera como empresa tecnológica con ventas mensuales cercanas a los $8.5M CLP y margen sano del 28%. Los principales desafíos identificados están en la retención de talento técnico y la optimización del ciclo de desarrollo...
+                        </p>
+                    </div>
+
+                    <!-- PAGE 3 -->
+                    <div class="pdf-page">
+                        <h3>💡 Página 3-4: 3 Oportunidades</h3>
+                        <div style="text-align: left; background: #f9f9f9; padding: 15px; border-radius: 4px; margin-bottom: 10px;">
+                            <div style="border-left: 3px solid #3498DB; padding-left: 10px; margin-bottom: 15px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #3498DB; margin-bottom: 5px;">Oportunidad 1: Optimizar ciclo de desarrollo</div>
+                                <div style="font-size: 11px;">Impacto: ALTO | Plazo: 30 días | Complejidad: Media</div>
+                            </div>
+                            <div style="border-left: 3px solid #16A085; padding-left: 10px; margin-bottom: 15px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #16A085; margin-bottom: 5px;">Oportunidad 2: Mejorar retención de talento</div>
+                                <div style="font-size: 11px;">Impacto: MUY ALTO | Plazo: 90 días | Complejidad: Alta</div>
+                            </div>
+                            <div style="border-left: 3px solid #E67E22; padding-left: 10px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #E67E22; margin-bottom: 5px;">Oportunidad 3: Incrementar productividad</div>
+                                <div style="font-size: 11px;">Impacto: ALTO | Plazo: 60 días | Complejidad: Media</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 11px; color: #666;">Cada oportunidad incluye: finding, acción recomendada, KPI, timeline e intervención necesaria</p>
+                    </div>
+
+                    <!-- PAGE 5 -->
+                    <div class="pdf-page">
+                        <h3>✅ Página 5: Plan de Acción</h3>
+                        <div style="text-align: left; font-size: 12px;">
+                            <div style="margin-bottom: 15px;">
+                                <strong style="color: #1B3B5C;">Q2 2026 (30 días):</strong>
+                                <ul style="margin: 5px 0 0 20px;">
+                                    <li>Auditar distribución de tiempo en sprints</li>
+                                    <li>Establecer métricas de velocidad</li>
+                                    <li>Implementar daily sync de 15 min</li>
+                                </ul>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <strong style="color: #1B3B5C;">Q3 2026 (60-90 días):</strong>
+                                <ul style="margin: 5px 0 0 20px;">
+                                    <li>Revisar estructura de remuneración</li>
+                                    <li>Diseñar programa de desarrollo</li>
+                                    <li>Evaluar beneficios competitivos</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: FLUJO AUTOMÁTICO -->
+        <div id="flow-diagram" class="tab-content">
+            <h2 style="color: #1B3B5C; margin-bottom: 20px;">🔄 Flujo Automático Post-Pago</h2>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-text">
+                        <strong>Cliente completa formulario</strong><br>
+                        <small>Nombre, empresa, email, teléfono, sector, datos financieros</small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-text">
+                        <strong>Cliente selecciona plan y paga</strong><br>
+                        <small>Redirigido a Flow gateway, completa pago con tarjeta</small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-text">
+                        <strong>Flow envía webhook de confirmación</strong><br>
+                        <small>Status: PAYED | Token: xxxx | Firma verificada</small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-text">
+                        <strong>🔄 AUTOMÁTICO - 3 acciones en paralelo:</strong><br>
+                        <small style="display: block; margin-top: 8px; padding: 10px; background: #f0f6ff; border-radius: 4px;">
+                            <strong>Step A:</strong> Envía email con cuestionario sector-específico<br>
+                            <strong>Step B:</strong> Genera PDF con diagnóstico preliminar<br>
+                            <strong>Step C:</strong> Notifica al asesor con detalles del cliente
+                        </small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-text">
+                        <strong>Cliente recibe email de cuestionario</strong><br>
+                        <small>De: informes@acpasociados.cl | Asunto: Tu cuestionario diagnóstico</small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">6</div>
+                    <div class="flow-step-text">
+                        <strong>Asesor recibe notificación de pago</strong><br>
+                        <small>De: informes@acpasociados.cl | Contiene: datos cliente + monto + botones acción</small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">7</div>
+                    <div class="flow-step-text">
+                        <strong>PDF reporte disponible en Blobs</strong><br>
+                        <small>URL: https://blobs.netlify.app/.../ACP-xxxxx-report.pdf</small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">8</div>
+                    <div class="flow-step-text">
+                        <strong>Cliente responde cuestionario</strong><br>
+                        <small>Submit → Sistema recibe respuestas → Refina diagnóstico</small>
+                    </div>
+                </div>
+
+                <div class="arrow">↓</div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">9</div>
+                    <div class="flow-step-text">
+                        <strong>Asesor revisa y aprueba informe final</strong><br>
+                        <small>Agrega notas personales → Envía informe final al cliente</small>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="color: #1B3B5C; margin-top: 30px; margin-bottom: 15px;">⏱️ Cronología</h3>
+            <div style="background: white; padding: 20px; border-radius: 8px;">
+                <table style="width: 100%; font-size: 13px;">
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td><strong>Momento</strong></td>
+                        <td><strong>Acción</strong></td>
+                        <td><strong>Responsable</strong></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td>T+0s</td>
+                        <td>Pago confirmado en Flow</td>
+                        <td>Flow Gateway</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td>T+1s</td>
+                        <td>Envía cuestionario</td>
+                        <td>send-questionnaire-email.js</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td>T+2s</td>
+                        <td>Genera PDF</td>
+                        <td>generate-report.js (Puppeteer)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td>T+3s</td>
+                        <td>Notifica al asesor</td>
+                        <td>send-advisor-payment-notification.js</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td>T+5min</td>
+                        <td>Cliente recibe email</td>
+                        <td>Resend Email Service</td>
+                    </tr>
+                    <tr>
+                        <td>T+5min</td>
+                        <td>Asesor recibe email</td>
+                        <td>Resend Email Service</td>
+                    </tr>
+                </table>
+            </div>
+
+            <h3 style="color: #1B3B5C; margin-top: 30px; margin-bottom: 15px;">📊 Datos Almacenados en Blobs</h3>
+            <div style="background: white; padding: 20px; border-radius: 8px; overflow-x: auto;">
+                <pre style="font-size: 11px; line-height: 1.4; background: #f5f5f5; padding: 15px; border-radius: 4px;"><code>{
+  id: "ACP-1716475400-a3f2b1",
+  status: "pagado",
+  company: "TechSolutions SpA",
+  name: "Juan García",
+  email: "juan@techsolutions.cl",
+  sector: "tecnologia",
+  plan: "basic",
+  amount: 1000,
+  paid_at: "2026-05-23T14:30:00.000Z",
+  flow_reference: "FLOW_TOKEN_12345678",
+  questionnaire_sent_at: "2026-05-23T14:30:01.000Z",
+  report_generated_at: "2026-05-23T14:30:03.000Z",
+  report_url: "https://blobs.netlify.app/.../ACP-1716475400-report.pdf",
+  monthly_sales: 8500000,
+  profit_margin: 28,
+  active_clients: 12,
+  main_challenge: "Retención de talento técnico",
+  created_at: "2026-05-23T14:28:00.000Z"
+}</code></pre>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
