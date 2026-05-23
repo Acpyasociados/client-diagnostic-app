@@ -42,9 +42,12 @@ function generateFlowSignature(params, secret) {
 
 export default async (event, context) => {
   console.log('=== Flow Create Payment Handler START ===');
+  console.log('Checking env vars - FLOW_API_KEY defined:', !!FLOW_API_KEY, 'FLOW_SECRET_KEY defined:', !!FLOW_SECRET_KEY);
+  console.log('SITE_URL:', SITE_URL);
+
   try {
     if (!FLOW_API_KEY || !FLOW_SECRET_KEY) {
-      console.error('Missing Flow API credentials');
+      console.error('Missing Flow API credentials - FLOW_API_KEY:', !!FLOW_API_KEY, 'FLOW_SECRET_KEY:', !!FLOW_SECRET_KEY);
       return new Response(
         JSON.stringify({ error: 'Missing Flow API configuration' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
