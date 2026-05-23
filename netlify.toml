@@ -27,5 +27,5 @@
   PRICE_PREMIUM_CLP = "11000"
   # Flow Payment Gateway Credentials (Sandbox)
   # IMPORTANT: Using original registered credentials from Flow account
-  FLOW_API_KEY = "1F7ABDF2-7286-4261-9A54-963935CDCL2I"
-  FLOW_SECRET_KEY = "9ebebcc7a7929aac1472c21b75fb764522b6601d"
+  FLOW_API_KEY = "7407DEBF-783B-4C84-9FB4-43C4L344D745"
+  FLOW_SECRET_KEY = "419fd1dc315b285498f60189ae50507c1df2dd6a"
