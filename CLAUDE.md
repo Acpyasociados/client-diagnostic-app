@@ -126,6 +126,23 @@ netlify dev
 - [ ] Test webhook with test payment
 - [ ] All env vars set in Netlify
 
+## Claude Code Autonomy Configuration
+
+**EXECUTE WITHOUT ASKING:**
+- ✅ Git commits and pushes
+- ✅ Redeploys to Netlify (production)
+- ✅ Code modifications and improvements
+- ✅ Tests and validations
+- ✅ Documentation updates
+- ✅ Configuration changes (netlify.toml, env vars)
+
+**ASK FIRST (never auto-execute):**
+- ❌ Tests with real money
+- ❌ Credential changes
+- ❌ Irreversible actions (data deletion)
+- ❌ Critical architecture changes
+
 ---
 **Last Updated:** 2026-05-23  
-**Architecture:** Netlify Functions (serverless) + Blobs (storage) + SendGrid (email)
+**Autonomy Configured:** 2026-05-23  
+**Architecture:** Netlify Functions (serverless) + Blobs (storage) + Resend (email) + Flow (payments)
