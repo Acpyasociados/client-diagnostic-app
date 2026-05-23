@@ -1,5 +1,5 @@
 [build]
-  command = "echo 'Build complete' && date > .netlify-build-time"
+  command = "echo Build complete"
   functions = "netlify/functions"
   publish = "."
 
