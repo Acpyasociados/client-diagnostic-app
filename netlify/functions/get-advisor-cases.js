@@ -39,18 +39,21 @@ export default async (req) => {
     const allCases = [];
 
     try {
-      for await (const { key } of casesStore.list()) {
-        const caseDataJson = await casesStore.get(key);
-        const caseData = JSON.parse(caseDataJson);
+      const { blobs } = await casesStore.list();
+      for (const blob of blobs) {
+        const caseDataJson = await casesStore.get(blob.key);
+        if (caseDataJson) {
+          const caseData = JSON.parse(caseDataJson);
 
-        // Only include paid cases
-        if (caseData.status === 'pagado') {
-          allCases.push({ orderId: key, ...caseData });
+          // Only include paid cases
+          if (caseData.status === 'pagado') {
+            allCases.push({ orderId: blob.key, ...caseData });
+          }
         }
       }
     } catch (e) {
       console.error('Error reading cases store:', e.message);
-      return json(500, { error: 'Error leyendo casos' });
+      return json(500, { error: 'Error leyendo casos: ' + e.message });
     }
 
     // Apply filters from query params
