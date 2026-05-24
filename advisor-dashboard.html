@@ -607,7 +607,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   currentToken = token;
   localStorage.setItem('advisorToken', token);
   document.getElementById('loginError').classList.add('hidden');
-  document.getElementById('tokenStatus').textContent = '✓ Conectado';
+  document.getElementById('token-status').textContent = '✓ Conectado';
 
   hideLogin();
   loadCases();
@@ -900,7 +900,7 @@ async function downloadPDF(orderId) {
 
 window.addEventListener('load', () => {
   if (currentToken) {
-    document.getElementById('tokenStatus').textContent = '✓ Conectado';
+    document.getElementById('token-status').textContent = '✓ Conectado';
     hideLogin();
     loadCases();
   } else {
