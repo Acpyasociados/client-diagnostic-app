@@ -694,7 +694,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
     try {
       console.log('🚀 Sending request to Netlify Function...');
       
-      const response = await fetch('/.netlify/functions/flow-create-payment', {
+      const response = await fetch('/.netlify/functions/create-diagnostic-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
