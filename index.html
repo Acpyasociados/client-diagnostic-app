@@ -707,9 +707,10 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
       const result = await response.json();
       console.log('📨 Response data:', result);
 
-      if (response.ok && result.paymentUrl) {
-        console.log('✅ Redirigiendo a Flow:', result.paymentUrl);
-        window.location.href = result.paymentUrl;
+      if (response.ok && (result.mercadoPagoUrl || result.paymentUrl)) {
+        const paymentUrl = result.mercadoPagoUrl || result.paymentUrl;
+        console.log('✅ Redirigiendo a Mercado Pago:', paymentUrl);
+        window.location.href = paymentUrl;
       } else {
         throw new Error(result.error || 'Error al procesar');
       }
