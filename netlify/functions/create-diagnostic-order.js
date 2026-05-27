@@ -167,7 +167,7 @@ export default async (event, context) => {
   const plan = body.plan || 'basico';
   const discount = Number(body.discount_percentage || 0);
   const basePrice = prices[plan] || prices.basico;
-  const finalPrice = Number(body.price) || (basePrice * (100 - discount) / 100);
+  const finalPrice = body.price !== undefined ? Number(body.price) : (basePrice * (100 - discount) / 100);
 
   // Datos del lead
   const lead = {
@@ -291,7 +291,7 @@ async function createMercadoPagoPreference(lead) {
     },
     external_reference: lead.lead_id,
     auto_return: 'approved',
-    notification_url: `${siteUrl}/api/mercadopago-webhook`
+    notification_url: `${siteUrl}/.netlify/functions/mercadopago-webhook`
   };
 
   console.log('Mercado Pago preference payload prepared');

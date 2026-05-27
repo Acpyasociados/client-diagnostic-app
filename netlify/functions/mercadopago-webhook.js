@@ -175,7 +175,7 @@ export default async (req) => {
     const planLabel = lead.plan === 'premium' ? 'Premium' : 'Básico';
     
     // URL de aprobación
-    const approvalUrl = `https://acp-asociados.netlify.app/admin/approve-and-send?leadId=${leadId}`;
+    const approvalUrl = `${siteUrl}/admin/approve-and-send?leadId=${leadId}`;
 
     const reviewEmailPayload = {
       from: 'informes@acpasociados.cl',
