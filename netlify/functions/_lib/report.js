@@ -198,7 +198,10 @@ export function buildReportPayload(lead) {
   const executiveSummary = `La empresa ${lead.company} reporta ventas mensuales por ${currency(base.monthly_sales)}, un margen estimado de ${base.margin}% y ${base.active_clients} clientes activos. El foco de mejora declarado es ${lead.main_problem}. El sistema prioriza acciones de impacto rápido antes de escalar estructura.`;
 
   return {
-    lead,
+    lead_id: lead.lead_id,
+    company: lead.company,
+    name: lead.name,
+    sector: lead.sector,
     sector_label: sectorLabels[lead.sector],
     summary: executiveSummary,
     improvements,
@@ -227,7 +230,7 @@ export function renderReportHtml(payload) {
 
   return `
     <h1>Informe de diagnóstico accionable</h1>
-    <p><strong>Empresa:</strong> ${payload.lead.company}</p>
+    <p><strong>Empresa:</strong> ${payload.company}</p>
     <p><strong>Rubro:</strong> ${payload.sector_label}</p>
     <p>${payload.summary}</p>
 
