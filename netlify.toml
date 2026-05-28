@@ -4,8 +4,8 @@
   publish = "."
 
 [[redirects]]
-  from = "/*"
-  to = "/"
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
   status = 200
 
 [functions]
@@ -19,7 +19,7 @@
 [context.production.environment]
   # Secrets (MERCADO_PAGO_ACCESS_TOKEN, SENDGRID_API_KEY) are configured in Netlify UI
   # Non-secret environment variables:
-  SENDGRID_FROM_EMAIL = "noreply@acp-asociados.com"
+  SENDGRID_FROM_EMAIL = "patriciosilvavalenzuela@gmail.com"
   ADVISOR_EMAIL = "asesor.pac@gmail.com"
   SITE_URL = "https://acp-asociados.netlify.app"
   NODE_ENV = "production"

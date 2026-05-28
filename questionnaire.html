@@ -30,7 +30,7 @@
         message.className = 'notice error';
         return;
       }
-      const response = await fetch(`/api/get-questionnaire?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
+      const response = await fetch(`/.netlify/functions/get-questionnaire?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
       const data = await response.json();
       if (!response.ok) {
         message.textContent = data.error || 'No se pudo cargar el cuestionario';
@@ -55,7 +55,7 @@
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const payload = Object.fromEntries(new FormData(form).entries());
-        const response = await fetch('/api/submit-questionnaire', {
+        const response = await fetch('/.netlify/functions/submit-questionnaire', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ lead_id: leadId, token, answers: payload })
