@@ -75,10 +75,16 @@ async function createFlowPayment(lead) {
   });
 
   const data = await response.json();
-  console.log('Flow API status:', response.status, '- code:', data.code, '- message:', data.message);
+  console.log('Flow API status:', response.status, '- token:', data.token ? 'present' : 'absent', '- code:', data.code, '- message:', data.message);
 
-  if (!response.ok || data.code !== 0) {
+  // Respuesta exitosa de Flow: {flowOrder, url, token} (sin campo "code")
+  // Respuesta de error de Flow: {code: <numero>, message: "..."}
+  if (!response.ok || data.code !== undefined) {
     throw new Error(`Flow API error ${data.code}: ${data.message}`);
+  }
+
+  if (!data.url || !data.token) {
+    throw new Error(`Flow API respuesta inesperada: ${JSON.stringify(data)}`);
   }
 
   return {
