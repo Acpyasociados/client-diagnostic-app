@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pago exitoso - ACP & Asociados</title>
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="container">
+    <section class="card">
+      <span class="badge">✓ Pago aprobado</span>
+      <h1 style="font-size:32px">¡Tu diagnóstico está en proceso!</h1>
+      <p>Tu pago fue procesado correctamente. En los próximos minutos recibirás el cuestionario sectorial en tu correo para que podamos personalizar tu diagnóstico.</p>
+      <p id="order-info" style="font-size:13px; color:#888; margin-top:12px;"></p>
+      <p style="font-size:14px; margin-top:16px;">Si no recibes el correo en 10 minutos, revisa tu carpeta de spam o contáctanos a <a href="mailto:info@acpasociados.cl">info@acpasociados.cl</a>.</p>
+      <a href="/" class="button secondary" style="margin-top:24px;">Volver al inicio</a>
+    </section>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('orderId');
+    if (orderId) {
+      document.getElementById('order-info').textContent = 'Orden: ' + orderId;
+    }
+  </script>
+</body>
+</html>
