@@ -180,6 +180,21 @@ export function buildReportPayload(lead) {
   if (lead.sector === 'comercio_ecommerce') improvements = diagnoseCommerce(lead, answers);
   if (lead.sector === 'servicios_terreno') improvements = diagnoseFieldServices(lead, answers);
 
+  // Fallback: si no se disparó ninguna condición específica, agregar mejora base
+  if (!improvements.length) {
+    improvements = [improvement({
+      axis: 'comercial',
+      title: 'Formalizar el proceso comercial',
+      finding: 'El negocio opera con buen desempeño base. La mejora viene por sistematizar lo que ya funciona.',
+      action: 'Documentar el proceso de venta, crear plantilla de propuesta y definir seguimiento post-servicio.',
+      impact: 'Mayor consistencia y capacidad de escalar sin depender de personas clave.',
+      kpi: 'Tasa de cierre y recompra',
+      term: '30 días',
+      intervention: 'Baja',
+      impact: 4, ease: 5, speed: 5, complexity: 1
+    })];
+  }
+
   const executiveSummary = `La empresa ${lead.company} reporta ventas mensuales por ${currency(base.monthly_sales)}, un margen estimado de ${base.margin}% y ${base.active_clients} clientes activos. El foco de mejora declarado es ${lead.main_problem}. El sistema prioriza acciones de impacto rápido antes de escalar estructura.`;
 
   return {

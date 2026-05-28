@@ -17,7 +17,6 @@ export default async (req) => {
   lead.status = 'cuestionario_completado';
 
   const reportPayload = buildReportPayload(lead);
-  if (!reportPayload.improvements.length) return json(400, { error: 'Información insuficiente para diagnosticar' });
   lead.report_payload = reportPayload;
   lead.report_html = renderReportHtml(reportPayload);
   lead.draft_generated = true;
