@@ -21,8 +21,16 @@ export default async (event) => {
 
   // ── GET: listar senders existentes ──────────────────────
   if (method === 'GET') {
-    const params = event.queryStringParameters || {};
-    if (!adminToken || params.token !== adminToken) return json(403, { error: 'Token inválido' });
+    // Soporte para Netlify Functions v2 (URL) y v1 (queryStringParameters)
+    let tokenParam = null;
+    try {
+      const url = new URL(event.url || event.rawUrl || `https://x?${event.rawQuery || ''}`);
+      tokenParam = url.searchParams.get('token');
+    } catch (e) {
+      const params = event.queryStringParameters || {};
+      tokenParam = params.token;
+    }
+    if (!adminToken || tokenParam !== adminToken) return json(403, { error: 'Token inválido' });
 
     const res = await fetch('https://api.sendgrid.com/v3/verified_senders', {
       headers: { 'Authorization': `Bearer ${apiKey}` }
