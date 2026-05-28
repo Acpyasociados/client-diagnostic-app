@@ -15,28 +15,30 @@ function verifyFlowSignature(params, signature, secret) {
 }
 
 async function sendEmail({ to, subject, html }) {
+  // La clave en Netlify (SENDGRID_API_KEY) es en realidad una clave Resend (re_...)
   const apiKey = process.env.SENDGRID_API_KEY;
   if (!apiKey) {
     console.warn('SENDGRID_API_KEY no configurada - email omitido');
     return false;
   }
   const payload = {
-    personalizations: [{ to: [{ email: to }], subject }],
-    from: { email: 'noreply@acpyasociados.com', name: 'ACP & Asociados' },
-    content: [{ type: 'text/html', value: html }]
+    from: 'ACP & Asociados <onboarding@resend.dev>',
+    to: [to],
+    subject,
+    html
   };
   try {
-    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     if (res.ok) { console.log('Email enviado a:', to); return true; }
     const errText = await res.text();
-    console.error('SendGrid error:', res.status, errText);
+    console.error('Resend error:', res.status, errText);
     return false;
   } catch (err) {
-    console.error('Error SendGrid:', err.message);
+    console.error('Error Resend:', err.message);
     return false;
   }
 }
