@@ -70,14 +70,22 @@
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const payload = Object.fromEntries(new FormData(form).entries());
-        const response = await fetch('/.netlify/functions/submit-questionnaire', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lead_id: leadId, token, answers: payload })
-        });
-        const result = await response.json();
+        let response, result;
+        try {
+          response = await fetch('/.netlify/functions/submit-questionnaire', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_id: leadId, token, answers: payload })
+          });
+          const text = await response.text();
+          try { result = JSON.parse(text); } catch(e) { result = { error: 'Respuesta no-JSON (' + response.status + '): ' + text.substring(0, 200) }; }
+        } catch(e) {
+          message.textContent = 'Error de red: ' + e.message;
+          message.className = 'notice error';
+          return;
+        }
         if (!response.ok) {
-          message.textContent = result.error || 'No fue posible enviar respuestas';
+          message.textContent = 'Error ' + response.status + ': ' + (result.error || JSON.stringify(result));
           message.className = 'notice error';
           return;
         }
