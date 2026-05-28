@@ -30,7 +30,7 @@
     let currentPayload = null;
 
     async function loadCase() {
-      const response = await fetch(`/api/get-review-case?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
+      const response = await fetch(`/.netlify/functions/get-review-case?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
       const data = await response.json();
       if (!response.ok) {
         reviewMessage.textContent = data.error || 'No se pudo cargar el caso';
@@ -43,7 +43,7 @@
     }
 
     approveBtn.addEventListener('click', async () => {
-      const response = await fetch('/api/approve-report', {
+      const response = await fetch('/.netlify/functions/approve-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: leadId, token })

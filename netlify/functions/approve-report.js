@@ -3,7 +3,8 @@ import { sendEmail } from './_lib/email.js';
 
 export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'Método no permitido' });
-  const { lead_id: leadId, token } = JSON.parse(req.body || '{}');
+  const raw = typeof req.text === 'function' ? await req.text() : (req.body || '{}');
+  const { lead_id: leadId, token } = JSON.parse(raw);
   if (!leadId || !token) return json(400, { error: 'Payload incompleto' });
   if (token !== process.env.ADMIN_REVIEW_TOKEN) return json(403, { error: 'Token inválido' });
   const lead = await getLead(leadId);
