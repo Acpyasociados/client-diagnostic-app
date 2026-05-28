@@ -1,14 +1,21 @@
-import { Resend } from 'resend';
-
-function getClient() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error('Falta RESEND_API_KEY');
-  return new Resend(apiKey);
-}
-
 export async function sendEmail({ to, subject, html }) {
-  const resend = getClient();
-  const from = process.env.FROM_EMAIL;
-  if (!from) throw new Error('Falta FROM_EMAIL');
-  return resend.emails.send({ from, to, subject, html });
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) throw new Error('Falta SENDGRID_API_KEY');
+  // patriciosilvavalenzuela@gmail.com esta verificado en SendGrid (id: 8950974)
+  const fromEmail = 'patriciosilvavalenzuela@gmail.com';
+  const payload = {
+    personalizations: [{ to: [{ email: to }], subject }],
+    from: { email: fromEmail, name: 'ACP & Asociados' },
+    content: [{ type: 'text/html', value: html }]
+  };
+  const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`SendGrid error ${res.status}: ${errText.substring(0, 200)}`);
+  }
+  return true;
 }

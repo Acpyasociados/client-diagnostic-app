@@ -40,15 +40,30 @@
       render(data);
     }
 
+    function renderField(q) {
+      if (q.type === 'select' && q.options) {
+        const opts = q.options.map(o => `<option value="${o}">${o}</option>`).join('');
+        return `
+          <div class="field">
+            <label>${q.label}${q.required ? ' *' : ''}</label>
+            <select name="${q.key}" ${q.required ? 'required' : ''}>
+              <option value="">-- Selecciona una opción --</option>
+              ${opts}
+            </select>
+          </div>`;
+      }
+      const inputType = q.type === 'text' ? 'text' : 'number';
+      return `
+        <div class="field">
+          <label>${q.label}${q.required ? ' *' : ''}</label>
+          <input name="${q.key}" type="${inputType}" ${inputType === 'number' ? 'min="0"' : ''} ${q.required ? 'required' : ''} placeholder="${q.placeholder || ''}" />
+        </div>`;
+    }
+
     function render(data) {
       form.innerHTML = `
-        <div class="notice">Empresa: ${data.lead.company} · Rubro: ${data.lead.sector_label}</div>
-        ${data.questions.map((q) => `
-          <div class="field">
-            <label>${q.label}</label>
-            <input name="${q.key}" type="${q.type || 'number'}" ${q.type !== 'text' ? 'min="0"' : ''} ${q.required ? 'required' : ''} placeholder="${q.placeholder || ''}" />
-          </div>
-        `).join('')}
+        <div class="notice">Empresa: ${data.lead.company} &middot; Rubro: ${data.lead.sector_label}</div>
+        ${data.questions.map(renderField).join('')}
         <button type="submit">Enviar cuestionario</button>
       `;
 
