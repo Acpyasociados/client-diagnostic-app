@@ -16,13 +16,19 @@ export default async (req) => {
   lead.delivered_at = new Date().toISOString();
   await saveLead(leadId, lead);
 
-  await sendEmail({
-    to: lead.email,
-    subject: `Tu informe ya está disponible - ${lead.company}`,
-    html: `${lead.report_html}<hr/><p>Si quieres avanzar con implementación o plan mensual, responde este correo.</p>`
-  });
+  let emailSent = false;
+  try {
+    await sendEmail({
+      to: lead.email,
+      subject: `Tu informe de diagnostico esta disponible - ${lead.company}`,
+      html: `${lead.report_html}<hr style="margin:32px 0;border:none;border-top:1px solid #eee;"><p style="font-family:Arial,sans-serif;color:#666;font-size:13px;">Si quieres avanzar con implementacion o acompanamiento mensual, responde este correo o escribe a <a href="mailto:info@acpasociados.cl">info@acpasociados.cl</a></p>`
+    });
+    emailSent = true;
+  } catch (e) {
+    console.error('Error enviando informe al cliente (no critico):', e.message);
+  }
 
-  return json(200, { ok: true });
+  return json(200, { ok: true, emailSent });
 };
 
 function json(statusCode, body) {

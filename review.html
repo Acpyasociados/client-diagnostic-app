@@ -43,19 +43,35 @@
     }
 
     approveBtn.addEventListener('click', async () => {
-      const response = await fetch('/.netlify/functions/approve-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: leadId, token })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        reviewMessage.textContent = data.error || 'No fue posible aprobar';
+      approveBtn.textContent = 'Enviando...';
+      approveBtn.disabled = true;
+      try {
+        const response = await fetch('/.netlify/functions/approve-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: leadId, token })
+        });
+        const text = await response.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch(e) { data = { error: 'Respuesta no-JSON (' + response.status + '): ' + text.substring(0, 200) }; }
+        if (!response.ok) {
+          reviewMessage.textContent = 'Error ' + response.status + ': ' + (data.error || JSON.stringify(data));
+          reviewMessage.className = 'notice error';
+          approveBtn.textContent = 'Aprobar y enviar';
+          approveBtn.disabled = false;
+          return;
+        }
+        reviewMessage.textContent = data.emailSent
+          ? 'Informe aprobado y enviado al cliente correctamente.'
+          : 'Informe aprobado. El email al cliente no pudo enviarse (revisar logs).';
+        reviewMessage.className = 'notice';
+        approveBtn.textContent = 'Enviado';
+      } catch(e) {
+        reviewMessage.textContent = 'Error de red: ' + e.message;
         reviewMessage.className = 'notice error';
-        return;
+        approveBtn.textContent = 'Aprobar y enviar';
+        approveBtn.disabled = false;
       }
-      reviewMessage.textContent = 'Informe aprobado y enviado al cliente.';
-      reviewMessage.className = 'notice';
     });
 
     loadCase();
