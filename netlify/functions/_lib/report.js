@@ -458,6 +458,38 @@ function opportunitiesCommerce(lead, a) {
   return pool.slice(0, 3);
 }
 
+// ── Labels legibles para valores internos ─────────────────────────────────
+
+const TAX_ADVISOR_LABELS = {
+  contador_externo:      'Contador externo',
+  contador_interno:      'Contador interno',
+  asesor_tributario:     'Asesor tributario',
+  sin_asesor:            'Sin asesor actualmente',
+  estudio_contable:      'Estudio contable',
+  sin_contador:          'Sin contador actualmente'
+};
+
+const DIGITAL_PRESENCE_LABELS = {
+  sin_presencia:         'Sin presencia digital',
+  redes_sociales:        'Solo redes sociales',
+  sitio_web:             'Sitio web propio',
+  google_maps:           'Google Maps / My Business',
+  todo_activo:           'Presencia digital completa'
+};
+
+const TAX_REGIME_LABELS = {
+  primera_categoria:     'Primera Categoría',
+  pro_pyme:              'Pro Pyme (Ley 21.210)',
+  regimen_general:       'Régimen General',
+  renta_presunta:        'Renta Presunta',
+  sin_inicio:            'Sin inicio de actividades'
+};
+
+function humanLabel(map, key) {
+  if (!key) return '';
+  return map[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
 // ── Build payload ──────────────────────────────────────────────────────────
 
 export function buildReportPayload(lead, externalCases = []) {
@@ -524,10 +556,12 @@ export function buildReportPayload(lead, externalCases = []) {
     margin:        lead.margin,
     active_clients: lead.active_clients,
     main_problem:  lead.main_problem,
-    digital_presence: lead.digital_presence,
-    tax_regime:    lead.tax_regime,
-    tax_advisor_name: lead.tax_advisor_name || lead.tax_advisor,
-    top_costs:     lead.top_costs,
+    digital_presence:       lead.digital_presence,
+    digital_presence_label: humanLabel(DIGITAL_PRESENCE_LABELS, lead.digital_presence),
+    tax_regime:             lead.tax_regime,
+    tax_regime_label:       humanLabel(TAX_REGIME_LABELS, lead.tax_regime),
+    tax_advisor_name:       humanLabel(TAX_ADVISOR_LABELS, lead.tax_advisor_name || lead.tax_advisor),
+    top_costs:              lead.top_costs,
     opportunities,
     totalMin,
     totalMax,
@@ -608,12 +642,31 @@ export function renderReportHtml(payload) {
     </tr>`
   ).join('');
 
-  const plan30Items = payload.opportunities
-    .filter(o => (o.term || '').includes('4') || (o.term || '').includes('semana'))
-    .flatMap(o => (o.plan || []).slice(0, 2))
-    .slice(0, 6)
-    .map(s => `<div style="display:flex;gap:8px;margin:5px 0;"><span style="color:#c8a96e;">→</span><span>${s}</span></div>`)
-    .join('');
+  // Plan de acción integrado: organizado por semana (1 acción por oportunidad por semana)
+  // Cada oportunidad aporta su paso de "Semana N" a la semana correspondiente
+  const semanas = [1, 2, 3, 4];
+  const plan30Items = semanas.map(sem => {
+    const acciones = payload.opportunities
+      .map(o => {
+        const paso = (o.plan || []).find(p => p.toLowerCase().includes(`semana ${sem}`));
+        return paso ? { titulo: o.title.split(' ').slice(0, 3).join(' '), paso } : null;
+      })
+      .filter(Boolean);
+    if (!acciones.length) return '';
+    const accionesHTML = acciones.map(a =>
+      `<div style="display:flex;gap:8px;margin:4px 0 4px 12px;">
+        <span style="color:#c8a96e;flex-shrink:0;">→</span>
+        <span><strong style="color:#1a3a5c;">${a.titulo}:</strong> ${a.paso.replace(/^Semana \d+:\s*/i, '')}</span>
+      </div>`
+    ).join('');
+    return `
+      <div style="margin-bottom:14px;">
+        <div style="font-weight:bold;color:#1a3a5c;font-size:13px;background:#f0f7ff;padding:6px 12px;border-radius:4px;margin-bottom:6px;">
+          📅 Semana ${sem}
+        </div>
+        ${accionesHTML}
+      </div>`;
+  }).join('');
 
   return `
   <div style="font-family:Arial,sans-serif;max-width:800px;margin:0 auto;color:#333;font-size:14px;line-height:1.6;">
@@ -642,6 +695,7 @@ export function renderReportHtml(payload) {
           <div>✓ <strong>Clientes activos:</strong> ${payload.active_clients}</div>
           <div>✓ <strong>Costos principales:</strong> ${payload.top_costs || 'Por determinar'}</div>
           ${payload.main_problem ? `<div style="grid-column:1/-1;">✓ <strong>Principal desafio:</strong> ${payload.main_problem}</div>` : ''}
+          ${payload.tax_regime_label ? `<div>✓ <strong>Régimen tributario:</strong> ${payload.tax_regime_label}</div>` : ''}
           ${payload.tax_advisor_name ? `<div>✓ <strong>Asesor tributario:</strong> ${payload.tax_advisor_name}</div>` : ''}
         </div>
       </div>
@@ -706,7 +760,7 @@ export function renderReportHtml(payload) {
         <div style="margin:4px 0;">✓ Este diagnostico se basa en los datos reales de ${payload.company}</div>
         <div style="margin:4px 0;">✓ Las proyecciones son conservadoras y alcanzables con ejecucion consistente</div>
         <div style="margin:4px 0;">✓ Todos los beneficios requieren seguimiento y ajuste segun resultados</div>
-        ${payload.tax_advisor_name ? `<div style="margin:4px 0;">✓ Validar recomendaciones tributarias con ${payload.tax_advisor_name}</div>` : ''}
+        ${payload.tax_advisor_name ? `<div style="margin:4px 0;">✓ Validar recomendaciones tributarias con tu ${payload.tax_advisor_name.toLowerCase()}</div>` : ''}
         <div style="margin:4px 0;">✓ Proxima revision recomendada: 30 dias para evaluar avance</div>
       </div>
     </div>

@@ -20,23 +20,23 @@
 
 const TAVILY_API_URL = 'https://api.tavily.com/search';
 
-// Queries por sector — simples y directas, sin operadores site: (no los soporta Tavily)
-// El filtrado por dominio se hace en código después de recibir los resultados
+// Queries por sector — orientadas a noticias de negocios en Chile
+// topic: 'news' entrega resultados de medios periodísticos en lugar de PDFs institucionales
 const QUERIES_BY_SECTOR = {
   servicios_terreno: [
-    'pyme chilena servicios mantención reparación aumentó ventas clientes caso exitoso 2024 2025',
-    'empresa servicios terreno Chile presencia digital Google más clientes resultados reales',
-    'empresa gasfitería electricidad instalación Chile crecimiento ventas estrategia caso real'
+    'pyme Chile servicios presencia digital Google My Business clientes 2025',
+    'empresa mantencion instalacion Chile digitalización ventas crecimiento 2025',
+    'pequeña empresa servicios Chile fidelización clientes recurrentes estrategia'
   ],
   servicios_profesionales: [
-    'consultora servicios profesionales Chile creció clientes transformación digital caso exitoso 2024 2025',
-    'estudio contable asesoría jurídica Chile más clientes facturación aumentó resultados reales',
-    'empresa servicios profesionales Chile automatización procesos clientes nuevos caso real'
+    'pyme consultora profesional Chile transformación digital clientes crecimiento 2025',
+    'empresa servicios profesionales Chile automatización facturación aumento 2025',
+    'pequeña empresa profesional Chile estrategia digital más clientes resultado'
   ],
   comercio_ecommerce: [
-    'tienda comercio local Chile ventas online ecommerce duplicó clientes caso exitoso 2024 2025',
-    'pyme comercio Chile transformación digital ventas incremento resultados reales',
-    'negocio local Chile ventas digitales estrategia caso exitoso crecimiento ventas'
+    'comercio local Chile ventas online ecommerce crecimiento digitalización 2025',
+    'pyme comercio Chile tienda online clientes nuevos resultado estrategia digital',
+    'negocio pequeño Chile ventas internet duplicó clientes ecommerce 2025'
   ]
 };
 
@@ -74,7 +74,7 @@ export async function searchCasesForSector(sector, lead = {}) {
     const body = {
       query,
       search_depth:     'basic',        // 1 crédito (no 2 como "advanced")
-      topic:            'general',
+      topic:            'news',         // noticias = medios periodísticos, no PDFs
       country:          'chile',
       max_results:      7,              // pedimos 7 para tener margen al filtrar
       time_range:       'year',         // resultados del último año
@@ -121,17 +121,27 @@ export async function searchCasesForSector(sector, lead = {}) {
       .filter(r => {
         if (!r.title || !r.content) return false;
         if (r.content.length < 80) return false;
-        // Descartar si el dominio está en la lista de excluidos (doble seguro)
-        const dom = extractDomain(r.url || '');
-        if (EXCLUDED_DOMAINS.some(d => dom.includes(d))) return false;
-        // Descartar títulos que parezcan posts sociales o irrelevantes
         const titleLower = r.title.toLowerCase();
+        const urlLower   = (r.url || '').toLowerCase();
+        // Descartar PDFs — no son artículos de negocio útiles
+        if (titleLower.startsWith('[pdf]')) return false;
+        if (urlLower.endsWith('.pdf')) return false;
+        // Descartar organismos internacionales y documentos técnicos
+        const badDomains = ['unepfi.org','iadb.org','worldbank.org','imf.org','cepal.org','ilo.org','un.org'];
+        const dom = extractDomain(r.url || '');
+        if (badDomains.some(d => dom.includes(d))) return false;
+        // Descartar redes sociales (doble seguro)
+        if (EXCLUDED_DOMAINS.some(d => dom.includes(d))) return false;
+        // Descartar contenido que parece índice/abreviaturas (señal de PDF mal parseado)
+        const contentLower = r.content.toLowerCase();
+        if (contentLower.includes('abreviaciones') || contentLower.includes('tabla de contenido')) return false;
+        if (contentLower.includes('assets under management') || contentLower.includes('environmental, social')) return false;
+        // Descartar posts sociales obvios
         if (titleLower.includes('instagram') || titleLower.includes('facebook')) return false;
-        if (titleLower.includes('¡') && titleLower.length < 40) return false; // anuncios
         return true;
       })
       .map(r => ({
-        title:       cleanText(r.title),
+        title:       cleanText(r.title.replace(/^\[PDF\]\s*/i, '')), // quitar prefijo [PDF] si queda
         description: cleanText(r.content),
         url:         r.url || '',
         source:      extractDomain(r.url),
@@ -146,6 +156,13 @@ export async function searchCasesForSector(sector, lead = {}) {
         return b.score - a.score;
       })
       .slice(0, 3);
+
+    // Si después de filtrar no quedan resultados útiles, retornar vacío
+    // (report.js usará los casos hardcoded de respaldo)
+    if (!filtered.length) {
+      console.log('[search] Todos los resultados filtrados — usando casos hardcoded');
+      return [];
+    }
 
     console.log(`[search] ${filtered.length} caso(s) encontrados para sector "${sector}"`);
     return filtered;
