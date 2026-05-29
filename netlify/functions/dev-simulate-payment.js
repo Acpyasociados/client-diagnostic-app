@@ -20,7 +20,7 @@ async function sendEmail({ to, subject, html }) {
     console.warn('SENDGRID_API_KEY no configurada - email omitido para:', to);
     return false;
   }
-  const fromEmail = 'info@acpasociados.cl';
+  const fromEmail = 'patricio.silva@acpasociados.cl';
   const payload = {
     personalizations: [{ to: [{ email: to }], subject }],
     from: { email: fromEmail, name: 'ACP & Asociados' },
@@ -157,7 +157,7 @@ export default async (event) => {
         </p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
         <p style="font-size: 13px; color: #999; margin: 0;">
-          ¿Tienes preguntas? Escríbenos a <a href="mailto:info@acpasociados.cl" style="color: #1a3a5c;">info@acpasociados.cl</a>
+          ¿Tienes preguntas? Escríbenos a <a href="mailto:patricio.silva@acpasociados.cl" style="color: #1a3a5c;">patricio.silva@acpasociados.cl</a>
         </p>
       </div>
     </div>`;

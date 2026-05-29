@@ -1,7 +1,7 @@
 export async function sendEmail({ to, subject, html }) {
   const apiKey = process.env.SENDGRID_API_KEY;
   if (!apiKey) throw new Error('Falta SENDGRID_API_KEY');
-  const fromEmail = 'info@acpasociados.cl';
+  const fromEmail = 'patricio.silva@acpasociados.cl';
   const payload = {
     personalizations: [{ to: [{ email: to }], subject }],
     from: { email: fromEmail, name: 'ACP & Asociados' },
