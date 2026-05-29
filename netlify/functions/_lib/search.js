@@ -20,23 +20,23 @@
 
 const TAVILY_API_URL = 'https://api.tavily.com/search';
 
-// Queries por sector — buscamos casos de éxito reales en Chile, en español
-// Usamos site: exclusions implícitas con frases orientadas a medios serios
+// Queries por sector — simples y directas, sin operadores site: (no los soporta Tavily)
+// El filtrado por dominio se hace en código después de recibir los resultados
 const QUERIES_BY_SECTOR = {
   servicios_terreno: [
-    'pyme chilena servicios mantención reparación aumentó ventas clientes caso exitoso site:df.cl OR site:emol.com OR site:latercera.com OR site:sercotec.cl OR site:corfo.cl',
-    'empresa servicios terreno Chile duplicó clientes presencia digital Google resultados 2024 2025',
-    'pyme servicios terreno Chile contratos recurrentes fidelización clientes caso real crecimiento'
+    'pyme chilena servicios mantención reparación aumentó ventas clientes caso exitoso 2024 2025',
+    'empresa servicios terreno Chile presencia digital Google más clientes resultados reales',
+    'empresa gasfitería electricidad instalación Chile crecimiento ventas estrategia caso real'
   ],
   servicios_profesionales: [
-    'consultora estudio profesional Chile creció clientes transformación digital caso real site:df.cl OR site:emol.com OR site:latercera.com OR site:pulso.cl',
-    'empresa servicios profesionales Chile facturación aumentó estrategia digital caso exitoso 2024 2025',
-    'estudio contable jurídico Chile más clientes automatización resultados concretos caso real'
+    'consultora servicios profesionales Chile creció clientes transformación digital caso exitoso 2024 2025',
+    'estudio contable asesoría jurídica Chile más clientes facturación aumentó resultados reales',
+    'empresa servicios profesionales Chile automatización procesos clientes nuevos caso real'
   ],
   comercio_ecommerce: [
-    'tienda comercio local Chile ventas online duplicó caso exitoso site:df.cl OR site:emol.com OR site:america-retail.com OR site:latercera.com',
-    'pyme comercio Chile ecommerce transformación digital ventas crecimiento caso real 2024 2025',
-    'negocio local Chile ventas digitales incremento resultados concretos estrategia caso exitoso'
+    'tienda comercio local Chile ventas online ecommerce duplicó clientes caso exitoso 2024 2025',
+    'pyme comercio Chile transformación digital ventas incremento resultados reales',
+    'negocio local Chile ventas digitales estrategia caso exitoso crecimiento ventas'
   ]
 };
 
