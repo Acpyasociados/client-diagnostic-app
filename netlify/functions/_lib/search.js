@@ -157,10 +157,16 @@ export async function searchCasesForSector(sector, lead = {}) {
       })
       .slice(0, 3);
 
-    // Si después de filtrar no quedan resultados útiles, retornar vacío
-    // (report.js usará los casos hardcoded de respaldo)
-    if (!filtered.length) {
-      console.log('[search] Todos los resultados filtrados — usando casos hardcoded');
+    // Verificar calidad mínima: al menos 1 resultado debe ser de un dominio chileno preferido
+    // o mencionar "Chile" en el contenido. Si no, los resultados son demasiado genéricos.
+    const tieneCalidad = filtered.some(r =>
+      PREFERRED_DOMAINS.some(d => r.source.includes(d)) ||
+      r.description.toLowerCase().includes('chile') ||
+      r.title.toLowerCase().includes('chile')
+    );
+
+    if (!filtered.length || !tieneCalidad) {
+      console.log('[search] Resultados Tavily sin relevancia para Chile — usando casos hardcoded');
       return [];
     }
 
