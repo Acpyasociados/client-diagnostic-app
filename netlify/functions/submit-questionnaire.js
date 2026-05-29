@@ -1,6 +1,7 @@
 import { getLead, saveLead } from './_lib/storage.js';
 import { buildReportPayload, renderReportHtml } from './_lib/report.js';
 import { sendEmail } from './_lib/email.js';
+import { searchCasesForSector } from './_lib/search.js';
 
 export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'Método no permitido' });
@@ -16,7 +17,18 @@ export default async (req) => {
   lead.questionnaire_completed = true;
   lead.status = 'cuestionario_completado';
 
-  const reportPayload = buildReportPayload(lead);
+  // Buscar casos reales en internet (Brave Search) — no bloquea si falla
+  let externalCases = [];
+  try {
+    externalCases = await searchCasesForSector(lead.sector || 'servicios_terreno', lead);
+    if (externalCases.length) {
+      console.log(`[submit] ${externalCases.length} casos externos encontrados para sector: ${lead.sector}`);
+    }
+  } catch (e) {
+    console.warn('[submit] searchCasesForSector falló (no crítico):', e.message);
+  }
+
+  const reportPayload = buildReportPayload(lead, externalCases);
   lead.report_payload = reportPayload;
   lead.report_html = renderReportHtml(reportPayload);
   lead.draft_generated = true;

@@ -460,7 +460,7 @@ function opportunitiesCommerce(lead, a) {
 
 // ── Build payload ──────────────────────────────────────────────────────────
 
-export function buildReportPayload(lead) {
+export function buildReportPayload(lead, externalCases = []) {
   const answers = lead.questionnaire_answers || {};
 
   // Priorizar datos del cuestionario sobre los del formulario de compra
@@ -474,6 +474,20 @@ export function buildReportPayload(lead) {
   if (lead.sector === 'servicios_terreno')        opportunities = opportunitiesFieldServices(lead, answers);
   if (lead.sector === 'servicios_profesionales')  opportunities = opportunitiesProfessional(lead, answers);
   if (lead.sector === 'comercio_ecommerce')        opportunities = opportunitiesCommerce(lead, answers);
+
+  // Inyectar casos reales de Brave Search en la primera oportunidad
+  // Si hay resultados externos, reemplazamos los casos hardcoded del top-1 con casos reales
+  if (externalCases && externalCases.length > 0 && opportunities.length > 0) {
+    const realCases = externalCases.slice(0, 3).map(c => ({
+      name: c.source ? `${c.title} (${c.source})` : c.title,
+      text: c.description + (c.date ? ` — ${c.date}` : ''),
+      url:  c.url || null,
+      real: true  // marca para el renderer saber que es caso real
+    }));
+    // Reemplazar los casos del top-1 con los reales
+    opportunities[0] = { ...opportunities[0], cases: realCases, hasRealCases: true };
+    console.log(`[report] Casos reales de Brave inyectados en oportunidad #1: ${opportunities[0].title}`);
+  }
 
   if (!opportunities.length) {
     opportunities = [{
@@ -527,11 +541,19 @@ export function renderReportHtml(payload) {
   const date = new Date(payload.generated_at || Date.now()).toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const oppCards = payload.opportunities.map((opp, i) => {
-    const caseItems = (opp.cases || []).map(c =>
-      `<div style="background:#f8f9fa;border-left:3px solid #c8a96e;padding:10px 14px;margin:6px 0;border-radius:0 4px 4px 0;">
-        <strong style="color:#1a3a5c;">${c.name}:</strong> ${c.text}
-      </div>`
-    ).join('');
+    const caseItems = (opp.cases || []).map(c => {
+      const badge = c.real
+        ? `<span style="background:#d4edda;color:#155724;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:6px;font-weight:normal;">Fuente web real</span>`
+        : '';
+      const link = c.url
+        ? `<a href="${c.url}" target="_blank" style="color:#1a3a5c;font-size:11px;display:block;margin-top:4px;word-break:break-all;">Ver fuente →</a>`
+        : '';
+      return `<div style="background:#f8f9fa;border-left:3px solid ${c.real ? '#28a745' : '#c8a96e'};padding:10px 14px;margin:6px 0;border-radius:0 4px 4px 0;">
+        <strong style="color:#1a3a5c;">${c.name}${badge}</strong><br/>
+        <span style="color:#444;">${c.text}</span>
+        ${link}
+      </div>`;
+    }).join('');
 
     const planItems = (opp.plan || []).map(step =>
       `<div style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;">
@@ -558,7 +580,10 @@ export function renderReportHtml(payload) {
           <p style="margin:0;color:#444;line-height:1.6;">${opp.why}</p>
         </div>
         <div style="margin-bottom:14px;">
-          <div style="font-weight:bold;font-size:13px;color:#1a3a5c;margin-bottom:6px;">CASOS DE EXITO COMPARABLES:</div>
+          <div style="font-weight:bold;font-size:13px;color:#1a3a5c;margin-bottom:6px;">
+            CASOS DE EXITO COMPARABLES:
+            ${opp.hasRealCases ? '<span style="background:#d4edda;color:#155724;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:normal;">Buscados en internet hoy</span>' : ''}
+          </div>
           ${caseItems}
         </div>
         <div style="margin-bottom:14px;">
