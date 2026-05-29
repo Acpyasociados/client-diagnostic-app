@@ -4,25 +4,60 @@ export const sectorLabels = {
   servicios_terreno: 'Servicios en terreno'
 };
 
+// Preguntas de contexto financiero comunes a todos los sectores (van primero)
+const financialContext = [
+  {
+    key: 'q_monthly_sales',
+    label: 'Ventas mensuales promedio (CLP)',
+    required: true,
+    type: 'number',
+    placeholder: 'Ej: 5000000'
+  },
+  {
+    key: 'q_margin',
+    label: 'Margen estimado de ganancia (%)',
+    required: true,
+    type: 'number',
+    placeholder: 'Ej: 25'
+  },
+  {
+    key: 'q_active_clients',
+    label: 'Numero de clientes activos',
+    required: true,
+    type: 'number',
+    placeholder: 'Ej: 20'
+  },
+  {
+    key: 'q_main_problem',
+    label: 'Principal desafio o problema del negocio hoy',
+    required: true,
+    type: 'text',
+    placeholder: 'Ej: Me cuesta conseguir clientes nuevos y los costos han subido mucho'
+  }
+];
+
 export const questionnaires = {
   servicios_profesionales: [
+    ...financialContext,
     { key: 'monthly_leads', label: 'Leads mensuales', required: true },
     { key: 'close_rate', label: 'Tasa de cierre estimada (%)', required: true },
     { key: 'avg_ticket', label: 'Ticket promedio (CLP)', required: true },
-    { key: 'top3_revenue_share', label: 'Participación de ingresos top 3 clientes (%)', required: true },
+    { key: 'top3_revenue_share', label: 'Participacion de ingresos top 3 clientes (%)', required: true },
     { key: 'non_billable_hours', label: 'Horas no facturables al mes', required: true },
-    { key: 'collection_days', label: 'Días promedio de cobro', required: true }
+    { key: 'collection_days', label: 'Dias promedio de cobro', required: true }
   ],
   comercio_ecommerce: [
+    ...financialContext,
     { key: 'avg_ticket', label: 'Ticket promedio (CLP)', required: true },
     { key: 'repeat_rate', label: 'Tasa de recompra estimada (%)', required: true },
-    { key: 'best_margin_product_share', label: 'Participación del producto más rentable (%)', required: true },
+    { key: 'best_margin_product_share', label: 'Participacion del producto mas rentable (%)', required: true },
     { key: 'slow_stock_share', label: 'Stock lento sobre inventario total (%)', required: true },
     { key: 'delivery_days', label: 'Días promedio de entrega', required: true },
     { key: 'promo_sales_share', label: 'Ventas con promoción (%)', required: true }
   ],
   servicios_terreno: [
-    // EXISTENTES (6 preguntas originales)
+    ...financialContext,
+    // OPERACIONALES
     { key: 'jobs_per_day', label: 'Trabajos por día', required: true },
     { key: 'idle_time_hours', label: 'Horas muertas por día', required: true },
     { key: 'fuel_cost_monthly', label: 'Gasto mensual de combustible (CLP)', required: true },

@@ -462,6 +462,13 @@ function opportunitiesCommerce(lead, a) {
 
 export function buildReportPayload(lead) {
   const answers = lead.questionnaire_answers || {};
+
+  // Priorizar datos del cuestionario sobre los del formulario de compra
+  if (answers.q_monthly_sales) lead.monthly_sales = toNumber(answers.q_monthly_sales);
+  if (answers.q_margin)        lead.margin         = toNumber(answers.q_margin);
+  if (answers.q_active_clients) lead.active_clients = toNumber(answers.q_active_clients);
+  if (answers.q_main_problem)  lead.main_problem   = answers.q_main_problem;
+
   let opportunities = [];
 
   if (lead.sector === 'servicios_terreno')        opportunities = opportunitiesFieldServices(lead, answers);
