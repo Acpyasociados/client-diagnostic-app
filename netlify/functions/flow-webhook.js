@@ -20,8 +20,7 @@ async function sendEmail({ to, subject, html }) {
     console.warn('SENDGRID_API_KEY no configurada - email omitido para:', to);
     return false;
   }
-  // Email verificado en SendGrid (patriciosilvavalenzuela@gmail.com, id: 8950974)
-  const fromEmail = 'patriciosilvavalenzuela@gmail.com';
+  const fromEmail = 'info@acpasociados.cl';
   const payload = {
     personalizations: [{ to: [{ email: to }], subject }],
     from: { email: fromEmail, name: 'ACP & Asociados' },

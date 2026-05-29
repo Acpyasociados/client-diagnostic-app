@@ -1,8 +1,7 @@
 export async function sendEmail({ to, subject, html }) {
   const apiKey = process.env.SENDGRID_API_KEY;
   if (!apiKey) throw new Error('Falta SENDGRID_API_KEY');
-  // patriciosilvavalenzuela@gmail.com esta verificado en SendGrid (id: 8950974)
-  const fromEmail = 'patriciosilvavalenzuela@gmail.com';
+  const fromEmail = 'info@acpasociados.cl';
   const payload = {
     personalizations: [{ to: [{ email: to }], subject }],
     from: { email: fromEmail, name: 'ACP & Asociados' },
