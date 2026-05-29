@@ -157,12 +157,12 @@ export async function searchCasesForSector(sector, lead = {}) {
       })
       .slice(0, 3);
 
-    // Verificar calidad mínima: al menos 1 resultado debe ser de un dominio chileno preferido
-    // o mencionar "Chile" en el contenido. Si no, los resultados son demasiado genéricos.
+    // Verificar calidad mínima: al menos 1 resultado debe ser de un dominio .cl o de un
+    // medio chileno preferido. Artículos internacionales *sobre* Chile no son útiles
+    // como casos comparables para PYMEs chilenas.
     const tieneCalidad = filtered.some(r =>
       PREFERRED_DOMAINS.some(d => r.source.includes(d)) ||
-      r.description.toLowerCase().includes('chile') ||
-      r.title.toLowerCase().includes('chile')
+      r.source.endsWith('.cl')
     );
 
     if (!filtered.length || !tieneCalidad) {
