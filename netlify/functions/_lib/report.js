@@ -98,7 +98,7 @@ function opportunitiesFieldServices(lead, a) {
   pool.push({
     priority: needsRoute ? 8 : 4,
     title: 'Eliminar Tiempos Muertos y Optimizar Rutas',
-    why: `${idle > 1 ? `Con ${idle} hora${idle !== 1 ? 's' : ''} muertas al dia, pierdes capacidad productiva directa — equivalente a ${Math.round(idle / (24 / jobs))} trabajos adicionales posibles por dia.` : 'La agrupacion de visitas por zona permite hacer mas trabajos con el mismo equipo y costo fijo.'} ${
+    why: `${idle > 1 ? `Con ${idle} hora${idle !== 1 ? 's' : ''} muertas al dia, pierdes capacidad productiva directa — si el promedio por trabajo es ${Math.round(8/jobs)} horas, podrias hacer ${Math.max(1, Math.round(idle * jobs / 8))} trabajo${Math.max(1, Math.round(idle * jobs / 8)) !== 1 ? 's' : ''} adicional${Math.max(1, Math.round(idle * jobs / 8)) !== 1 ? 'es' : ''} al dia con el mismo equipo.` : 'La agrupacion de visitas por zona permite hacer mas trabajos con el mismo equipo y costo fijo.'} ${
       (a.return_trip_utilization || '').toLowerCase().includes('vac')
         ? ' Ademas, los viajes de vuelta vacios son costos sin retorno que se pueden convertir en ingresos coordinando clientes en la misma ruta.'
         : ''

@@ -3,31 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revisión interna</title>
+  <title>Revision interna</title>
   <link rel="stylesheet" href="/assets/style.css" />
+  <style>
+    .action-bar { display:flex; gap:12px; margin-top:20px; flex-wrap:wrap; align-items:flex-start; }
+    .notes-box { width:100%; margin-top:16px; }
+    .notes-box textarea { width:100%; box-sizing:border-box; padding:12px; border:1px solid #ccc; border-radius:6px; font-size:14px; font-family:Arial,sans-serif; resize:vertical; min-height:80px; }
+    .notes-box label { display:block; font-weight:bold; font-size:13px; color:#1a3a5c; margin-bottom:6px; }
+    #requestChangesBtn { background:#f0ad00; color:#333; }
+    #requestChangesBtn:hover { background:#d99a00; }
+    .status-badge { display:inline-block; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:bold; margin-left:8px; }
+    .status-borrador { background:#fff3cd; color:#856404; }
+    .status-enviado { background:#d4edda; color:#155724; }
+    .status-cambios { background:#f8d7da; color:#721c24; }
+    .review-notes { background:#fff3cd; border-left:4px solid #f0ad00; padding:12px 16px; border-radius:4px; margin-bottom:12px; font-size:13px; }
+  </style>
 </head>
 <body>
   <div class="container">
     <section class="card">
-      <span class="badge">Revisión interna</span>
-      <h1 style="font-size:32px">Aprobación del informe</h1>
+      <span class="badge">Revision interna</span>
+      <h1 style="font-size:32px">Aprobacion del informe</h1>
       <div id="reviewMessage" class="notice hidden"></div>
       <div id="reviewMeta" class="small"></div>
+      <div id="reviewNotes" style="display:none" class="review-notes"></div>
       <div id="reportBox" class="report" style="margin-top:16px"></div>
-      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+
+      <div class="notes-box" id="notesBox" style="display:none">
+        <label>Notas para el equipo (cambios solicitados):</label>
+        <textarea id="notesInput" placeholder="Ej: Cambiar la oportunidad #2 por algo de fidelizacion. El cliente no tiene combustible propio, usa vehiculo arrendado."></textarea>
+      </div>
+
+      <div class="action-bar">
         <button id="approveBtn">Aprobar y enviar</button>
+        <button id="requestChangesBtn" style="display:none">Solicitar cambios</button>
+        <button id="showNotesBtn" style="background:#6c757d;color:white;">Agregar notas / pedir cambios</button>
       </div>
     </section>
   </div>
+
   <script>
     const params = new URLSearchParams(window.location.search);
     const leadId = params.get('lead_id');
-    const token = params.get('token');
-    const reportBox = document.getElementById('reportBox');
-    const reviewMessage = document.getElementById('reviewMessage');
-    const reviewMeta = document.getElementById('reviewMeta');
-    const approveBtn = document.getElementById('approveBtn');
-    let currentPayload = null;
+    const token  = params.get('token');
+
+    const reportBox        = document.getElementById('reportBox');
+    const reviewMessage    = document.getElementById('reviewMessage');
+    const reviewMeta       = document.getElementById('reviewMeta');
+    const reviewNotes      = document.getElementById('reviewNotes');
+    const approveBtn       = document.getElementById('approveBtn');
+    const requestChangesBtn = document.getElementById('requestChangesBtn');
+    const showNotesBtn     = document.getElementById('showNotesBtn');
+    const notesBox         = document.getElementById('notesBox');
+    const notesInput       = document.getElementById('notesInput');
+
+    // Mostrar/ocultar caja de notas
+    showNotesBtn.addEventListener('click', () => {
+      const visible = notesBox.style.display !== 'none';
+      notesBox.style.display = visible ? 'none' : 'block';
+      requestChangesBtn.style.display = visible ? 'none' : 'inline-block';
+      showNotesBtn.textContent = visible ? 'Agregar notas / pedir cambios' : 'Cancelar';
+    });
 
     async function loadCase() {
       const response = await fetch(`/.netlify/functions/get-review-case?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
@@ -37,12 +73,30 @@
         reviewMessage.className = 'notice error';
         return;
       }
-      currentPayload = data;
-      reviewMeta.textContent = `${data.lead.company} · ${data.lead.email} · ${data.lead.plan.toUpperCase()} · ${data.lead.status}`;
-      reportBox.innerHTML = data.report_html;
+
+      const lead = data.lead;
+      const statusLabel = lead.status === 'enviado' ? 'Enviado' : lead.status === 'cambios_solicitados' ? 'Cambios solicitados' : 'Borrador listo';
+      const statusClass = lead.status === 'enviado' ? 'status-enviado' : lead.status === 'cambios_solicitados' ? 'status-cambios' : 'status-borrador';
+
+      reviewMeta.innerHTML = `${lead.company} &middot; ${lead.email} &middot; ${(lead.plan||'').toUpperCase()} <span class="status-badge ${statusClass}">${statusLabel}</span>`;
+
+      if (lead.review_notes) {
+        reviewNotes.style.display = 'block';
+        reviewNotes.innerHTML = '<strong>Notas pendientes:</strong> ' + lead.review_notes;
+      }
+
+      if (lead.status === 'enviado') {
+        approveBtn.textContent = 'Ya enviado';
+        approveBtn.disabled = true;
+        showNotesBtn.style.display = 'none';
+      }
+
+      reportBox.innerHTML = data.report_html || '<p>No hay borrador aun.</p>';
     }
 
+    // Aprobar y enviar
     approveBtn.addEventListener('click', async () => {
+      if (!confirm('Confirmas que el informe esta listo para enviarlo al cliente?')) return;
       approveBtn.textContent = 'Enviando...';
       approveBtn.disabled = true;
       try {
@@ -53,7 +107,7 @@
         });
         const text = await response.text();
         let data = {};
-        try { data = JSON.parse(text); } catch(e) { data = { error: 'Respuesta no-JSON (' + response.status + '): ' + text.substring(0, 200) }; }
+        try { data = JSON.parse(text); } catch(e) { data = { error: 'Respuesta inesperada (' + response.status + '): ' + text.substring(0, 200) }; }
         if (!response.ok) {
           reviewMessage.textContent = 'Error ' + response.status + ': ' + (data.error || JSON.stringify(data));
           reviewMessage.className = 'notice error';
@@ -63,15 +117,51 @@
         }
         reviewMessage.textContent = data.emailSent
           ? 'Informe aprobado y enviado al cliente correctamente.'
-          : 'Informe aprobado. El email al cliente no pudo enviarse (revisar logs).';
+          : 'Informe aprobado. Revisa los logs si el email no llego.';
         reviewMessage.className = 'notice';
         approveBtn.textContent = 'Enviado';
+        showNotesBtn.style.display = 'none';
       } catch(e) {
         reviewMessage.textContent = 'Error de red: ' + e.message;
         reviewMessage.className = 'notice error';
         approveBtn.textContent = 'Aprobar y enviar';
         approveBtn.disabled = false;
       }
+    });
+
+    // Solicitar cambios
+    requestChangesBtn.addEventListener('click', async () => {
+      const notes = notesInput.value.trim();
+      if (!notes) { alert('Escribe las notas con los cambios que necesitas antes de enviar.'); return; }
+      requestChangesBtn.textContent = 'Guardando...';
+      requestChangesBtn.disabled = true;
+      try {
+        const response = await fetch('/.netlify/functions/request-changes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: leadId, token, notes })
+        });
+        const text = await response.text();
+        let data = {};
+        try { data = JSON.parse(text); } catch(e) {}
+        if (!response.ok) {
+          reviewMessage.textContent = 'Error al guardar notas: ' + (data.error || text.substring(0, 100));
+          reviewMessage.className = 'notice error';
+        } else {
+          reviewMessage.textContent = 'Cambios solicitados guardados. El equipo los revisara antes de regenerar el informe.';
+          reviewMessage.className = 'notice';
+          reviewNotes.style.display = 'block';
+          reviewNotes.innerHTML = '<strong>Notas pendientes:</strong> ' + notes;
+          notesBox.style.display = 'none';
+          requestChangesBtn.style.display = 'none';
+          showNotesBtn.textContent = 'Agregar notas / pedir cambios';
+        }
+      } catch(e) {
+        reviewMessage.textContent = 'Error de red: ' + e.message;
+        reviewMessage.className = 'notice error';
+      }
+      requestChangesBtn.textContent = 'Solicitar cambios';
+      requestChangesBtn.disabled = false;
     });
 
     loadCase();
