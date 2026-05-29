@@ -21,36 +21,37 @@
 const TAVILY_API_URL = 'https://api.tavily.com/search';
 
 // Queries por sector — buscamos casos de éxito reales en Chile, en español
+// Usamos site: exclusions implícitas con frases orientadas a medios serios
 const QUERIES_BY_SECTOR = {
   servicios_terreno: [
-    'empresa servicios terreno Chile pyme caso éxito crecimiento ventas 2024 2025',
-    'gasfitería electricidad mantención empresa Chile aumentó clientes resultados reales',
-    'empresa servicios en terreno Chile fidelización optimización caso exitoso'
+    'pyme chilena servicios mantención reparación aumentó ventas clientes caso exitoso site:df.cl OR site:emol.com OR site:latercera.com OR site:sercotec.cl OR site:corfo.cl',
+    'empresa servicios terreno Chile duplicó clientes presencia digital Google resultados 2024 2025',
+    'pyme servicios terreno Chile contratos recurrentes fidelización clientes caso real crecimiento'
   ],
   servicios_profesionales: [
-    'consultora servicios profesionales Chile pyme caso éxito crecimiento clientes 2024 2025',
-    'estudio contable asesoría jurídica Chile transformación digital resultados reales',
-    'empresa servicios profesionales Chile más clientes caso exitoso estrategia'
+    'consultora estudio profesional Chile creció clientes transformación digital caso real site:df.cl OR site:emol.com OR site:latercera.com OR site:pulso.cl',
+    'empresa servicios profesionales Chile facturación aumentó estrategia digital caso exitoso 2024 2025',
+    'estudio contable jurídico Chile más clientes automatización resultados concretos caso real'
   ],
   comercio_ecommerce: [
-    'tienda comercio pyme Chile ventas online ecommerce caso éxito crecimiento 2024 2025',
-    'negocio local Chile ventas digitales resultados reales transformación digital',
-    'comercio minorista Chile estrategia digital caso exitoso aumento ventas'
+    'tienda comercio local Chile ventas online duplicó caso exitoso site:df.cl OR site:emol.com OR site:america-retail.com OR site:latercera.com',
+    'pyme comercio Chile ecommerce transformación digital ventas crecimiento caso real 2024 2025',
+    'negocio local Chile ventas digitales incremento resultados concretos estrategia caso exitoso'
   ]
 };
 
-// Dominios de alta calidad para resultados de negocios en Chile
+// Dominios de alta calidad — priorizados en el ranking de resultados
 const PREFERRED_DOMAINS = [
-  'df.cl',
-  'emol.com',
-  'latercera.com',
-  'elmercurio.com',
-  'sercotec.cl',
-  'corfo.cl',
-  'pulso.cl',
-  'america-retail.com',
-  'g5noticias.cl',
-  'startupchile.org'
+  'df.cl', 'emol.com', 'latercera.com', 'elmercurio.com',
+  'sercotec.cl', 'corfo.cl', 'pulso.cl', 'america-retail.com',
+  'g5noticias.cl', 'startupchile.org', 'economiaenegocios.cl', 'biobiochile.cl'
+];
+
+// Dominios a excluir — redes sociales y fuentes no confiables
+const EXCLUDED_DOMAINS = [
+  'instagram.com', 'facebook.com', 'twitter.com', 'x.com',
+  'tiktok.com', 'youtube.com', 'pinterest.com', 'reddit.com',
+  'wikipedia.org', 'quora.com', 'tripadvisor.com'
 ];
 
 /**
@@ -72,16 +73,17 @@ export async function searchCasesForSector(sector, lead = {}) {
   try {
     const body = {
       query,
-      search_depth:     'basic',   // 1 crédito (no 2 como "advanced")
+      search_depth:     'basic',        // 1 crédito (no 2 como "advanced")
       topic:            'general',
       country:          'chile',
-      max_results:      5,
-      time_range:       'year',    // resultados del último año
+      max_results:      7,              // pedimos 7 para tener margen al filtrar
+      time_range:       'year',         // resultados del último año
       include_answer:   false,
       include_images:   false,
       include_raw_content: false,
       include_favicon:  false,
-      include_usage:    true       // para monitorear consumo de créditos en logs
+      include_usage:    true,           // monitorear consumo de créditos en logs
+      exclude_domains:  EXCLUDED_DOMAINS
     };
 
     const res = await fetch(TAVILY_API_URL, {
@@ -116,21 +118,32 @@ export async function searchCasesForSector(sector, lead = {}) {
 
     // Filtrar y mapear resultados útiles
     const filtered = results
-      .filter(r => r.title && r.content && r.content.length > 60)
+      .filter(r => {
+        if (!r.title || !r.content) return false;
+        if (r.content.length < 80) return false;
+        // Descartar si el dominio está en la lista de excluidos (doble seguro)
+        const dom = extractDomain(r.url || '');
+        if (EXCLUDED_DOMAINS.some(d => dom.includes(d))) return false;
+        // Descartar títulos que parezcan posts sociales o irrelevantes
+        const titleLower = r.title.toLowerCase();
+        if (titleLower.includes('instagram') || titleLower.includes('facebook')) return false;
+        if (titleLower.includes('¡') && titleLower.length < 40) return false; // anuncios
+        return true;
+      })
       .map(r => ({
         title:       cleanText(r.title),
         description: cleanText(r.content),
         url:         r.url || '',
         source:      extractDomain(r.url),
         score:       r.score || 0,
-        date:        null  // Tavily no siempre devuelve fecha en búsqueda básica
+        date:        null
       }))
-      // Priorizar resultados de dominios chilenos de calidad
+      // Priorizar dominios chilenos de calidad, luego por relevancia
       .sort((a, b) => {
         const aPref = PREFERRED_DOMAINS.some(d => a.source.includes(d)) ? 1 : 0;
         const bPref = PREFERRED_DOMAINS.some(d => b.source.includes(d)) ? 1 : 0;
         if (bPref !== aPref) return bPref - aPref;
-        return b.score - a.score; // fallback: por relevancia
+        return b.score - a.score;
       })
       .slice(0, 3);
 
