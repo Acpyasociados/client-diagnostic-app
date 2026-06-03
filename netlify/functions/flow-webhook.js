@@ -174,7 +174,10 @@ export default async (event, context) => {
     console.log('Lead encontrado:', leadId, '- status actual:', lead.status);
 
     // 3. Procesar estado del pago
-    if (params.status === 'PAYED') {
+    // Flow envía status como número: 1=Pendiente, 2=Pagado, 3=Rechazado, 4=Anulado
+    const flowStatus = parseInt(params.status);
+    console.log('Flow status recibido:', params.status, '→ int:', flowStatus);
+    if (flowStatus === 2) {
       // Actualizar lead con pago aprobado
       lead.status          = 'pagado';
       lead.payment_status  = 'approved';
@@ -206,8 +209,8 @@ export default async (event, context) => {
       );
 
     } else {
-      // Pago rechazado o pendiente
-      console.warn('Pago no aprobado. Status Flow:', params.status, 'orden:', leadId);
+      // Pago rechazado o pendiente (status 1=pendiente, 3=rechazado, 4=anulado)
+      console.warn('Pago no aprobado. Status Flow:', params.status, '(', flowStatus, ') orden:', leadId);
       lead.payment_status   = 'failed';
       lead.flow_status      = params.status;
       lead.payment_failed_at = new Date().toISOString();
