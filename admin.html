@@ -571,7 +571,7 @@ async function loadLeads() {
     '<tr><td colspan="8" class="center-msg"><div class="spinner"></div>Cargando…</td></tr>';
 
   try {
-    const res = await fetch(`/api/audit-leads?token=${encodeURIComponent(currentToken)}`);
+    const res = await fetch(`/.netlify/functions/audit-leads?token=${encodeURIComponent(currentToken)}`);
 
     if (res.status === 403) {
       showMsg('❌ Token inválido.', 'error');
@@ -601,7 +601,7 @@ async function loadLeads() {
 // ── EXPORT CSV ────────────────────────────────────────────
 function exportCSV() {
   if (!currentToken) { showMsg('❌ Sin token', 'error'); return; }
-  window.open(`/api/audit-leads?token=${encodeURIComponent(currentToken)}&format=csv`, '_blank');
+  window.open(`/.netlify/functions/audit-leads?token=${encodeURIComponent(currentToken)}&format=csv`, '_blank');
 }
 
 // ── OPEN REVIEW ───────────────────────────────────────────
