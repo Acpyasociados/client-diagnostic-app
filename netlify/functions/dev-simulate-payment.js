@@ -69,7 +69,7 @@ export default async (event) => {
   const email     = body.email    || 'test@acpasociados.cl';
   const name      = body.name     || 'Cliente Test';
   const company   = body.company  || 'Empresa de Prueba SpA';
-  const finalPrice = plan === 'premium' ? 149900 : 49900;
+  const finalPrice = plan === 'premium' ? 149900 : 1500;
 
   const sectorLabels = {
     servicios_profesionales: 'Servicios profesionales',
