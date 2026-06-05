@@ -14,21 +14,30 @@
 import { getLead, saveLead } from './_lib/storage.js';
 
 async function sendEmail({ to, subject, html }) {
-  const apiKey = process.env.SENDGRID_API_KEY;
-  if (!apiKey) return false;
-  const payload = {
-    personalizations: [{ to: [{ email: to }], subject }],
-    from: { email: 'patricio.silva@acpasociados.cl', name: 'ACP & Asociados' },
-    content: [{ type: 'text/html', value: html }]
-  };
+  const apiKey = process.env.SENDGRID_API_KEY; // Resend key: re_...
+  if (!apiKey) {
+    console.warn('[email] SENDGRID_API_KEY (Resend) no configurada - omitido para:', to);
+    return false;
+  }
   try {
-    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        from:    'ACP & Asociados <patricio.silva@acpasociados.cl>',
+        to:      [to],
+        subject,
+        html
+      })
     });
-    return res.ok;
-  } catch { return false; }
+    if (res.ok) { console.log('[email] Enviado a:', to); return true; }
+    const errText = await res.text();
+    console.error('[email] Resend error:', res.status, errText.substring(0, 300));
+    return false;
+  } catch (err) {
+    console.error('[email] Error:', err.message);
+    return false;
+  }
 }
 
 export default async (req) => {

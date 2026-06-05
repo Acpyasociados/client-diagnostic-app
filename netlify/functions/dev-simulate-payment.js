@@ -14,27 +14,30 @@ import crypto from 'crypto';
 import { saveLead } from './_lib/storage.js';
 
 async function sendEmail({ to, subject, html }) {
-  // La clave en Netlify (SENDGRID_API_KEY) es en realidad una clave Resend (re_...)
-  const apiKey = process.env.SENDGRID_API_KEY;
+  const apiKey = process.env.SENDGRID_API_KEY; // Resend key: re_...
   if (!apiKey) {
-    console.warn('SENDGRID_API_KEY no configurada - email omitido para:', to);
+    console.warn('[email] SENDGRID_API_KEY (Resend) no configurada - omitido para:', to);
     return false;
   }
-  const fromEmail = 'patricio.silva@acpasociados.cl';
-  const payload = {
-    personalizations: [{ to: [{ email: to }], subject }],
-    from: { email: fromEmail, name: 'ACP & Asociados' },
-    content: [{ type: 'text/html', value: html }]
-  };
-  const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (res.ok) { console.log('Email enviado a:', to); return true; }
-  const errText = await res.text();
-  console.error('SendGrid error:', res.status, errText.substring(0, 300));
-  return false;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from:    'ACP & Asociados <patricio.silva@acpasociados.cl>',
+        to:      [to],
+        subject,
+        html
+      })
+    });
+    if (res.ok) { console.log('[email] Enviado a:', to); return true; }
+    const errText = await res.text();
+    console.error('[email] Resend error:', res.status, errText.substring(0, 300));
+    return false;
+  } catch (err) {
+    console.error('[email] Error:', err.message);
+    return false;
+  }
 }
 
 export default async (event) => {
