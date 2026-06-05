@@ -82,7 +82,7 @@ async function sendQuestionnaireEmail(lead) {
 async function sendAdvisorPaymentNotification(lead) {
   const siteUrl = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
   const adminUrl = `${siteUrl}/admin.html`;
-  const advisorEmail = 'asesor.pac@gmail.com';
+  const advisorEmail = process.env.ADVISOR_EMAIL || 'asesor.pac@gmail.com';
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -95,10 +95,10 @@ async function sendAdvisorPaymentNotification(lead) {
           <tr><td style="padding: 8px 0; color: #666; width: 40%;">Cliente</td><td style="padding: 8px 0; font-weight: bold;">${lead.name}</td></tr>
           <tr><td style="padding: 8px 0; color: #666;">Email</td><td style="padding: 8px 0;"><a href="mailto:${lead.email}" style="color: #1a3a5c;">${lead.email}</a></td></tr>
           <tr><td style="padding: 8px 0; color: #666;">Empresa</td><td style="padding: 8px 0;">${lead.company}</td></tr>
-          <tr><td style="padding: 8px 0; color: #666;">Rubro</td><td style="padding: 8px 0;">${lead.sector_label || lead.sector}</td></tr>
           <tr><td style="padding: 8px 0; color: #666;">Plan</td><td style="padding: 8px 0;">${lead.plan === 'basico' ? 'Básico' : 'Premium'}</td></tr>
-          <tr><td style="padding: 8px 0; color: #666;">Monto pagado</td><td style="padding: 8px 0; font-weight: bold; color: #28a745;">$${Number(lead.final_price).toLocaleString('es-CL')} CLP</td></tr>
+          <tr><td style="padding: 8px 0; color: #666;">Monto pagado</td><td style="padding: 8px 0; font-weight: bold; color: #28a745;">$${Number(lead.final_price || 0).toLocaleString('es-CL')} CLP</td></tr>
           <tr><td style="padding: 8px 0; color: #666;">Fecha pago</td><td style="padding: 8px 0;">${new Date().toLocaleString('es-CL')}</td></tr>
+          <tr><td style="padding: 8px 0; color: #666;">Order ID</td><td style="padding: 8px 0; font-size: 12px; color: #888;">${lead.lead_id}</td></tr>
         </table>
         <div style="margin-top: 24px; padding: 16px; background: #f0f7ff; border-radius: 6px; font-size: 13px; color: #555;">
           📋 El cuestionario sectorial ya fue enviado al cliente. Una vez que lo complete, recibirás el borrador del informe para revisión.
@@ -114,16 +114,21 @@ async function sendAdvisorPaymentNotification(lead) {
 
   return sendEmail({
     to: advisorEmail,
-    subject: `[ACP] Pago confirmado - ${lead.company} ($${Number(lead.final_price).toLocaleString('es-CL')} CLP)`,
+    subject: `[ACP] Pago confirmado - ${lead.company} ($${Number(lead.final_price || 0).toLocaleString('es-CL')} CLP)`,
     html
   });
 }
 
-export default async (event, context) => {
+// ─── Handler principal (Netlify Functions v2) ─────────────────────────────────
+// CORRECCIÓN: usa Request API (v2), no event.queryStringParameters (v1)
+export default async (req) => {
   console.log('=== FLOW WEBHOOK START ===');
 
   try {
-    const params = event.queryStringParameters || {};
+    // FIX v2: leer query params desde la URL del Request, no desde event.queryStringParameters
+    const url = new URL(req.url);
+    const params = Object.fromEntries(url.searchParams.entries());
+
     console.log('Webhook params:', {
       commerceOrder: params.commerceOrder,
       status: params.status,
@@ -177,30 +182,39 @@ export default async (event, context) => {
     // Flow envía status como número: 1=Pendiente, 2=Pagado, 3=Rechazado, 4=Anulado
     const flowStatus = parseInt(params.status);
     console.log('Flow status recibido:', params.status, '→ int:', flowStatus);
+
     if (flowStatus === 2) {
+      // Evitar procesar el mismo pago dos veces
+      if (lead.status === 'pagado') {
+        console.log('Pago ya procesado anteriormente para:', leadId);
+        return new Response(JSON.stringify({ success: true, status: 'ya_procesado' }), {
+          status: 200, headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
       // Actualizar lead con pago aprobado
-      lead.status          = 'pagado';
-      lead.payment_status  = 'approved';
-      lead.paid_at         = new Date().toISOString();
-      lead.flow_reference  = params.token;
+      lead.status         = 'pagado';
+      lead.payment_status = 'approved';
+      lead.paid_at        = new Date().toISOString();
+      lead.flow_reference = params.token;
 
       await saveLead(leadId, lead);
       console.log('Lead actualizado: pagado, payment_status=approved');
 
-      // Enviar cuestionario al cliente (no crítico)
+      // Enviar cuestionario al cliente
       try {
         await sendQuestionnaireEmail(lead);
         lead.questionnaire_email_sent_at = new Date().toISOString();
         await saveLead(leadId, lead);
       } catch (e) {
-        console.error('Error enviando cuestionario (no crítico):', e.message);
+        console.error('Error enviando cuestionario (no critico):', e.message);
       }
 
-      // Notificar al asesor (no crítico)
+      // Notificar al asesor
       try {
         await sendAdvisorPaymentNotification(lead);
       } catch (e) {
-        console.error('Error notificando asesor (no crítico):', e.message);
+        console.error('Error notificando asesor (no critico):', e.message);
       }
 
       return new Response(
@@ -209,10 +223,9 @@ export default async (event, context) => {
       );
 
     } else {
-      // Pago rechazado o pendiente (status 1=pendiente, 3=rechazado, 4=anulado)
       console.warn('Pago no aprobado. Status Flow:', params.status, '(', flowStatus, ') orden:', leadId);
-      lead.payment_status   = 'failed';
-      lead.flow_status      = params.status;
+      lead.payment_status    = 'failed';
+      lead.flow_status       = params.status;
       lead.payment_failed_at = new Date().toISOString();
       await saveLead(leadId, lead);
 
