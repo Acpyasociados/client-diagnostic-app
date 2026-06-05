@@ -1,42 +1,19 @@
-/**
- * resend-questionnaire.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Función de recuperación: reenvía el email de cuestionario a un lead que
- * pagó pero no recibió el email (por ejemplo por falla del webhook).
- *
- * USO (solo desde admin.html o llamada directa con token):
- *   POST /.netlify/functions/resend-questionnaire
- *   Body: { "lead_id": "...", "admin_token": "..." }
- *
- * Requiere: ADMIN_REVIEW_TOKEN en env vars de Netlify
- * ─────────────────────────────────────────────────────────────────────────────
- */
 import { getLead, saveLead } from './_lib/storage.js';
 
 async function sendEmail({ to, subject, html }) {
-  const apiKey = process.env.SENDGRID_API_KEY; // Resend key: re_...
-  if (!apiKey) {
-    console.warn('[email] SENDGRID_API_KEY (Resend) no configurada - omitido para:', to);
-    return false;
-  }
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) return { ok: false, error: 'SENDGRID_API_KEY no configurada' };
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from:    'ACP & Asociados <onboarding@resend.dev>',
-        to:      [to],
-        subject,
-        html
-      })
+      body: JSON.stringify({ from: 'ACP & Asociados <onboarding@resend.dev>', to: [to], subject, html })
     });
-    if (res.ok) { console.log('[email] Enviado a:', to); return true; }
+    if (res.ok) return { ok: true };
     const errText = await res.text();
-    console.error('[email] Resend error:', res.status, errText.substring(0, 300));
-    return false;
+    return { ok: false, error: `Resend ${res.status}: ${errText.substring(0, 200)}` };
   } catch (err) {
-    console.error('[email] Error:', err.message);
-    return false;
+    return { ok: false, error: err.message };
   }
 }
 
@@ -49,57 +26,68 @@ export default async (req) => {
   const { lead_id, admin_token } = body;
   if (!lead_id || !admin_token) return json(400, { error: 'lead_id y admin_token requeridos' });
 
-  // Verificar token de admin
   const validToken = process.env.ADMIN_REVIEW_TOKEN;
   if (!validToken || admin_token !== validToken) return json(403, { error: 'Token inválido' });
 
-  const lead = await getLead(lead_id);
-  if (!lead) return json(404, { error: 'Lead no encontrado: ' + lead_id });
+  let lead;
+  try {
+    lead = await getLead(lead_id);
+  } catch (err) {
+    return json(500, { error: 'Error leyendo storage: ' + err.message, lead_id });
+  }
+
+  if (!lead) return json(404, { error: 'Lead no encontrado en diagnostic-leads store', lead_id });
 
   const siteUrl = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
   const questionnaireUrl = `${siteUrl}/questionnaire.html?lead_id=${lead.lead_id}&token=${lead.client_token}`;
 
   const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-      <div style="background: #1a3a5c; padding: 30px; border-radius: 8px 8px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">ACP & Asociados</h1>
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <div style="background:#1a3a5c;padding:30px;border-radius:8px 8px 0 0;text-align:center;">
+        <h1 style="color:white;margin:0;">ACP & Asociados</h1>
       </div>
-      <div style="background: white; padding: 32px; border: 1px solid #e0e0e0; border-radius: 0 0 8px 8px;">
-        <p style="font-size: 18px; font-weight: bold; color: #1a3a5c;">¡Hola ${lead.name}!</p>
-        <p>Tu pago fue confirmado. Por favor completa el cuestionario para personalizar tu diagnóstico.</p>
-        <div style="text-align: center; margin: 32px 0;">
-          <a href="${questionnaireUrl}" style="background: #1a3a5c; color: white; padding: 16px 40px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
+      <div style="background:white;padding:32px;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;">
+        <p style="font-size:18px;font-weight:bold;color:#1a3a5c;">¡Hola ${lead.name}!</p>
+        <p>Tu pago fue confirmado. Completa el cuestionario para personalizar tu diagnóstico.</p>
+        <div style="text-align:center;margin:32px 0;">
+          <a href="${questionnaireUrl}" style="background:#1a3a5c;color:white;padding:16px 40px;border-radius:6px;text-decoration:none;font-size:16px;font-weight:bold;display:inline-block;">
             Completar Cuestionario →
           </a>
         </div>
-        <p style="font-size: 13px; color: #888; text-align: center;">Enlace directo: <a href="${questionnaireUrl}" style="color: #1a3a5c;">${questionnaireUrl}</a></p>
+        <p style="font-size:12px;color:#888;text-align:center;word-break:break-all;">${questionnaireUrl}</p>
       </div>
-    </div>
-  `;
+    </div>`;
 
-  const sent = await sendEmail({
+  const emailResult = await sendEmail({
     to: lead.email,
     subject: `[ACP & Asociados] Tu cuestionario - ${lead.company}`,
     html
   });
 
-  if (sent) {
-    lead.questionnaire_email_sent_at = new Date().toISOString();
+  // Actualizar estado aunque falle el email
+  try {
     lead.questionnaire_email_resent = true;
-    if (lead.payment_status === 'approved' || lead.status === 'pagado') {
-      // ya pagado, solo reenviar
-    } else {
-      // marcar como pagado si no estaba marcado (pago existió pero webhook falló)
+    lead.questionnaire_email_resent_at = new Date().toISOString();
+    if (!lead.status || lead.status === 'pending') {
       lead.status = 'pagado';
       lead.payment_status = 'approved';
       lead.paid_at = lead.paid_at || new Date().toISOString();
     }
     await saveLead(lead_id, lead);
-    console.log('[resend] Cuestionario reenviado a:', lead.email, 'para lead:', lead_id);
-    return json(200, { ok: true, sent_to: lead.email, lead_id, company: lead.company });
-  } else {
-    return json(500, { error: 'Fallo el envío de email', lead_id, email: lead.email });
+  } catch (err) {
+    console.error('[resend] Error guardando lead (no crítico):', err.message);
   }
+
+  return json(200, {
+    ok:         emailResult.ok,
+    sent_to:    lead.email,
+    lead_id,
+    company:    lead.company,
+    name:       lead.name,
+    status:     lead.status,
+    email_error: emailResult.error || null,
+    questionnaire_url: questionnaireUrl
+  });
 };
 
 function json(status, body) {
