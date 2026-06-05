@@ -16,8 +16,14 @@
 [functions.generate-report]
   timeout = 26
 
+[functions.submit-questionnaire]
+  timeout = 26
+
 [context.production.environment]
-  # Secrets (MERCADO_PAGO_ACCESS_TOKEN, SENDGRID_API_KEY) are configured in Netlify UI
+  # Secrets configuradas en Netlify UI (Site settings → Environment variables):
+  #   FLOW_API_KEY, FLOW_SECRET_KEY        — pagos Flow
+  #   SENDGRID_API_KEY                     — emails
+  #   ANTHROPIC_API_KEY                    — Claude IA (obtener en console.anthropic.com)
   # Non-secret environment variables:
   SENDGRID_FROM_EMAIL = "patriciosilvavalenzuela@gmail.com"
   ADVISOR_EMAIL = "asesor.pac@gmail.com"
