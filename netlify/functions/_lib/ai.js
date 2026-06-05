@@ -16,6 +16,8 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+import { QUESTION_LABELS } from './questions_labels.js';
+
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 2000;
@@ -25,33 +27,6 @@ const SECTOR_LABELS = {
   servicios_profesionales: 'Servicios profesionales',
   comercio_ecommerce: 'Comercio / e-commerce',
   servicios_terreno: 'Servicios en terreno'
-};
-
-const QUESTION_LABELS = {
-  q_monthly_sales:         'Ventas mensuales (CLP)',
-  q_margin:                'Margen de ganancia (%)',
-  q_active_clients:        'Clientes activos',
-  q_main_problem:          'Principal desafío del negocio',
-  monthly_leads:           'Leads mensuales',
-  close_rate:              'Tasa de cierre (%)',
-  avg_ticket:              'Ticket promedio (CLP)',
-  top3_revenue_share:      'Concentración top 3 clientes (%)',
-  non_billable_hours:      'Horas no facturables al mes',
-  collection_days:         'Días promedio de cobro',
-  repeat_rate:             'Tasa de recompra / repetición (%)',
-  best_margin_product_share: 'Participación producto más rentable (%)',
-  slow_stock_share:        'Stock lento sobre inventario total (%)',
-  delivery_days:           'Días promedio de entrega',
-  promo_sales_share:       'Ventas con promoción (%)',
-  jobs_per_day:            'Trabajos por día',
-  idle_time_hours:         'Horas muertas por día',
-  fuel_cost_monthly:       'Gasto mensual combustible (CLP)',
-  response_time_hours:     'Tiempo de respuesta promedio (horas)',
-  quote_acceptance_rate:   'Presupuestos aceptados (%)',
-  client_acquisition_method: 'Cómo llegan los clientes',
-  fuel_purchase_structure: 'Estructura de compra de combustible',
-  return_trip_utilization: 'Utilización de viajes de vuelta',
-  digital_presence:        'Presencia digital'
 };
 
 /**
