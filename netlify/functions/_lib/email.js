@@ -8,7 +8,7 @@ export async function sendEmail({ to, subject, html }) {
   if (!apiKey) throw new Error('Falta SENDGRID_API_KEY (Resend key re_...)');
 
   const payload = {
-    from:    'ACP & Asociados <patricio.silva@acpasociados.cl>',
+    from:    'ACP & Asociados <onboarding@resend.dev>',
     to:      [to],
     subject,
     html
