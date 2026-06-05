@@ -100,7 +100,7 @@ export default async (event, context) => {
       amount: amount,
       email: formData.email,
       currency: 'CLP',
-      urlReturn: `${SITE_URL}/flow-success.html?orderId=${orderId}`,
+      urlReturn: `${SITE_URL}/.netlify/functions/flow-success-page?orderId=${orderId}`,
       urlConfirmation: `${SITE_URL}/.netlify/functions/flow-webhook`
     };
 

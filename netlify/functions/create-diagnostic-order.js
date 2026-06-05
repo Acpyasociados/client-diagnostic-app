@@ -57,7 +57,7 @@ async function createFlowPayment(lead) {
     amount:          lead.final_price,
     email:           lead.email,
     currency:        'CLP',
-    urlReturn:       `${siteUrl}/flow-success.html?orderId=${lead.lead_id}`,
+    urlReturn:       `${siteUrl}/.netlify/functions/flow-success-page?orderId=${lead.lead_id}`,
     urlConfirmation: `${siteUrl}/.netlify/functions/flow-webhook`
   };
 
