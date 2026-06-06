@@ -46,14 +46,19 @@ export default async (req) => {
     if (aiEnrichment.opportunities.length > 0) {
       reportPayload.opportunities = aiEnrichment.opportunities;
 
-      // Inyectar casos externos de Tavily en la primera oportunidad IA
+      // Distribuir casos externos de Tavily en las 3 oportunidades (1 por cada una)
       if (externalCases.length > 0) {
-        reportPayload.opportunities[0].cases = externalCases.slice(0, 3).map(c => ({
-          name: c.source ? c.title + ' (' + c.source + ')' : c.title,
-          text: c.description + (c.date ? ' — ' + c.date : ''),
-          url:  c.url || null,
-          real: true
-        }));
+        reportPayload.opportunities.forEach((opp, i) => {
+          const caso = externalCases[i];
+          if (caso) {
+            opp.cases = [{
+              name: caso.source ? caso.title + ' (' + caso.source + ')' : caso.title,
+              text: caso.description + (caso.date ? ' — ' + caso.date : ''),
+              url:  caso.url || null,
+              real: true
+            }];
+          }
+        });
       }
     }
 

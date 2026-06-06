@@ -25,8 +25,15 @@ const TIMEOUT_MS = 20000;
 
 const SECTOR_LABELS = {
   servicios_profesionales: 'Servicios profesionales',
-  comercio_ecommerce: 'Comercio / e-commerce',
-  servicios_terreno: 'Servicios en terreno'
+  comercio_ecommerce:      'Comercio / e-commerce',
+  servicios_terreno:       'Servicios en terreno',
+  construccion_obras:      'Construcción y obras',
+  gastronomia_alimentos:   'Gastronomía y alimentos',
+  salud_belleza:           'Salud y belleza',
+  tecnologia_software:     'Tecnología y software',
+  educacion_capacitacion:  'Educación y capacitación',
+  manufactura_industria:   'Manufactura e industria',
+  otro:                    'Otro'
 };
 
 /**
@@ -61,22 +68,41 @@ function buildPrompt(lead, answers) {
   const mainProblem = answers.q_main_problem || lead.main_problem || 'no especificado';
   const formattedAnswers = formatAnswers(answers);
 
-  return `Eres un experto en finanzas y control de gestión para pymes chilenas con 20 años de experiencia como CFO. Analiza estos datos y genera un diagnóstico financiero profesional.
+  // Métricas derivadas para enriquecer el contexto del prompt
+  const ventasMensuales  = Number(lead.monthly_sales || 0);
+  const margen           = Number(lead.margin || 0);
+  const clientes         = Number(lead.active_clients || 0);
+  const utilidadMensual  = ventasMensuales > 0 && margen > 0 ? ventasMensuales * (margen / 100) : 0;
+  const ticketPromedio   = clientes > 0 && ventasMensuales > 0 ? Math.round(ventasMensuales / clientes) : 0;
+
+  return `Eres un CFO con 20 años de experiencia en pymes chilenas. Dominas: SII, IVA (19%), PPM mensual, F29, gratificaciones (4,75% o 25%), régimen ProPyme, Ley de Pago Oportuno (30 días), AFP + salud, y márgenes típicos por sector en Chile.
 
 DATOS DE LA EMPRESA:
 - Nombre: ${lead.company || 'no especificado'}
 - Sector: ${sectorLabel}
-- Ventas mensuales: ${formatCLP(lead.monthly_sales)}
-- Margen estimado: ${lead.margin != null ? lead.margin + '%' : 'no especificado'}
-- Clientes activos: ${lead.active_clients || 'no especificado'}
-- Plan contratado: ${lead.plan === 'premium' ? 'Premium' : 'Básico'}
-- Principal problema declarado: ${mainProblem}
+- Ventas mensuales brutas: ${formatCLP(ventasMensuales)}
+- Margen declarado: ${margen > 0 ? margen + '%' : 'no especificado'}${utilidadMensual > 0 ? ` → Utilidad mensual estimada: ${formatCLP(utilidadMensual)}` : ''}
+- Clientes activos: ${clientes > 0 ? clientes : 'no especificado'}${ticketPromedio > 0 ? ` → Ticket promedio: ${formatCLP(ticketPromedio)}/cliente` : ''}
+- Plan: ${lead.plan === 'premium' ? 'Premium' : 'Básico'}
+- Problema principal: ${mainProblem}
+- Régimen tributario: ${lead.tax_regime || 'no especificado'}
+- Top costos: ${lead.top_costs || 'no especificado'}
+- Objetivo 6 meses: ${lead.goal_6m || 'no especificado'}
 
 RESPUESTAS DEL CUESTIONARIO:
 ${formattedAnswers || '(sin respuestas adicionales)'}
 
+BENCHMARKS CHILE (compara con estos):
+- Servicios terreno: margen bruto 35-55%
+- Servicios profesionales: margen bruto 50-70%
+- Comercio/retail: margen bruto 25-40%
+- Gastronomía: food cost ≤30%, margen neto 8-15%
+- Construcción: margen bruto 20-35%
+- Costo laboral pymes Chile: 35-45% ventas
+- Morosidad cuentas por cobrar: 45-90 días promedio
+
 INSTRUCCIONES:
-Genera un diagnóstico financiero específico para ESTA empresa (no genérico). Usa sus números reales. Sé directo y concreto como lo haría un CFO experimentado.
+Diagnóstico específico para ESTA empresa. Compara sus números con benchmarks. Cuantifica en CLP cuando sea posible. Directo, como si acabaras de revisar sus estados financieros.
 
 Responde SOLO con un objeto JSON válido (sin markdown, sin texto adicional):
 
