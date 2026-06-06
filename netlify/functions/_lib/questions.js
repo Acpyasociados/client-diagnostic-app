@@ -1,12 +1,25 @@
+// IMPORTANTE: estas claves deben coincidir 1:1 con las <option value="..."> del
+// selector "industry" en index.html. Si falta una clave acá, el cuestionario
+// muestra el rubro como su slug crudo (ej. "manufactura" en vez de
+// "Manufactura e Industria") — bug detectado en prueba real el 2026-06-06.
 export const sectorLabels = {
   servicios_profesionales: 'Servicios profesionales',
   comercio_ecommerce:      'Comercio / e-commerce',
-  servicios_terreno:       'Servicios en terreno'
+  servicios_terreno:       'Servicios en terreno',
+  construccion:            'Construcción y obras',
+  gastronomia:             'Gastronomía y alimentos',
+  salud_belleza:           'Salud y belleza',
+  tecnologia:              'Tecnología y software',
+  educacion:               'Educación y capacitación',
+  manufactura:             'Manufactura e industria',
+  otro:                    'Otro rubro'
 };
 
 // ── Preguntas base: aplican a TODOS los sectores ─────────────────────────────
 // Lenguaje cotidiano, sin jerga financiera.
-const baseQuestions = [
+// Exportada para servir de fallback cuando un sector no tiene banco propio
+// (ver get-questionnaire.js) — así nunca se entrega un cuestionario vacío.
+export const baseQuestions = [
   {
     key:         'q_monthly_sales',
     label:       '¿Cuánto vende tu empresa al mes aproximadamente? (en pesos)',
@@ -262,9 +275,101 @@ const serviciosTerrenoQuestions = [
   }
 ];
 
+// ── Manufactura e industria ───────────────────────────────────────────────────
+// Aplica a: metalmecánica, plásticos, alimentos procesados, textil, maderas,
+//           imprentas, talleres de producción en serie, etc.
+const manufacturaQuestions = [
+  {
+    key:         'capacity_utilization',
+    label:       '¿Qué porcentaje de tu capacidad productiva (máquinas, planta, turnos) usas en un mes normal?',
+    required:    true,
+    type:        'select',
+    options: [
+      'Menos del 50% (tengo capacidad ociosa importante)',
+      'Entre 50% y 75%',
+      'Entre 75% y 90%',
+      'Más del 90% (estoy al límite de mi capacidad)'
+    ]
+  },
+  {
+    key:         'main_client_type',
+    label:       '¿A quién le vendes principalmente?',
+    required:    true,
+    type:        'select',
+    options: [
+      'A otras empresas (B2B) por pedido o contrato',
+      'A distribuidores o retail',
+      'Directo al público final',
+      'A clientes en el extranjero (exportación)'
+    ]
+  },
+  {
+    key:         'rejection_rate',
+    label:       '¿Qué porcentaje de tu producción se pierde por fallas, mermas o rechazos de calidad?',
+    required:    true,
+    type:        'select',
+    options: [
+      'Menos del 2% (tengo buen control de calidad)',
+      'Entre 2% y 5%',
+      'Entre 5% y 10%',
+      'Más del 10% (es un problema relevante)'
+    ]
+  },
+  {
+    key:         'machinery_age',
+    label:       '¿Qué tan antigua o al día está tu maquinaria/equipos principales?',
+    required:    true,
+    type:        'select',
+    options: [
+      'Nueva o renovada en los últimos 2-3 años',
+      'Funcional pero con varios años de uso',
+      'Antigua, requiere mantención frecuente',
+      'Antigua y limita mi producción o calidad'
+    ]
+  },
+  {
+    key:         'key_person_dependency',
+    label:       '¿Qué tan dependiente es tu producción de 1 o 2 personas clave (que si faltan, todo se atrasa)?',
+    required:    true,
+    type:        'select',
+    options: [
+      'Nada dependiente, cualquiera puede cubrir',
+      'Algo dependiente, pero hay respaldo',
+      'Bastante dependiente de 1 o 2 personas',
+      'Muy dependiente — si faltan, se detiene la producción'
+    ]
+  },
+  {
+    key:         'order_lead_time',
+    label:       '¿Cuánto tiempo pasa desde que recibes un pedido hasta que lo entregas?',
+    required:    true,
+    type:        'select',
+    options: [
+      'Menos de 1 semana',
+      'Entre 1 y 4 semanas',
+      'Entre 1 y 3 meses',
+      'Más de 3 meses'
+    ]
+  }
+];
+
+// ── Cuestionarios genéricos para sectores aún sin banco propio ───────────────
+// construccion, gastronomia, salud_belleza, tecnologia, educacion, otro:
+// usan las preguntas base hasta que se redacten bancos específicos por rubro.
+// Esto evita el bug detectado el 2026-06-06: get-questionnaire devolvía
+// questions:[] para estos rubros y el cliente veía un formulario vacío que
+// igual se podía "enviar" sin responder nada.
+
 // ── Exportar cuestionarios por sector ────────────────────────────────────────
 export const questionnaires = {
   servicios_profesionales: [...baseQuestions, ...serviciosProfesionalesQuestions],
   comercio_ecommerce:      [...baseQuestions, ...comercioQuestions],
-  servicios_terreno:       [...baseQuestions, ...serviciosTerrenoQuestions]
+  servicios_terreno:       [...baseQuestions, ...serviciosTerrenoQuestions],
+  manufactura:             [...baseQuestions, ...manufacturaQuestions],
+  construccion:            baseQuestions,
+  gastronomia:             baseQuestions,
+  salud_belleza:           baseQuestions,
+  tecnologia:              baseQuestions,
+  educacion:               baseQuestions,
+  otro:                    baseQuestions
 };

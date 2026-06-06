@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { sectorLabels } from './_lib/questions.js';
 import { sendAdvisorEmail } from './send-advisor-email.js';
+import { findRecentPendingLead } from './_lib/storage.js';
 
 // Campos requeridos del formulario HTML
 const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'monthly_sales', 'plan'];
@@ -153,13 +154,25 @@ export default async (event, context) => {
     ? Number(body.price)
     : Math.round(basePrice * (100 - discount) / 100);
 
-  const leadId      = crypto.randomUUID();
-  const clientToken = crypto.randomBytes(18).toString('hex');
+  // ── Evitar registros duplicados ───────────────────────────────────────────
+  // Si la persona reintenta el envío (doble clic, botón "atrás", recarga,
+  // error de Flow, etc.) y todavía no pagó, reutilizamos su lead existente
+  // en vez de crear uno nuevo. Antes esto generaba múltiples "solicitudes"
+  // huérfanas en el panel admin para una sola intención de compra real.
+  const existingLead = await findRecentPendingLead(body.email, body.company).catch(() => null);
+  const isRetry      = Boolean(existingLead);
+
+  const leadId      = existingLead ? existingLead.lead_id      : crypto.randomUUID();
+  const clientToken = existingLead ? existingLead.client_token : crypto.randomBytes(18).toString('hex');
+
+  if (isRetry) {
+    console.log('Reintento detectado — reutilizando lead existente:', leadId);
+  }
 
   const lead = {
     lead_id:                 leadId,
     client_token:            clientToken,
-    created_at:              new Date().toISOString(),
+    created_at:              existingLead ? existingLead.created_at : new Date().toISOString(),
     status:                  'lead_creado',
     payment_status:          'pending',
     payment_provider:        'flow',
@@ -205,11 +218,17 @@ export default async (event, context) => {
     lead.payment_created_at = new Date().toISOString();
     await store.set(leadId, JSON.stringify(lead), { metadata: { email: lead.email } });
 
-    // Notificar al asesor (no critico)
-    try {
-      await sendAdvisorEmail(lead);
-    } catch (emailErr) {
-      console.warn('Advisor email fallo (no critico):', emailErr.message);
+    // Notificar al asesor SOLO en la primera solicitud — en reintentos
+    // (mismo cliente, mismo lead reutilizado) se omite para no duplicar
+    // el correo "Nueva solicitud de diagnóstico" (no critico)
+    if (!isRetry) {
+      try {
+        await sendAdvisorEmail(lead);
+      } catch (emailErr) {
+        console.warn('Advisor email fallo (no critico):', emailErr.message);
+      }
+    } else {
+      console.log('Reintento — se omite email "nueva solicitud" al asesor para:', leadId);
     }
 
     console.log('Order creada exitosamente:', leadId);
