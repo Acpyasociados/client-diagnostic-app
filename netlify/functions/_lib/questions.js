@@ -353,12 +353,253 @@ const manufacturaQuestions = [
   }
 ];
 
-// ── Cuestionarios genéricos para sectores aún sin banco propio ───────────────
-// construccion, gastronomia, salud_belleza, tecnologia, educacion, otro:
-// usan las preguntas base hasta que se redacten bancos específicos por rubro.
-// Esto evita el bug detectado el 2026-06-06: get-questionnaire devolvía
-// questions:[] para estos rubros y el cliente veía un formulario vacío que
-// igual se podía "enviar" sin responder nada.
+// ── Bancos cortos para sectores que antes corrían solo con preguntas base ────
+// Agregadas 2026-06-06: con apenas 2 leads reales en el sistema no se justifica
+// escribir bancos de 6-7 preguntas como los de arriba — eso es trabajo a ciegas.
+// En cambio, 2-3 preguntas por rubro, ancladas en datos reales del sector
+// (ver fuentes en el commit), y TODAS opcionales (required:false): le pedimos
+// al cliente una señal más sin forzarlo a inventar un número que no maneja.
+// Si el dato no llega, el informe sigue funcionando con las 5 preguntas base.
+
+// ── Construcción y obras ──────────────────────────────────────────────────────
+// Fundamento: 28% de la concentración de morosidad nacional está en este rubro
+// (pagos atrasados de mandantes), más alza de costos de materiales y escasez
+// de mano de obra calificada — los 3 frenos más citados en 2025-2026.
+const construccionQuestions = [
+  {
+    key:      'cost_overrun_frequency',
+    label:    '¿Qué tan seguido un proyecto termina costando más de lo presupuestado al inicio?',
+    required: false,
+    type:     'select',
+    options: [
+      'Casi nunca — cumplimos el presupuesto',
+      'A veces, por imprevistos puntuales',
+      'Frecuentemente',
+      'Casi siempre — es difícil cerrar dentro de lo presupuestado'
+    ]
+  },
+  {
+    key:      'client_payment_delay',
+    label:    '¿Cuánto demoran tus clientes o mandantes en pagarte después de un estado de pago o entrega?',
+    required: false,
+    type:     'select',
+    options: [
+      'Me pagan dentro de 30 días',
+      'Entre 30 y 60 días',
+      'Entre 60 y 90 días',
+      'Más de 90 días — es un problema recurrente para mi caja'
+    ]
+  },
+  {
+    key:      'skilled_labor_availability',
+    label:    'Cuando necesitas contratar mano de obra calificada, ¿qué tan fácil es encontrarla?',
+    required: false,
+    type:     'select',
+    options: [
+      'Fácil, tengo una red de confianza',
+      'Demoro pero la encuentro',
+      'Me cuesta bastante encontrar gente calificada',
+      'Muy difícil — esto frena directamente mis proyectos'
+    ]
+  }
+];
+
+// ── Gastronomía y alimentos ───────────────────────────────────────────────────
+// Fundamento: presión de costos de insumos al alza y alta rotación de personal
+// son los dos frenos más citados para restaurantes pyme en 2025.
+const gastronomiaQuestions = [
+  {
+    key:      'input_cost_volatility',
+    label:    '¿Qué tan seguido suben los precios de tus insumos principales (proveedores de alimentos o bebidas)?',
+    required: false,
+    type:     'select',
+    options: [
+      'Rara vez — tengo precios bastante estables',
+      'Cada algunos meses',
+      'Casi todos los meses',
+      'Constantemente — me cuesta sostener mis márgenes'
+    ]
+  },
+  {
+    key:      'staff_turnover',
+    label:    '¿Cuánto tiempo dura en promedio un trabajador en tu local antes de irse?',
+    required: false,
+    type:     'select',
+    options: [
+      'Más de 2 años',
+      'Entre 1 y 2 años',
+      'Entre 6 meses y 1 año',
+      'Menos de 6 meses — la rotación es alta y me cuesta'
+    ]
+  },
+  {
+    key:      'best_margin_dish_known',
+    label:    '¿Tienes claro qué plato o producto te deja más ganancia por unidad vendida?',
+    required: false,
+    type:     'select',
+    options: [
+      'Sí, lo tengo calculado y lo promuevo activamente',
+      'Tengo una idea aproximada, pero no lo prioritizo',
+      'No lo he calculado realmente'
+    ]
+  }
+];
+
+// ── Salud y belleza ───────────────────────────────────────────────────────────
+// Fundamento: el sector está creciendo (+32% en reservas), el freno no es
+// demanda sino gestión — desconocimiento de costos reales, falta de
+// planificación comercial y dificultad para fidelizar (hallazgo 2026).
+const saludBellezaQuestions = [
+  {
+    key:      'agenda_occupancy',
+    label:    'En una semana normal, ¿qué tan llena está tu agenda de horas o citas?',
+    required: false,
+    type:     'select',
+    options: [
+      'Casi siempre llena, incluso tengo lista de espera',
+      'Mayormente llena, con algunos espacios libres',
+      'Como la mitad ocupada',
+      'Tengo bastantes horas libres sin reservar'
+    ]
+  },
+  {
+    key:      'client_loyalty_system',
+    label:    '¿Tienes alguna forma de hacer que tus clientes vuelvan o te recomienden (seguimiento, promociones, programa de fidelización)?',
+    required: false,
+    type:     'select',
+    options: [
+      'Sí, tengo un sistema que funciona bien',
+      'Hago algo, pero de forma informal',
+      'No tengo nada definido para esto'
+    ]
+  },
+  {
+    key:      'service_cost_awareness',
+    label:    '¿Sabes cuánto te cuesta realmente cada servicio o tratamiento que ofreces (insumos + tiempo + otros gastos)?',
+    required: false,
+    type:     'select',
+    options: [
+      'Sí, lo tengo calculado servicio por servicio',
+      'Tengo una idea aproximada',
+      'No lo he calculado realmente'
+    ]
+  }
+];
+
+// ── Tecnología y software ─────────────────────────────────────────────────────
+// Fundamento: déficit estimado de ~6.000 profesionales TI al año en Chile —
+// la retención de talento técnico y la dependencia de pocas personas clave
+// son el cuello de botella más citado para 2025-2026.
+const tecnologiaQuestions = [
+  {
+    key:      'key_person_dependency',
+    label:    '¿Qué tan dependiente es tu empresa de 1 o 2 personas técnicas clave (que si se van, sería un problema serio)?',
+    required: false,
+    type:     'select',
+    options: [
+      'Nada dependiente, cualquiera puede cubrir',
+      'Algo dependiente, pero hay respaldo',
+      'Bastante dependiente de 1 o 2 personas',
+      'Muy dependiente — si se van, frenamos proyectos'
+    ]
+  },
+  {
+    key:      'revenue_recurrence',
+    label:    '¿Tus ingresos vienen principalmente de proyectos puntuales o de contratos recurrentes (mensualidades, soporte, licencias)?',
+    required: false,
+    type:     'select',
+    options: [
+      'Casi todo es recurrente — ingreso predecible',
+      'Una mezcla de ambos',
+      'Casi todo son proyectos puntuales — ingreso variable mes a mes'
+    ]
+  },
+  {
+    key:      'tech_talent_availability',
+    label:    'Cuando necesitas contratar o reemplazar personal técnico calificado, ¿qué tan fácil te resulta?',
+    required: false,
+    type:     'select',
+    options: [
+      'Fácil, tengo buena red o flujo de candidatos',
+      'Demoro pero encuentro a quien necesito',
+      'Me cuesta bastante encontrar a la persona indicada',
+      'Muy difícil — esto frena directamente mi crecimiento'
+    ]
+  }
+];
+
+// ── Educación y capacitación ──────────────────────────────────────────────────
+// Fundamento: deserción de ~23-24% en educación superior y cerca de 30% de
+// ausentismo severo reportado en 2025 — retención/finalización es el dato
+// que más impacta a un instituto o academia pyme.
+const educacionQuestions = [
+  {
+    key:      'completion_rate',
+    label:    'De los alumnos que se inscriben en tus cursos o programas, ¿cuántos terminan completándolos?',
+    required: false,
+    type:     'select',
+    options: [
+      'Casi todos (más del 80%)',
+      'La mayoría (entre 60% y 80%)',
+      'Como la mitad',
+      'Menos de la mitad — la deserción es un problema para mí'
+    ]
+  },
+  {
+    key:      'acquisition_channel',
+    label:    '¿Cómo consigues la mayoría de tus nuevos alumnos o clientes?',
+    required: false,
+    type:     'select',
+    options: [
+      'Recomendaciones de alumnos anteriores (boca a boca)',
+      'Redes sociales o publicidad propia',
+      'Convenios con empresas o instituciones',
+      'Plataformas o portales externos'
+    ]
+  },
+  {
+    key:      'repeat_enrollment',
+    label:    'De tus alumnos, ¿cuántos vuelven a inscribirse en otro curso o te recomiendan a otros?',
+    required: false,
+    type:     'select',
+    options: [
+      'Menos de 2 de cada 10',
+      'Entre 2 y 4 de cada 10',
+      'Entre 4 y 7 de cada 10',
+      'Más de 7 de cada 10 — tengo buena fidelización'
+    ]
+  }
+];
+
+// ── Otro rubro ────────────────────────────────────────────────────────────────
+// No hay un sector específico que investigar — son 2 preguntas universales
+// de diagnóstico de riesgo operativo, no relleno genérico. Ambas opcionales.
+const otroQuestions = [
+  {
+    key:      'income_predictability',
+    label:    '¿Qué tan predecibles son tus ingresos de un mes a otro?',
+    required: false,
+    type:     'select',
+    options: [
+      'Muy predecibles, varían poco',
+      'Algo variables, pero dentro de un rango que conozco',
+      'Bastante variables — me cuesta proyectar',
+      'Muy impredecibles — cada mes es distinto'
+    ]
+  },
+  {
+    key:      'key_person_dependency_general',
+    label:    '¿Qué tan dependiente es tu negocio de ti o de 1-2 personas clave para funcionar día a día?',
+    required: false,
+    type:     'select',
+    options: [
+      'Poco dependiente, el equipo funciona sin mí',
+      'Algo dependiente, pero hay respaldo',
+      'Bastante dependiente — si falto, se nota',
+      'Muy dependiente — si falto, se detiene casi todo'
+    ]
+  }
+];
 
 // ── Exportar cuestionarios por sector ────────────────────────────────────────
 export const questionnaires = {
@@ -366,10 +607,10 @@ export const questionnaires = {
   comercio_ecommerce:      [...baseQuestions, ...comercioQuestions],
   servicios_terreno:       [...baseQuestions, ...serviciosTerrenoQuestions],
   manufactura:             [...baseQuestions, ...manufacturaQuestions],
-  construccion:            baseQuestions,
-  gastronomia:             baseQuestions,
-  salud_belleza:           baseQuestions,
-  tecnologia:              baseQuestions,
-  educacion:               baseQuestions,
-  otro:                    baseQuestions
+  construccion:            [...baseQuestions, ...construccionQuestions],
+  gastronomia:             [...baseQuestions, ...gastronomiaQuestions],
+  salud_belleza:           [...baseQuestions, ...saludBellezaQuestions],
+  tecnologia:              [...baseQuestions, ...tecnologiaQuestions],
+  educacion:               [...baseQuestions, ...educacionQuestions],
+  otro:                    [...baseQuestions, ...otroQuestions]
 };

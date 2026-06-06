@@ -30,5 +30,42 @@ export const QUESTION_LABELS = {
   client_acquisition_method: 'Cómo consigue clientes',
   response_time:           'Tiempo de respuesta a solicitudes',
   management_control_system: 'Sistema de registro y control',
-  main_cost:               'Principal gasto operativo mensual'
+  main_cost:               'Principal gasto operativo mensual',
+
+  // Manufactura e industria (faltaban — agregadas 2026-06-06 junto al fix
+  // del cuestionario vacío; sin esto la IA recibía claves crudas sin traducir)
+  capacity_utilization:    'Uso de capacidad productiva',
+  main_client_type:        'A quién le vende principalmente',
+  rejection_rate:          'Porcentaje de producción perdida por fallas/mermas',
+  machinery_age:           'Antigüedad y estado de la maquinaria',
+  key_person_dependency:   'Dependencia de personas clave en producción',
+  order_lead_time:         'Tiempo entre pedido y entrega',
+
+  // Construcción y obras
+  cost_overrun_frequency:  'Frecuencia de sobrecostos vs. presupuesto',
+  client_payment_delay:    'Demora de mandantes en pagar',
+  skilled_labor_availability: 'Disponibilidad de mano de obra calificada',
+
+  // Gastronomía y alimentos
+  input_cost_volatility:   'Variabilidad de precios de insumos',
+  staff_turnover:          'Permanencia promedio del personal',
+  best_margin_dish_known:  'Claridad sobre plato/producto más rentable',
+
+  // Salud y belleza
+  agenda_occupancy:        'Ocupación de agenda semanal',
+  client_loyalty_system:   'Sistema de fidelización de clientes',
+  service_cost_awareness:  'Conocimiento del costo real por servicio',
+
+  // Tecnología y software
+  revenue_recurrence:      'Ingresos recurrentes vs. proyectos puntuales',
+  tech_talent_availability: 'Facilidad para contratar personal técnico',
+
+  // Educación y capacitación
+  completion_rate:         'Tasa de finalización de cursos/programas',
+  acquisition_channel:     'Cómo consigue nuevos alumnos',
+  repeat_enrollment:       'Alumnos que repiten o recomiendan',
+
+  // Otro rubro
+  income_predictability:   'Predictibilidad de ingresos mes a mes',
+  key_person_dependency_general: 'Dependencia del negocio de 1-2 personas clave'
 };
