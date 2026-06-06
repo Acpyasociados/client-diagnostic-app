@@ -27,12 +27,12 @@ const SECTOR_LABELS = {
   servicios_profesionales: 'Servicios profesionales',
   comercio_ecommerce:      'Comercio / e-commerce',
   servicios_terreno:       'Servicios en terreno',
-  construccion_obras:      'Construcción y obras',
-  gastronomia_alimentos:   'Gastronomía y alimentos',
+  construccion:            'Construcción y obras',
+  gastronomia:             'Gastronomía y alimentos',
   salud_belleza:           'Salud y belleza',
-  tecnologia_software:     'Tecnología y software',
-  educacion_capacitacion:  'Educación y capacitación',
-  manufactura_industria:   'Manufactura e industria',
+  tecnologia:              'Tecnología y software',
+  educacion:               'Educación y capacitación',
+  manufactura:             'Manufactura e industria',
   otro:                    'Otro'
 };
 

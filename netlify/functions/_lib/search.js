@@ -36,11 +36,11 @@ const QUERIES_BY_SECTOR = {
     'comercio local Chile tienda online ventas digitales crecimiento resultado concreto pyme',
     'negocio retail Chile reducción inventario margen ganancia estrategia exitosa'
   ],
-  construccion_obras: [
+  construccion: [
     'constructora pyme Chile gestión proyectos costos control presupuesto resultado concreto',
     'empresa construcción Chile licitaciones nuevos contratos digitalización administración obra'
   ],
-  gastronomia_alimentos: [
+  gastronomia: [
     'restaurant café Chile delivery digital ventas online crecimiento caso éxito pyme',
     'negocio gastronomía Chile reducción merma costos food cost control resultado'
   ],
@@ -48,15 +48,15 @@ const QUERIES_BY_SECTOR = {
     'clínica centro estética salud Chile agenda digital fidelización pacientes clientes resultado',
     'pyme salud belleza Chile gestión citas pagos online crecimiento ingreso concreto'
   ],
-  tecnologia_software: [
+  tecnologia: [
     'startup empresa tecnología Chile escala clientes recurrentes MRR crecimiento caso real',
     'empresa software Chile ventas B2B reducción churn fidelización clientes resultado'
   ],
-  educacion_capacitacion: [
+  educacion: [
     'academia escuela capacitación Chile digitalización estudiantes online ingresos resultado',
     'empresa educación Chile modelo híbrido presencial online escalabilidad caso concreto'
   ],
-  manufactura_industria: [
+  manufactura: [
     'pyme manufactura industria Chile reducción costos producción eficiencia resultado medible',
     'empresa industrial Chile proveedor cadena suministro mejora margen caso éxito'
   ],

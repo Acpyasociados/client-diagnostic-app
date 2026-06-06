@@ -1,17 +1,88 @@
 import crypto from 'crypto';
 import { getLead, saveLead } from './_lib/storage.js';
 
+const FLOW_API_KEY    = process.env.FLOW_API_KEY;
 const FLOW_SECRET_KEY = process.env.FLOW_SECRET_KEY;
+const FLOW_API_URL    = process.env.FLOW_API_URL || 'https://www.flow.cl/api';
 
-function verifyFlowSignature(params, signature, secret) {
-  const paramsWithoutSignature = { ...params };
-  delete paramsWithoutSignature.s;
-  const sortedString = Object.keys(paramsWithoutSignature)
+// ─────────────────────────────────────────────────────────────────────────────
+// IMPORTANTE — Contrato real de Flow para urlConfirmation:
+// Flow NO manda commerceOrder/status/firma en la URL ni en query params.
+// Manda un POST con body application/x-www-form-urlencoded que contiene
+// SOLO el campo "token". El merchant debe llamar a payment/getStatus con
+// ese token (firmado con su propio secretKey) para obtener el estado real
+// del pago (commerceOrder, status, amount, etc.).
+//
+// El bug anterior asumía que Flow mandaba todo directo (incluida una firma
+// "s") en la query string — por eso TODO llegaba undefined y la verificación
+// de firma fallaba de inmediato (ver logs: "Missing signature in webhook").
+// Resultado: ningún pago real disparó jamás el flujo automático.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function generateFlowSignature(params, secret) {
+  const sortedString = Object.keys(params)
     .sort()
-    .map(key => `${key}${paramsWithoutSignature[key]}`)
+    .map(key => `${key}${params[key]}`)
     .join('');
-  const computed = crypto.createHmac('sha256', secret).update(sortedString).digest('hex');
-  return computed === signature;
+  return crypto.createHmac('sha256', secret).update(sortedString).digest('hex');
+}
+
+/**
+ * Extrae el "token" del POST que envía Flow al confirmar un pago.
+ * Soporta application/x-www-form-urlencoded (formato real de Flow),
+ * JSON (por si acaso) y query string (fallback / pruebas manuales).
+ */
+async function extractToken(req) {
+  const url = new URL(req.url);
+
+  // 1. Intentar leer el body
+  let rawBody = '';
+  try {
+    rawBody = typeof req.text === 'function' ? await req.text() : '';
+  } catch (e) {
+    console.warn('No se pudo leer el body del request:', e.message);
+  }
+
+  if (rawBody) {
+    const contentType = req.headers?.get?.('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      try {
+        const parsed = JSON.parse(rawBody);
+        if (parsed.token) return parsed.token;
+      } catch (e) { /* no era JSON valido, seguimos */ }
+    }
+
+    // form-urlencoded (formato real que usa Flow)
+    try {
+      const params = new URLSearchParams(rawBody);
+      if (params.get('token')) return params.get('token');
+    } catch (e) { /* ignorar */ }
+  }
+
+  // 2. Fallback: query string (pruebas manuales / integraciones alternativas)
+  return url.searchParams.get('token');
+}
+
+/**
+ * Llama a Flow payment/getStatus con el token recibido para obtener
+ * el estado REAL y autoritativo del pago (firmado con nuestro secretKey).
+ */
+async function getFlowPaymentStatus(token) {
+  const params = { apiKey: FLOW_API_KEY, token };
+  params.s = generateFlowSignature(params, FLOW_SECRET_KEY);
+
+  const qs  = new URLSearchParams(params).toString();
+  const res = await fetch(`${FLOW_API_URL}/payment/getStatus?${qs}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  const data = await res.json();
+  if (!res.ok || data.code !== undefined) {
+    throw new Error(`Flow getStatus error ${data.code ?? res.status}: ${data.message || 'respuesta inesperada'}`);
+  }
+  return data; // { flowOrder, commerceOrder, status, amount, payer, ... }
 }
 
 async function sendEmail({ to, subject, html }) {
@@ -119,54 +190,50 @@ async function sendAdvisorPaymentNotification(lead) {
 }
 
 // ─── Handler principal (Netlify Functions v2) ─────────────────────────────────
-// CORRECCIÓN: usa Request API (v2), no event.queryStringParameters (v1)
 export default async (req) => {
   console.log('=== FLOW WEBHOOK START ===');
 
   try {
-    // FIX v2: leer query params desde la URL del Request, no desde event.queryStringParameters
-    const url = new URL(req.url);
-    const params = Object.fromEntries(url.searchParams.entries());
-
-    console.log('Webhook params:', {
-      commerceOrder: params.commerceOrder,
-      status: params.status,
-      token: params.token ? params.token.substring(0, 8) + '...' : 'missing'
-    });
-
-    // 1. Verificar firma
-    const signature = params.s;
-    if (!signature) {
-      console.error('Missing signature in webhook');
-      return new Response(JSON.stringify({ error: 'Missing signature' }), {
-        status: 400, headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    if (!FLOW_SECRET_KEY) {
-      console.error('FLOW_SECRET_KEY no configurada');
+    if (!FLOW_API_KEY || !FLOW_SECRET_KEY) {
+      console.error('FLOW_API_KEY / FLOW_SECRET_KEY no configuradas');
       return new Response(JSON.stringify({ error: 'Server config error' }), {
         status: 500, headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    if (!verifyFlowSignature(params, signature, FLOW_SECRET_KEY)) {
-      console.error('Invalid Flow webhook signature');
-      return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-        status: 401, headers: { 'Content-Type': 'application/json' }
+    // 1. Extraer el token que Flow manda en el POST (form-urlencoded)
+    const token = await extractToken(req);
+    if (!token) {
+      console.error('Webhook sin token — no se puede confirmar el pago');
+      return new Response(JSON.stringify({ error: 'Missing token' }), {
+        status: 400, headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    console.log('Token recibido de Flow:', token.substring(0, 12) + '...');
+
+    // 2. Consultar el estado REAL y autoritativo del pago en Flow
+    let statusData;
+    try {
+      statusData = await getFlowPaymentStatus(token);
+    } catch (e) {
+      console.error('Error consultando payment/getStatus:', e.message);
+      return new Response(JSON.stringify({ error: 'getStatus failed', message: e.message }), {
+        status: 502, headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    console.log('Firma verificada OK');
+    const leadId     = statusData.commerceOrder;
+    const flowStatus = parseInt(statusData.status);
+    console.log('Flow getStatus →', { leadId, status: statusData.status, flowOrder: statusData.flowOrder });
 
-    // 2. Obtener lead
-    const leadId = params.commerceOrder;
     if (!leadId) {
-      return new Response(JSON.stringify({ error: 'Missing commerceOrder' }), {
+      console.error('getStatus no devolvió commerceOrder:', JSON.stringify(statusData));
+      return new Response(JSON.stringify({ error: 'Missing commerceOrder in getStatus response' }), {
         status: 400, headers: { 'Content-Type': 'application/json' }
       });
     }
 
+    // 3. Obtener lead
     const lead = await getLead(leadId);
     if (!lead) {
       console.error('Lead no encontrado:', leadId);
@@ -177,11 +244,8 @@ export default async (req) => {
 
     console.log('Lead encontrado:', leadId, '- status actual:', lead.status);
 
-    // 3. Procesar estado del pago
-    // Flow envía status como número: 1=Pendiente, 2=Pagado, 3=Rechazado, 4=Anulado
-    const flowStatus = parseInt(params.status);
-    console.log('Flow status recibido:', params.status, '→ int:', flowStatus);
-
+    // 4. Procesar estado del pago
+    // Flow status: 1=Pendiente, 2=Pagado, 3=Rechazado, 4=Anulado
     if (flowStatus === 2) {
       // Evitar procesar el mismo pago dos veces
       if (lead.status === 'pagado') {
@@ -195,7 +259,8 @@ export default async (req) => {
       lead.status         = 'pagado';
       lead.payment_status = 'approved';
       lead.paid_at        = new Date().toISOString();
-      lead.flow_reference = params.token;
+      lead.flow_reference = token;
+      lead.flow_order     = statusData.flowOrder || lead.flow_order;
 
       await saveLead(leadId, lead);
       console.log('Lead actualizado: pagado, payment_status=approved');
@@ -204,6 +269,7 @@ export default async (req) => {
       try {
         await sendQuestionnaireEmail(lead);
         lead.questionnaire_email_sent_at = new Date().toISOString();
+        lead.questionnaire_sent = true;
         await saveLead(leadId, lead);
       } catch (e) {
         console.error('Error enviando cuestionario (no critico):', e.message);
@@ -222,14 +288,14 @@ export default async (req) => {
       );
 
     } else {
-      console.warn('Pago no aprobado. Status Flow:', params.status, '(', flowStatus, ') orden:', leadId);
+      console.warn('Pago no aprobado. Status Flow:', statusData.status, '(', flowStatus, ') orden:', leadId);
       lead.payment_status    = 'failed';
-      lead.flow_status       = params.status;
+      lead.flow_status       = statusData.status;
       lead.payment_failed_at = new Date().toISOString();
       await saveLead(leadId, lead);
 
       return new Response(
-        JSON.stringify({ success: false, status: params.status, orderId: leadId }),
+        JSON.stringify({ success: false, status: statusData.status, orderId: leadId }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
