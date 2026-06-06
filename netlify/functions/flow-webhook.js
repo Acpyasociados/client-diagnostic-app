@@ -25,7 +25,7 @@ async function sendEmail({ to, subject, html }) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from:    'ACP & Asociados <onboarding@resend.dev>',
+        from:    'ACP & Asociados <noreply@mail.acpasociados.cl>',
         to:      [to],
         subject,
         html

@@ -31,7 +31,7 @@ export async function sendAdvisorEmail(lead) {
       method:  'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from:    'ACP & Asociados <onboarding@resend.dev>',
+        from:    'ACP & Asociados <noreply@mail.acpasociados.cl>',
         to:      [advisorEmail],
         subject: `Nueva solicitud de diagnóstico - ${lead.company}`,
         html
