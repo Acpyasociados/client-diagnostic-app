@@ -718,12 +718,31 @@ function showDetail(idx) {
     ${row('Top costos',         esc(lead.top_costs))}
     ` : ''}
 
-    <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap;">
+    ${lead.plan === 'premium' ? `
+    <div style="background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;padding:12px 16px;margin-top:16px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:22px;">⭐</span>
+      <div style="flex:1;">
+        <div style="font-weight:700;color:#1e40af;font-size:13px;margin-bottom:2px;">PLAN PREMIUM — Sesión de implementación incluida</div>
+        <div style="font-size:12px;color:#475569;">Este cliente pagó $149.900 CLP e incluye una sesión de 30 min. Coordinar por WhatsApp una vez aprobado el informe.</div>
+      </div>
+      ${lead.status === 'enviado' ? `
+      <a href="https://wa.me/56944018594?text=Hola%20${encodeURIComponent(lead.name || '')}%2C%20soy%20de%20ACP%20%26%20Asociados.%20Tu%20informe%20de%20diagn%C3%B3stico%20ya%20fue%20enviado%20y%20quiero%20coordinar%20tu%20sesi%C3%B3n%20de%20implementaci%C3%B3n%20de%2030%20min%20incluida%20en%20tu%20plan%20Premium."
+         target="_blank"
+         style="background:#25D366;color:white;border:none;padding:7px 14px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">
+        📱 Agendar sesión
+      </a>` : `<span style="font-size:11px;color:#94a3b8;">Disponible al enviar el informe</span>`}
+    </div>` : ''}
+
+    <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+      ${lead.status === 'cambios_solicitados' ? `
+        <button class="btn btn-purple" onclick="regenerateReport('${lead.lead_id}')">
+          🔄 Regenerar con notas
+        </button>` : ''}
       ${lead.status === 'borrador_listo' ? `
         <button class="btn btn-purple" onclick="openReview('https://acp-asociados.netlify.app/review.html?lead_id=${encodeURIComponent(lead.lead_id)}&token=${encodeURIComponent(currentToken)}')">
           ✏ Revisar y Aprobar Borrador
         </button>` : ''}
-      ${(lead.draft_generated || lead.status === 'borrador_listo' || lead.status === 'enviado') ? `
+      ${(lead.draft_generated || lead.status === 'borrador_listo' || lead.status === 'enviado' || lead.status === 'cambios_solicitados') ? `
         <button class="btn btn-info" onclick="genPDF('${lead.lead_id}')">
           📄 Descargar PDF
         </button>` : ''}
@@ -764,6 +783,55 @@ function esc(t) {
   return String(t).replace(/[&<>"']/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]
   );
+}
+
+// ── REGENERATE REPORT ──────────────────────────────────────
+async function regenerateReport(leadId) {
+  if (!confirm('¿Regenerar el informe con las notas del asesor?')) return;
+  showMsg('⏳ Regenerando informe…', 'success');
+  try {
+    const res = await fetch('/.netlify/functions/regenerate-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_id: leadId, token: currentToken })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showMsg(`✅ Informe regenerado (iteración #${data.regeneration_count})`, 'success');
+      setTimeout(() => loadLeads(), 1500);
+    } else {
+      showMsg('❌ Error: ' + (data.error || 'desconocido'), 'error');
+    }
+  } catch (err) {
+    showMsg('❌ Error de red: ' + err.message, 'error');
+  }
+}
+
+// ── GENERATE PDF ──────────────────────────────────────────
+async function genPDF(leadId) {
+  showMsg('⏳ Generando PDF…', 'success');
+  try {
+    const res = await fetch('/.netlify/functions/generate-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_id: leadId })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `diagnostico-${leadId}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showMsg('✅ PDF descargado.', 'success');
+  } catch (err) {
+    showMsg('❌ Error generando PDF: ' + err.message, 'error');
+  }
+}
+
+function openReview(url) {
+  window.open(url, '_blank');
 }
 
 // ── INIT ──────────────────────────────────────────────────

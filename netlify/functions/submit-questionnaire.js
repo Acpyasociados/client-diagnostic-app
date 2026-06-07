@@ -91,14 +91,24 @@ export default async (req) => {
       ? '<span style="background:#d4edda;color:#155724;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;">✦ Generado con IA</span>'
       : '<span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;">⚙ Generado con reglas</span>';
 
+    const isPremium = (lead.plan || '').toLowerCase() === 'premium';
+    const premiumAlert = isPremium
+      ? '<div style="background:#eff6ff;border:2px solid #3b82f6;border-radius:6px;padding:14px 18px;margin:0 0 16px 0;">' +
+          '<div style="font-weight:700;color:#1e40af;font-size:14px;margin-bottom:4px;">⭐ PLAN PREMIUM — $149.900 CLP</div>' +
+          '<div style="color:#475569;font-size:13px;">Este cliente tiene una <strong>sesi&oacute;n de implementaci&oacute;n de 30 min incluida</strong>. ' +
+          'Coordinar por WhatsApp con <strong>' + (lead.phone || 'sin tel&eacute;fono') + '</strong> una vez aprobado y enviado el informe.</div>' +
+        '</div>'
+      : '';
+
     await sendEmail({
       to: advisorEmail,
-      subject: '[ACP] Borrador listo para revisar: ' + lead.company,
+      subject: (isPremium ? '⭐ [PREMIUM] ' : '[ACP] ') + 'Borrador listo para revisar: ' + lead.company,
       html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">' +
         '<div style="background:#1a3a5c;padding:24px;border-radius:8px 8px 0 0;">' +
-          '<h2 style="color:white;margin:0;">Borrador listo para revision</h2>' +
+          '<h2 style="color:white;margin:0;">' + (isPremium ? '⭐ Borrador Premium listo' : 'Borrador listo para revision') + '</h2>' +
         '</div>' +
         '<div style="background:white;padding:28px;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;">' +
+          premiumAlert +
           '<p>El cliente <strong>' + lead.name + '</strong> de <strong>' + lead.company + '</strong> completo el cuestionario.</p>' +
           '<p>Origen del diagnostico: ' + aiBadge + '</p>' +
           '<p>El informe esta listo para tu revision y aprobacion.</p>' +
