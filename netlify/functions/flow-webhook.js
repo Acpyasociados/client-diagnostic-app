@@ -254,10 +254,29 @@ export default async (req) => {
     // 4. Procesar estado del pago
     // Flow status: 1=Pendiente, 2=Pagado, 3=Rechazado, 4=Anulado
     if (flowStatus === 2) {
-      // Evitar procesar el mismo pago dos veces
-      if (lead.status === 'pagado') {
+      // I-8: Idempotencia robusta — comparar payment_status, no status del pipeline.
+      // Si el lead ya avanzó a cuestionario_completado/borrador_listo/etc.
+      // y Flow reintenta el webhook, no se resetea el flujo.
+      if (lead.payment_status === 'approved') {
         console.log('Pago ya procesado anteriormente para:', leadId);
         return new Response(JSON.stringify({ success: true, status: 'ya_procesado' }), {
+          status: 200, headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      // I-1: Validar que el monto cobrado coincida con el precio del lead.
+      // Segunda línea de defensa ante manipulación de precio.
+      const expectedPrice  = Number(lead.final_price);
+      const receivedAmount = Number(statusData.amount);
+      if (expectedPrice > 0 && receivedAmount < expectedPrice) {
+        console.error(`MONTO INCORRECTO — recibido $${receivedAmount} < esperado $${expectedPrice} (lead: ${leadId})`);
+        lead.payment_status   = 'amount_mismatch';
+        lead.fraud_detected   = true;
+        lead.fraud_at         = new Date().toISOString();
+        lead.flow_amount_recv = receivedAmount;
+        await saveLead(leadId, lead);
+        // Responder 200 para que Flow no reintente (ya registramos el fraude)
+        return new Response(JSON.stringify({ error: 'Amount mismatch', received: receivedAmount, expected: expectedPrice }), {
           status: 200, headers: { 'Content-Type': 'application/json' }
         });
       }

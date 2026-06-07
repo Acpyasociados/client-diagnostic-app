@@ -200,10 +200,12 @@ export default async (req) => {
   }
 
   // 1. Parsear body
-  let lead_id;
+  let lead_id, client_token, admin_token;
   try {
     const body = JSON.parse(await req.text());
-    lead_id = body.lead_id;
+    lead_id      = body.lead_id;
+    client_token = body.token;          // autenticación del cliente
+    admin_token  = body.admin_token;    // autenticación del asesor (para previsualización)
   } catch {
     return json(400, { error: 'Body JSON inválido' });
   }
@@ -219,6 +221,14 @@ export default async (req) => {
     lead = JSON.parse(raw);
   } catch (err) {
     return json(500, { error: 'Error leyendo lead', detail: err.message });
+  }
+
+  // I-3: Autenticación — requerir client_token del cliente O admin_token del asesor.
+  const validAdminToken  = process.env.ADMIN_REVIEW_TOKEN;
+  const isAdmin          = validAdminToken && admin_token === validAdminToken;
+  const isClient         = client_token && lead.client_token === client_token;
+  if (!isAdmin && !isClient) {
+    return json(403, { error: 'No autorizado' });
   }
 
   // 3. Leer template HTML

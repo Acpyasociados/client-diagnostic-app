@@ -11,11 +11,6 @@ export default async (req) => {
   if (!lead) return json(404, { error: 'Caso no encontrado' });
   if (!lead.report_html) return json(400, { error: 'No existe borrador' });
 
-  lead.reviewed_by_human = true;
-  lead.status = 'enviado';
-  lead.delivered_at = new Date().toISOString();
-  await saveLead(leadId, lead);
-
   const isPremium = (lead.plan || '').toLowerCase() === 'premium';
   const advisorPhoneClean = (process.env.ADVISOR_PHONE || '56944018594').replace(/[^0-9]/g, '');
   const waSessionLink = `https://wa.me/${advisorPhoneClean}?text=Hola%2C%20acabo%20de%20recibir%20mi%20informe%20Premium%20de%20ACP%20y%20quiero%20agendar%20mi%20sesi%C3%B3n%20de%20implementaci%C3%B3n.`;
@@ -31,6 +26,7 @@ export default async (req) => {
     : `<hr style="margin:32px 0;border:none;border-top:1px solid #eee;">
        <p style="font-family:Arial,sans-serif;color:#666;font-size:13px;">¿Quieres implementar estas oportunidades con acompañamiento experto? Escríbenos a <a href="mailto:contacto@acpasociados.cl">contacto@acpasociados.cl</a> o por <a href="https://wa.me/${advisorPhoneClean}">WhatsApp</a>.</p>`;
 
+  // I-6: Enviar el email PRIMERO — solo marcar como 'enviado' si el email llega.
   let emailSent = false;
   try {
     await sendEmail({
@@ -40,8 +36,15 @@ export default async (req) => {
     });
     emailSent = true;
   } catch (e) {
-    console.error('Error enviando informe al cliente (no critico):', e.message);
+    console.error('Error enviando informe al cliente:', e.message);
+    return json(500, { ok: false, error: 'No se pudo enviar el email al cliente. El informe NO fue marcado como enviado. Intenta nuevamente.' });
   }
+
+  // Solo actualizamos el estado si el email fue exitoso
+  lead.reviewed_by_human = true;
+  lead.status            = 'enviado';
+  lead.delivered_at      = new Date().toISOString();
+  await saveLead(leadId, lead);
 
   return json(200, { ok: true, emailSent });
 };

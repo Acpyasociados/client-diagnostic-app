@@ -14,9 +14,22 @@ export default async (req) => {
   if (!lead) return json(404, { error: 'Caso no encontrado' });
   if (lead.client_token !== token) return json(403, { error: 'Token inválido' });
 
-  lead.questionnaire_answers = answers;
-  lead.questionnaire_completed = true;
-  lead.status = 'cuestionario_completado';
+  // I-2: Solo aceptar cuestionario si el pago fue confirmado por Flow.
+  if (lead.payment_status !== 'approved') {
+    console.warn('[submit] Cuestionario rechazado — pago no aprobado para lead:', leadId, '(status:', lead.payment_status, ')');
+    return json(402, { error: 'Pago no confirmado. Completa el pago antes de responder el cuestionario.' });
+  }
+
+  // Idempotencia: si ya fue completado, no reprocesar
+  if (lead.questionnaire_completed) {
+    console.log('[submit] Cuestionario ya enviado anteriormente para:', leadId);
+    return json(200, { ok: true, already_submitted: true });
+  }
+
+  lead.questionnaire_answers        = answers;
+  lead.questionnaire_completed      = true;
+  lead.questionnaire_completed_at   = new Date().toISOString();
+  lead.status                       = 'cuestionario_completado';
 
   // 1. Buscar casos reales en internet (Tavily) — no bloquea si falla
   let externalCases = [];
