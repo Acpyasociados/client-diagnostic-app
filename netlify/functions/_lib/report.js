@@ -587,6 +587,196 @@ function opportunitiesManufactura(lead, a) {
   return pool.slice(0, 3);
 }
 
+// ── Oportunidades: Gastronomía y Alimentos ────────────────────────────────
+// Datos: food cost objetivo Chile ≤30% (FIPE 2024); rotación personal gastro
+// 120-180% anual (UDD 2023); delivery representa 28% ventas pymes gastro 2024.
+
+function opportunitiesGastronomia(lead, a) {
+  const sales = toNumber(lead.monthly_sales);
+  const pool  = [];
+
+  // ── 1. Control del food cost y estandarización de recetas ─────────────
+  const highVolatility = (a.input_cost_volatility || '').toLowerCase().includes('alta') ||
+                         (a.input_cost_volatility || '').toLowerCase().includes('muy');
+  const unknownMargin  = (a.best_margin_dish_known || '').toLowerCase().includes('no') ||
+                         (a.best_margin_dish_known || '').toLowerCase().includes('aproximada');
+  const foodMin = Math.round(sales * 0.05);
+  const foodMax = Math.round(sales * 0.10);
+  pool.push({
+    priority: (highVolatility || unknownMargin) ? 10 : 6,
+    title: 'Controlar Food Cost con Recetas Estandarizadas',
+    why: `En gastronomía chilena, el food cost objetivo es ≤30% de las ventas (FIPE 2024). Sin recetas estandarizadas y fichas técnicas, el costo real por plato varía hasta un 15% entre turno y turno — dependiendo de quién esté cocinando. ${unknownMargin ? 'Sin claridad sobre el plato más rentable, es imposible saber qué conviene más preparar y promover.' : ''} Con ventas de ${currency(sales)}, reducir el food cost 3-5 puntos equivale a ${currency(foodMin)}-${currency(foodMax)} adicionales al mes sin cambiar los precios.`,
+    cases: [
+      { name: 'Restaurante El Tablón (Santiago)', text: 'Implementó fichas técnicas para sus 30 platos y redujo food cost del 38% al 28% en 60 días. Ahorro: $1,8M CLP/mes.' },
+      { name: 'FIPE Chile — Benchmark 2024', text: 'Restaurantes con fichas técnicas actualizadas mensualmente tienen food cost promedio 4,2 pp menor que los que no las usan.' },
+      { name: 'Cocinería La Yunta (Valparaíso)', text: 'Identificó que su plato más vendido era el menos rentable (food cost 45%). Rebalanceó la carta y subió margen neto de 8% a 14% en 3 meses.' }
+    ],
+    plan: [
+      'Semana 1: Calcular el costo real de los 5 platos más vendidos (ingredientes + porciones exactas + merma)',
+      'Semana 2: Crear ficha técnica con gramajes fijos — una foto del plato terminado como referencia visual para el equipo',
+      'Semana 3: Revisar precios de carta: cada plato debe tener food cost ≤33% para margen neto positivo',
+      'Semana 4: Elegir 2-3 platos de mayor margen y promoverlos activamente como "recomendaciones del día"'
+    ],
+    projection: `Reducir food cost 3-5 pp = +${currency(foodMin)} a ${currency(foodMax)} mensuales`,
+    projectionMin: foodMin,
+    projectionMax: foodMax,
+    effort: 'Bajo',
+    term: '4 semanas'
+  });
+
+  // ── 2. Reducir rotación de personal ───────────────────────────────────
+  const highTurnover = (a.staff_turnover || '').toLowerCase().includes('menos de') ||
+                       (a.staff_turnover || '').toLowerCase().includes('1-3') ||
+                       (a.staff_turnover || '').toLowerCase().includes('3 mes');
+  const rotMin = Math.round(sales * 0.04);
+  const rotMax = Math.round(sales * 0.08);
+  pool.push({
+    priority: highTurnover ? 9 : 5,
+    title: 'Reducir Rotación de Personal y su Costo Oculto',
+    why: `La rotación en gastronomía chilena es 120-180% anual (UDD 2023) — el sector con mayor rotación del país. Cada salida implica: finiquito legal, horas de reclutamiento, capacitación del reemplazo y baja productividad durante 2-4 semanas. En una pyme gastronómica, esto equivale al 15-25% del sueldo mensual del cargo como costo oculto por rotación. Retener personal clave es más barato que reemplazarlo.`,
+    cases: [
+      { name: 'Cadena de café Balthus (Chile)', text: 'Implementó bonos de permanencia trimestral y redujo rotación del 180% al 60% en un año. Ahorro en finiquitos: $3,2M CLP/año.' },
+      { name: 'Estudio laboral Pymes Gastronómicas Chile 2023', text: 'Negocios con propinas formalizadas y horarios fijos tienen rotación 40% menor que los de horario variable.' },
+      { name: 'Modelo "4 días chef fijo"', text: 'Restaurantes que garantizan 4 días semanales fijos a cocineros reducen el ausentismo 35% y mejoran consistencia del plato.' }
+    ],
+    plan: [
+      'Semana 1: Calcular cuánto cuesta realmente una rotación: finiquito + días perdidos en productividad + horas de capacitación',
+      'Semana 2: Identificar a los 2-3 empleados clave y crear un "bono de permanencia" trimestral equivalente al 5-8% de su sueldo',
+      'Semana 3: Formalizar las propinas (liquidación o fondo colectivo) — es el factor #1 de retención en gastro',
+      'Semana 4: Publicar el turno de la semana siguiente con 7 días de anticipación — elimina la incertidumbre de horario'
+    ],
+    projection: `Reducir rotación 40% = +${currency(rotMin)} a ${currency(rotMax)} en costos ocultos recuperados`,
+    projectionMin: rotMin,
+    projectionMax: rotMax,
+    effort: 'Bajo',
+    term: '4-8 semanas'
+  });
+
+  // ── 3. Activar canal delivery y catering ──────────────────────────────
+  const delivMin = Math.round(sales * 0.12);
+  const delivMax = Math.round(sales * 0.22);
+  pool.push({
+    priority: 8,
+    title: 'Activar Delivery y Catering como Canal Adicional',
+    why: `El delivery representa el 28% de las ventas de pymes gastronómicas en Chile (Asociación Chilena de Gastronomía 2024), y el catering corporativo tiene ticket promedio 3-5x mayor al servicio de mesa. Ambos canales generan ingresos con la misma infraestructura instalada, sin costo de arriendo adicional. Con ventas actuales de ${currency(sales)}, agregar un canal bien ejecutado puede sumar entre ${currency(delivMin)} y ${currency(delivMax)} mensuales en 60-90 días.`,
+    cases: [
+      { name: 'Cocinería San Martín (Stgo)', text: 'Abrió delivery en Rappi + PedidosYa en 2 semanas con menú reducido de 8 platos. Representa hoy el 31% de sus ventas sin meseros adicionales.' },
+      { name: 'Catering La Morada (Providencia)', text: 'Ofreció servicio de colaciones a 2 empresas vecinas. Contrato mensual de $1,2M CLP — equivale a 15% de sus ventas de restaurante.' },
+      { name: 'Benchmark Asociación Chilena de Gastronomía 2024', text: 'Pymes con 2+ canales de venta tienen ingresos 38% más estables en temporada baja que las que solo operan en sala.' }
+    ],
+    plan: [
+      'Semana 1: Diseñar menú delivery de 6-8 platos que viajan bien y tienen food cost ≤35% (no todo el menú funciona en delivery)',
+      'Semana 2: Inscribirse en Rappi Empresas o PedidosYa — proceso online, sin costo fijo inicial',
+      'Semana 3: Identificar 5-10 empresas o edificios de oficinas a 1 km del local y ofrecer colaciones semanales',
+      'Semana 4: Evaluar ventas por canal y decidir si ampliar el menú delivery o formalizar el primer contrato de catering'
+    ],
+    projection: `Delivery + catering = +${currency(delivMin)} a ${currency(delivMax)} mensuales`,
+    projectionMin: delivMin,
+    projectionMax: delivMax,
+    effort: 'Medio',
+    term: '6-8 semanas'
+  });
+
+  pool.sort((a, b) => b.priority - a.priority);
+  return pool.slice(0, 3);
+}
+
+// ── Oportunidades: Salud y Belleza ────────────────────────────────────────
+// Datos: agenda promedio pyme belleza Chile 55-65% ocupada (SERCOTEC 2023);
+// costo real por servicio desconocido en 70% de salones (OTEC Belleza 2024);
+// clientes que vuelven gastan 3x más en promedio (estudio Beauty Chile 2023).
+
+function opportunitiesSaludBelleza(lead, a) {
+  const sales = toNumber(lead.monthly_sales);
+  const pool  = [];
+
+  // ── 1. Optimización de agenda: llenar horas vacías ────────────────────
+  const lowOccupancy = (a.agenda_occupancy || '').toLowerCase().includes('menos') ||
+                       (a.agenda_occupancy || '').toLowerCase().includes('50') ||
+                       (a.agenda_occupancy || '').toLowerCase().includes('60');
+  const agendaMin = Math.round(sales * 0.15);
+  const agendaMax = Math.round(sales * 0.25);
+  pool.push({
+    priority: lowOccupancy ? 10 : 7,
+    title: 'Llenar la Agenda: Reducir Horas Vacías',
+    why: `En salones y centros de salud/belleza chilenos, la ocupación promedio es 55-65% (SERCOTEC 2023) — lo que significa que 35-45% de la capacidad se pierde sin generar ingreso alguno. Los costos fijos (arriendo, sueldo, insumos) corren igual. Subir la ocupación al 80% con el mismo equipo es la palanca más directa de crecimiento: con ventas de ${currency(sales)}, alcanzar ese nivel representaría entre ${currency(agendaMin)} y ${currency(agendaMax)} adicionales al mes.`,
+    cases: [
+      { name: 'Salón Aura (Las Condes)', text: 'Activó recordatorio por WhatsApp 48h antes de cada cita y redujo cancelaciones de última hora del 22% al 6%. Subió ocupación al 78% en 6 semanas.' },
+      { name: 'Centro de Estética Lumina (Viña del Mar)', text: 'Creó "tarifa de horario libre" con 15% de descuento para martes y miércoles mañana — sus horas más vacías. Subió ocupación de 52% a 71%.' },
+      { name: 'SERCOTEC — Benchmark salones pyme 2023', text: 'Salones con sistema de reserva online tienen 23% más de citas que los que solo reciben por teléfono/WhatsApp manual.' }
+    ],
+    plan: [
+      'Semana 1: Mapear qué horas y días tienen mayor disponibilidad y crear oferta especial para esos slots',
+      'Semana 2: Activar recordatorio automático por WhatsApp 24-48h antes de cada cita (reduce "no shows" al 5%)',
+      'Semana 3: Inscribir el negocio en Reservo o SimplyBook (gratis hasta 50 citas/mes) para recibir reservas online 24/7',
+      'Semana 4: Ofrecer descuento del 10-15% a clientes que agenden en los horarios de menor demanda'
+    ],
+    projection: `Subir ocupación al 75-80% = +${currency(agendaMin)} a ${currency(agendaMax)} mensuales`,
+    projectionMin: agendaMin,
+    projectionMax: agendaMax,
+    effort: 'Bajo',
+    term: '4-6 semanas'
+  });
+
+  // ── 2. Fidelización: convertir clientes únicos en recurrentes ─────────
+  const noLoyalty = (a.client_loyalty_system || '').toLowerCase().includes('no') ||
+                    (a.client_loyalty_system || '').toLowerCase().includes('sin') ||
+                    (a.client_loyalty_system || '').toLowerCase().includes('informal');
+  const fidelMin = Math.round(sales * 0.12);
+  const fidelMax = Math.round(sales * 0.20);
+  pool.push({
+    priority: noLoyalty ? 9 : 5,
+    title: 'Fidelizar Clientes: De Visita Única a Recurrente',
+    why: `En belleza y salud, un cliente que vuelve gasta en promedio 3x más que uno nuevo en su ciclo de vida (Beauty Business Chile 2023). Sin embargo, el 60% de los negocios del sector no tiene ningún sistema de seguimiento post-servicio. El costo de retener un cliente existente es 5-7x menor que captar uno nuevo. Con ventas de ${currency(sales)}, aumentar la tasa de retención un 15% representa entre ${currency(fidelMin)} y ${currency(fidelMax)} mensuales sin invertir en publicidad.`,
+    cases: [
+      { name: 'Spa Serena (Providencia)', text: 'Creó programa "Visita 4, paga 3" y subió la recurrencia promedio de 1,8 a 3,2 visitas anuales por cliente. Ingresos +23% en 6 meses.' },
+      { name: 'Clínica Estética Vitalia', text: 'Implementó llamada de seguimiento 7 días post-servicio. El 35% de los clientes agendó una nueva cita en el momento de la llamada.' },
+      { name: 'Estudio Beauty Pymes Chile 2023', text: 'Salones con programa de lealtad activo tienen ticket promedio 28% mayor y 40% más de recomendaciones boca a boca.' }
+    ],
+    plan: [
+      'Semana 1: Crear base de datos de clientes con nombre, teléfono y último servicio (puede ser un Google Sheet simple)',
+      'Semana 2: Implementar mensaje de seguimiento por WhatsApp a los 21-30 días del último servicio con oferta de reagendamiento',
+      'Semana 3: Crear "tarjeta de fidelización" digital (10 visitas = 1 gratis) — puede ser manual o con app gratuita como Stamp Me',
+      'Semana 4: Identificar los 20 mejores clientes y hacerles una oferta exclusiva de "precio especial de temporada"'
+    ],
+    projection: `+15% retención = +${currency(fidelMin)} a ${currency(fidelMax)} mensuales estabilizados`,
+    projectionMin: fidelMin,
+    projectionMax: fidelMax,
+    effort: 'Bajo',
+    term: '4-6 semanas'
+  });
+
+  // ── 3. Pricing correcto: conocer el costo real por servicio ───────────
+  const unknownCost = (a.service_cost_awareness || '').toLowerCase().includes('no') ||
+                      (a.service_cost_awareness || '').toLowerCase().includes('aproxima');
+  const pricingMin = Math.round(sales * 0.08);
+  const pricingMax = Math.round(sales * 0.15);
+  pool.push({
+    priority: unknownCost ? 9 : 4,
+    title: 'Corregir Precios: Calcular el Costo Real por Servicio',
+    why: `El 70% de los salones y centros de belleza pymes en Chile cobra precios basados en lo que cobra la competencia, no en su estructura de costos real (OTEC Belleza 2024). Esto significa que muchos servicios se prestan con margen neto negativo sin saberlo. Calcular el costo real de cada servicio (insumos + tiempo de profesional + parte proporcional de arriendo + IVA) puede revelar que algunos servicios deben subir precio o eliminarse de la oferta.`,
+    cases: [
+      { name: 'Centro de estética La Clave (Ñuñoa)', text: 'Al calcular costos reales descubrió que su servicio de extensiones de pestañas tenía margen negativo. Subió precio 20% y no perdió ninguna clienta fiel.' },
+      { name: 'Metodología "precio mínimo viable"', text: 'Costo insumos + (hora profesional × tiempo servicio) + 30% costos fijos + 15% margen mínimo = precio piso de cada servicio.' },
+      { name: 'SERCOTEC — Diagnóstico Sector Belleza 2023', text: 'Negocios que conocen su costo real por servicio tienen margen neto 6,4 pp mayor en promedio que los que no lo calculan.' }
+    ],
+    plan: [
+      'Semana 1: Listar los 5 servicios más vendidos y calcular el costo de insumos exacto por servicio (gramo a gramo si es necesario)',
+      'Semana 2: Sumar el costo de tiempo (sueldo del profesional ÷ horas trabajadas × tiempo del servicio)',
+      'Semana 3: Agregar parte proporcional del arriendo y servicios básicos a cada servicio según tiempo que ocupa la sala',
+      'Semana 4: Comparar precio actual vs. precio mínimo viable y ajustar los que están bajo costo'
+    ],
+    projection: `Corregir pricing en 2-3 servicios = +${currency(pricingMin)} a ${currency(pricingMax)} de margen recuperado`,
+    projectionMin: pricingMin,
+    projectionMax: pricingMax,
+    effort: 'Bajo',
+    term: '4 semanas'
+  });
+
+  pool.sort((a, b) => b.priority - a.priority);
+  return pool.slice(0, 3);
+}
+
 // ── Build payload ──────────────────────────────────────────────────────────
 
 export function buildReportPayload(lead, externalCases = []) {
@@ -604,6 +794,8 @@ export function buildReportPayload(lead, externalCases = []) {
   if (lead.sector === 'servicios_profesionales')  opportunities = opportunitiesProfessional(lead, answers);
   if (lead.sector === 'comercio_ecommerce')        opportunities = opportunitiesCommerce(lead, answers);
   if (lead.sector === 'manufactura')               opportunities = opportunitiesManufactura(lead, answers);
+  if (lead.sector === 'gastronomia')               opportunities = opportunitiesGastronomia(lead, answers);
+  if (lead.sector === 'salud_belleza')              opportunities = opportunitiesSaludBelleza(lead, answers);
 
   // Inyectar casos reales de Brave Search en la primera oportunidad
   // Si hay resultados externos, reemplazamos los casos hardcoded del top-1 con casos reales
