@@ -62,8 +62,11 @@ function formatCLP(value) {
 
 /**
  * Construye el prompt para Claude.
+ * @param {object} lead
+ * @param {object} answers
+ * @param {string|null} reviewNotes - Notas del asesor al solicitar cambios (opcional)
  */
-function buildPrompt(lead, answers) {
+function buildPrompt(lead, answers, reviewNotes = null) {
   const sectorLabel = SECTOR_LABELS[lead.sector] || lead.sector || 'no especificado';
   const mainProblem = answers.q_main_problem || lead.main_problem || 'no especificado';
   const formattedAnswers = formatAnswers(answers);
@@ -136,7 +139,12 @@ REGLAS:
 - Genera exactamente 3 oportunidades, ordenadas de mayor a menor impacto
 - El primer eje debe ser el más crítico según los datos
 - Todos los textos en español chileno, tono profesional pero directo
-- Si los datos son insuficientes para una oportunidad específica, usa benchmarks del sector en Chile`;
+- Si los datos son insuficientes para una oportunidad específica, usa benchmarks del sector en Chile${reviewNotes ? `
+
+OBSERVACIONES DEL ASESOR — INCORPORAR OBLIGATORIAMENTE:
+${reviewNotes}
+
+Estas observaciones son el motivo de la regeneración. Las 3 oportunidades deben reflejarlas directamente. Si el asesor señala oportunidades específicas, úsalas como base para los títulos y findings.` : ''}`;
 }
 
 /**
@@ -146,14 +154,14 @@ REGLAS:
  * @param {object} answers - Respuestas del cuestionario
  * @returns {Promise<{summary: string, opportunities: Array}|null>}
  */
-export async function generateAiEnrichment(lead, answers = {}) {
+export async function generateAiEnrichment(lead, answers = {}, reviewNotes = null) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.warn('[ai] ANTHROPIC_API_KEY no configurada — se usará lógica de reglas');
     return null;
   }
 
-  const prompt = buildPrompt(lead, answers);
+  const prompt = buildPrompt(lead, answers, reviewNotes);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);

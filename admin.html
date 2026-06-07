@@ -499,8 +499,11 @@ function renderTable(leads) {
     if (lead.status === 'borrador_listo' || lead.status === 'cambios_solicitados') {
       const siteUrl = 'https://acp-asociados.netlify.app';
       const reviewUrl = `${siteUrl}/review.html?lead_id=${encodeURIComponent(lead.lead_id)}&token=${encodeURIComponent(currentToken)}`;
-      const reviewLabel = lead.status === 'cambios_solicitados' ? '🔄 Regenerar' : '✏ Revisar';
-      actions += ` <button class="btn btn-sm btn-purple" onclick="openReview('${reviewUrl}')">${reviewLabel}</button>`;
+      if (lead.status === 'cambios_solicitados') {
+        actions += ` <button class="btn btn-sm btn-purple" onclick="regenerateReport('${lead.lead_id}')">🔄 Regenerar</button>`;
+      } else {
+        actions += ` <button class="btn btn-sm btn-purple" onclick="openReview('${reviewUrl}')">✏ Revisar</button>`;
+      }
     }
     if (lead.draft_generated || lead.status === 'borrador_listo' || lead.status === 'cambios_solicitados' || lead.status === 'enviado') {
       actions += ` <button class="btn btn-sm btn-info" onclick="genPDF('${lead.lead_id}')">PDF</button>`;
@@ -613,6 +616,28 @@ function exportCSV() {
 // ── OPEN REVIEW ───────────────────────────────────────────
 function openReview(url) {
   window.open(url, '_blank');
+}
+
+// ── REGENERATE REPORT ─────────────────────────────────────
+async function regenerateReport(leadId) {
+  if (!currentToken) { showMsg('❌ Sin token de acceso', 'error'); return; }
+  showMsg('⏳ Regenerando informe con tus notas… puede tomar 10-20 segundos', 'success');
+  try {
+    const res = await fetch('/.netlify/functions/regenerate-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_id: leadId, token: currentToken })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    showMsg(`✅ Informe regenerado (iteración #${data.regeneration_count}). Revisa tu correo.`, 'success');
+    setTimeout(() => loadLeads(), 1500);
+  } catch (err) {
+    showMsg('❌ Error regenerando: ' + err.message, 'error');
+  }
 }
 
 // ── GENERATE PDF ──────────────────────────────────────────
