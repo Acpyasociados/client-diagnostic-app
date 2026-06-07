@@ -113,8 +113,9 @@ async function sendEmail({ to, subject, html }) {
 }
 
 async function sendQuestionnaireEmail(lead) {
-  const siteUrl = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
+  const siteUrl          = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
   const questionnaireUrl = `${siteUrl}/questionnaire.html?lead_id=${lead.lead_id}&token=${lead.client_token}`;
+  const statusUrl        = `${siteUrl}/status.html?lead_id=${lead.lead_id}&token=${lead.client_token}`;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
@@ -128,7 +129,7 @@ async function sendQuestionnaireEmail(lead) {
         <div style="background: #f0f7ff; border-left: 4px solid #1a3a5c; padding: 16px; margin: 24px 0; border-radius: 4px;">
           <p style="margin: 0; font-size: 14px; color: #555;">⏱ Tiempo estimado: <strong>5–10 minutos</strong><br>
           📋 Empresa: <strong>${lead.company}</strong><br>
-          📦 Plan contratado: <strong>${lead.plan === 'basico' ? 'Básico' : 'Premium'}</strong></p>
+          📦 Plan contratado: <strong>${lead.plan === 'basico' ? 'Básico' : 'Premium ⭐'}</strong></p>
         </div>
         <div style="text-align: center; margin: 32px 0;">
           <a href="${questionnaireUrl}" style="background: #1a3a5c; color: white; padding: 16px 40px; border-radius: 6px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
@@ -137,7 +138,13 @@ async function sendQuestionnaireEmail(lead) {
         </div>
         <p style="font-size: 13px; color: #888; text-align: center;">O copia este enlace: <a href="${questionnaireUrl}" style="color: #1a3a5c;">${questionnaireUrl}</a></p>
         <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
-        <p style="font-size: 13px; color: #999; margin: 0;">¿Tienes preguntas? Escríbenos a <a href="mailto:patricio.silva@acpasociados.cl" style="color: #1a3a5c;">patricio.silva@acpasociados.cl</a></p>
+        <div style="background: #f8fafc; border-radius: 6px; padding: 14px 16px; margin-bottom: 16px;">
+          <p style="margin: 0; font-size: 13px; color: #475569;">
+            🔍 <strong>Sigue el estado de tu informe en tiempo real:</strong><br>
+            <a href="${statusUrl}" style="color: #2563eb; font-size: 13px;">${statusUrl}</a>
+          </p>
+        </div>
+        <p style="font-size: 13px; color: #999; margin: 0;">¿Tienes preguntas? Escríbenos a <a href="mailto:contacto@acpasociados.cl" style="color: #1a3a5c;">contacto@acpasociados.cl</a></p>
       </div>
     </div>
   `;

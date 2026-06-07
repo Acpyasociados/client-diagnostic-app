@@ -19,6 +19,9 @@
 [functions.submit-questionnaire]
   timeout = 26
 
+[functions.health-check]
+  schedule = "0 * * * *"    # cada hora en punto
+
 [context.production.environment]
   # Secrets configuradas en Netlify UI (Site settings → Environment variables):
   #   FLOW_API_KEY, FLOW_SECRET_KEY        — pagos Flow
