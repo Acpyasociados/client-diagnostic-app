@@ -777,6 +777,387 @@ function opportunitiesSaludBelleza(lead, a) {
   return pool.slice(0, 3);
 }
 
+// ── Oportunidades: Construcción y Obras ───────────────────────────────────
+// Datos: 70% proyectos pymes construcción Chile terminan con sobrecosto
+// (CChC 2024); mandantes demoran 60-90 días en pagar (Ley 21.131);
+// mano de obra calificada escasea — brecha 45.000 trabajadores (SENCE 2023).
+
+function opportunitiesConstruccion(lead, a) {
+  const sales = toNumber(lead.monthly_sales);
+  const pool  = [];
+
+  // ── 1. Control de presupuesto y prevención de sobrecostos ─────────────
+  const highOverrun = (a.cost_overrun_frequency || '').toLowerCase().includes('frecuente') ||
+                      (a.cost_overrun_frequency || '').toLowerCase().includes('siempre') ||
+                      (a.cost_overrun_frequency || '').toLowerCase().includes('difícil');
+  const overrunMin = Math.round(sales * 0.06);
+  const overrunMax = Math.round(sales * 0.12);
+  pool.push({
+    priority: highOverrun ? 10 : 6,
+    title: 'Controlar Presupuesto y Prevenir Sobrecostos',
+    why: `El 70% de los proyectos de pymes constructoras en Chile terminan sobre presupuesto (CChC 2024), con desviaciones promedio del 18-25%. La causa principal no es la imprevisión, sino la falta de control de avance vs. gasto durante la ejecución — no al final. Con ventas de ${currency(sales)}, reducir la desviación de presupuesto un 5% equivale a ${currency(overrunMin)}-${currency(overrunMax)} de margen recuperado mensualmente.`,
+    cases: [
+      { name: 'Constructora Arteagas (Bio-Bío)', text: 'Implementó planilla de control semanal de materiales vs. presupuesto. Redujo sobrecostos del 22% al 7% en 3 proyectos consecutivos.' },
+      { name: 'CChC — Informe Pymes Construcción 2024', text: 'Empresas que revisan avance financiero semanalmente tienen sobrecostos 58% menores que las que lo hacen al cierre de proyecto.' },
+      { name: 'Método "curva S" simplificada', text: 'Comparar gasto acumulado real vs. planificado cada 7 días permite detectar desviaciones cuando aún hay margen para corregir.' }
+    ],
+    plan: [
+      'Semana 1: Crear planilla de control por proyecto: presupuesto item por item vs. gasto real a la fecha',
+      'Semana 2: Revisar avance financiero cada viernes — identificar los 3 ítems con mayor desviación acumulada',
+      'Semana 3: Agregar colchón de imprevistos del 8-12% al presupuesto de propuesta en los contratos nuevos',
+      'Semana 4: Definir un tope de alerta: si el gasto supera el 80% del presupuesto con menos del 70% de avance, escalar inmediatamente'
+    ],
+    projection: `Reducir sobrecostos 5-10% = +${currency(overrunMin)} a ${currency(overrunMax)} de margen recuperado`,
+    projectionMin: overrunMin,
+    projectionMax: overrunMax,
+    effort: 'Bajo',
+    term: '4 semanas'
+  });
+
+  // ── 2. Acelerar cobranza a mandantes ──────────────────────────────────
+  const slowPayment = (a.client_payment_delay || '').toLowerCase().includes('60') ||
+                      (a.client_payment_delay || '').toLowerCase().includes('90') ||
+                      (a.client_payment_delay || '').toLowerCase().includes('más de');
+  const cobMin = Math.round(sales * 0.05);
+  const cobMax = Math.round(sales * 0.10);
+  pool.push({
+    priority: slowPayment ? 9 : 5,
+    title: 'Acelerar Cobro a Mandantes y Mejorar Flujo de Caja',
+    why: `Los mandantes en Chile demoran en promedio 60-90 días en pagar estados de pago (CChC 2024). La Ley 21.131 obliga a pagar en 30 días para contratos públicos, pero en el sector privado la negociación es clave. El capital inmovilizado en cuentas por cobrar es el mayor estresor financiero de las pymes constructoras — y muchas financian ese gap con crédito bancario a tasas del 18-24% anual.`,
+    cases: [
+      { name: 'Constructora Irarrázaval (RM)', text: 'Incluyó cláusula de interés del 1,5% mensual por mora en todos los contratos nuevos. Los mandantes bajaron de 85 a 34 días promedio de pago.' },
+      { name: 'Factoring Empresas BCI', text: 'Factoring de estados de pago permite recibir el 80-90% del valor en 24-48h, cediendo el cobro. Costo: 1,2-2,5% mensual — vs. 18-24% de un crédito bancario.' },
+      { name: 'Ley 21.131 (Pago Oportuno)', text: 'Contratos con el Estado deben pagarse en 30 días. Incumplimiento genera interés automático. Muchas pymes no conocen este derecho.' }
+    ],
+    plan: [
+      'Semana 1: Revisar contratos vigentes e identificar cuáles tienen cláusula de interés por mora — agregar en los nuevos',
+      'Semana 2: Enviar estados de pago con número de factura y fecha límite explícita — el 40% de los atrasos son por documentación incompleta',
+      'Semana 3: Cotizar factoring con BCI, Santander o BICE Factoring para los estados de pago de mayor monto',
+      'Semana 4: Para contratos estatales: verificar si el mandante está dentro del plazo legal y cobrar interés si corresponde'
+    ],
+    projection: `Reducir días de cobro 20-30 días = +${currency(cobMin)} a ${currency(cobMax)} en caja disponible mensual`,
+    projectionMin: cobMin,
+    projectionMax: cobMax,
+    effort: 'Bajo',
+    term: '4-6 semanas'
+  });
+
+  // ── 3. Gestión de subcontratistas y mano de obra calificada ───────────
+  const laborShortage = (a.skilled_labor_availability || '').toLowerCase().includes('difícil') ||
+                        (a.skilled_labor_availability || '').toLowerCase().includes('muy') ||
+                        (a.skilled_labor_availability || '').toLowerCase().includes('escasa');
+  const laborMin = Math.round(sales * 0.07);
+  const laborMax = Math.round(sales * 0.13);
+  pool.push({
+    priority: laborShortage ? 8 : 4,
+    title: 'Asegurar Mano de Obra Calificada con Red de Subcontratistas',
+    why: `Chile tiene una brecha de 45.000 trabajadores calificados en construcción (SENCE 2023), y la escasez se agudiza en temporada alta. Las empresas que no tienen red de subcontratistas previa pierden proyectos por no poder garantizar plazo, o contratan personal no calificado que genera retrabajo. Construir una red de 5-8 subcontratistas confiables por especialidad es un activo operativo que reduce el riesgo de plazo en cada proyecto.`,
+    cases: [
+      { name: 'Constructora Punta Arenas SpA', text: 'Creó base de datos de 12 subcontratistas por especialidad con evaluación post-obra. Redujo búsqueda de última hora del 80% al 10%.' },
+      { name: 'Plataforma SubcontrataChile', text: 'Conecta obras con subcontratistas verificados. Más de 2.000 empresas activas. Permite licitar trabajos con 48h de anticipación.' },
+      { name: 'SENCE — Programa Construcción', text: 'Subsidia hasta el 60% del costo de capacitación en oficios como gasfitería, electricidad y terminaciones. Aplica para trabajadores propios.' }
+    ],
+    plan: [
+      'Semana 1: Listar los 5 subcontratistas que más usas y pedirles disponibilidad tentativa para los próximos 3 meses',
+      'Semana 2: Incorporar 2-3 subcontratistas nuevos en especialidades críticas — evaluar en un trabajo pequeño antes de asignarles obra mayor',
+      'Semana 3: Crear ficha de cada subcontratista: especialidad, capacidad de cuadrilla, precio referencial y calificación post-obra',
+      'Semana 4: Revisar si aplica subsidio SENCE para capacitar a 1-2 trabajadores propios en la especialidad más escasa'
+    ],
+    projection: `Red de subcontratistas = +${currency(laborMin)} a ${currency(laborMax)} en proyectos que no se perdían por falta de mano de obra`,
+    projectionMin: laborMin,
+    projectionMax: laborMax,
+    effort: 'Medio',
+    term: '6-8 semanas'
+  });
+
+  pool.sort((a, b) => b.priority - a.priority);
+  return pool.slice(0, 3);
+}
+
+// ── Oportunidades: Tecnología y Software ──────────────────────────────────
+// Datos: MRR estabiliza ingresos — empresas SaaS pyme crecen 2,4x más rápido
+// (SaaS Chile 2024); talento tech escaso — brecha 10.000 perfiles digitales
+// Chile 2024 (Accenture); nearshoring LATAM crece 34% anual.
+
+function opportunitiesTecnologia(lead, a) {
+  const sales = toNumber(lead.monthly_sales);
+  const pool  = [];
+
+  // ── 1. Aumentar ingresos recurrentes (MRR) ────────────────────────────
+  const lowRecurrence = (a.revenue_recurrence || '').toLowerCase().includes('proyec') ||
+                        (a.revenue_recurrence || '').toLowerCase().includes('puntu') ||
+                        (a.revenue_recurrence || '').toLowerCase().includes('menos');
+  const mrrMin = Math.round(sales * 0.15);
+  const mrrMax = Math.round(sales * 0.28);
+  pool.push({
+    priority: lowRecurrence ? 10 : 6,
+    title: 'Convertir Proyectos en Ingresos Recurrentes (MRR)',
+    why: `Empresas tech pyme con más del 40% de sus ingresos en modelo recurrente (retainer, suscripción, soporte mensual) crecen 2,4x más rápido y tienen valorización 3-5x mayor que las que operan solo por proyecto (SaaS Chile 2024). Con ventas de ${currency(sales)}, convertir incluso el 25% a ingresos recurrentes estabiliza el flujo de caja y elimina la dependencia de conseguir proyectos nuevos cada mes.`,
+    cases: [
+      { name: 'Agencia digital Stgo (6 devs)', text: 'Migró del modelo "proyecto a precio fijo" a retainer mensual de soporte + evolución. MRR creció de $4M a $11M CLP en 18 meses.' },
+      { name: 'Startup SaaS Valparaíso', text: 'Ofreció su herramienta interna como servicio a 3 clientes existentes a $290K CLP/mes c/u. Ingreso recurrente nuevo sin desarrollo adicional.' },
+      { name: 'SaaS Chile — Benchmark 2024', text: 'Empresas tech con MRR > 50% de ingresos acceden a crédito bancario con tasas 30-40% menores que las que operan solo por proyecto.' }
+    ],
+    plan: [
+      'Semana 1: Identificar clientes actuales que reciben soporte o mantención informal y formalizar ese servicio en contrato mensual',
+      'Semana 2: Crear oferta de "plan de soporte y evolución" — 10-20 horas mensuales a precio fijo — para los 3 mejores clientes',
+      'Semana 3: Revisar si algún desarrollo interno puede empaquetarse como herramienta para otros clientes del mismo rubro',
+      'Semana 4: Medir cuánto del ingreso mensual es recurrente vs. por proyecto — definir meta: 30% recurrente en 6 meses'
+    ],
+    projection: `25% de ventas en MRR = +${currency(mrrMin)} a ${currency(mrrMax)} estabilizados mensualmente`,
+    projectionMin: mrrMin,
+    projectionMax: mrrMax,
+    effort: 'Medio',
+    term: '6-8 semanas'
+  });
+
+  // ── 2. Escalar sin contratar: productividad y automatización ──────────
+  const talentShortage = (a.tech_talent_availability || '').toLowerCase().includes('difícil') ||
+                         (a.tech_talent_availability || '').toLowerCase().includes('muy') ||
+                         (a.tech_talent_availability || '').toLowerCase().includes('escaso');
+  const prodMin = Math.round(sales * 0.08);
+  const prodMax = Math.round(sales * 0.16);
+  pool.push({
+    priority: talentShortage ? 9 : 5,
+    title: 'Escalar Capacidad sin Contratar: IA y Automatización',
+    why: `Chile tiene una brecha de 10.000 perfiles digitales calificados (Accenture 2024) — contratar un desarrollador senior demora 3-6 meses y cuesta $2-4M CLP/mes. Las herramientas de IA generativa (Copilot, Cursor, Claude API) pueden multiplicar la productividad del equipo existente un 30-50% sin aumentar la planilla. Para una empresa tech pyme, esto equivale a agregar 1 desarrollador equivalente sin el costo ni el tiempo de contratación.`,
+    cases: [
+      { name: 'Dev shop Santiago (8 personas)', text: 'Adoptó GitHub Copilot para todo el equipo ($19 USD/mes/dev). Velocidad de entrega aumentó 38% medido en story points. Sin nuevas contrataciones.' },
+      { name: 'Outsourcing tech Concepción', text: 'Automatizó testing con IA (Playwright + Claude API). Redujo tiempo de QA manual de 2 días a 4 horas por sprint.' },
+      { name: 'Benchmark ThoughtWorks LATAM 2024', text: 'Equipos que usan asistentes de código IA reportan 40-55% de aumento en velocidad de entrega en proyectos de desarrollo estándar.' }
+    ],
+    plan: [
+      'Semana 1: Evaluar qué tareas repetitivas consume más horas del equipo: testing, documentación, boilerplate, reportes',
+      'Semana 2: Activar GitHub Copilot o Cursor para el equipo de desarrollo (costo ~$19-20 USD/mes por dev)',
+      'Semana 3: Identificar 1 flujo de trabajo manual (informes, onboarding, soporte) que pueda automatizarse con una API sencilla',
+      'Semana 4: Medir velocidad de entrega antes/después y calcular el equivalente en horas liberadas por semana'
+    ],
+    projection: `+30-40% productividad equipo = +${currency(prodMin)} a ${currency(prodMax)} en capacidad sin contratar`,
+    projectionMin: prodMin,
+    projectionMax: prodMax,
+    effort: 'Bajo',
+    term: '4-6 semanas'
+  });
+
+  // ── 3. Diversificar con nearshoring LATAM ─────────────────────────────
+  const nearMin = Math.round(sales * 0.20);
+  const nearMax = Math.round(sales * 0.40);
+  pool.push({
+    priority: 7,
+    title: 'Captar Clientes Fuera de Chile: Nearshoring LATAM y USA',
+    why: `El mercado nearshoring de desarrollo de software desde LATAM hacia USA crece al 34% anual (Everest Group 2024). Una empresa tech chilena puede cobrar entre $40-80 USD/hora por desarrollo (vs. $150-250 de una firma americana), con la ventaja de zona horaria compatible. Con ventas actuales de ${currency(sales)}, conseguir 1-2 clientes en dólares puede representar un aumento del 30-60% en ingresos sin cambiar el equipo.`,
+    cases: [
+      { name: 'Dev agency Fintual-Tech (spinoff)', text: 'Consiguió primer cliente en USA vía LinkedIn en 45 días ofreciendo 10 horas de prueba gratis. Contrato resultante: $15.000 USD/mes.' },
+      { name: 'Plataforma Toptal / Gun.io', text: 'Conecta devs y equipos LATAM con empresas USA. Proceso de certificación 2-3 semanas. Tarifa media equipos chilenos: $55-75 USD/hora.' },
+      { name: 'ProChile — Programa Exportación Servicios', text: 'Subsidia hasta $5M CLP en participación en ferias tech internacionales y misiones comerciales a USA, España y México.' }
+    ],
+    plan: [
+      'Semana 1: Crear perfil de empresa en LinkedIn en inglés con casos de éxito y tecnologías del equipo',
+      'Semana 2: Identificar 20 startups o pymes USA en un rubro específico y enviar propuesta de 10 horas de auditoría técnica gratuita',
+      'Semana 3: Cotizar plataformas de certificación (Toptal, Andela, Deel) para contratar o ser contratado internacionalmente',
+      'Semana 4: Contactar ProChile para revisar elegibilidad al subsidio de exportación de servicios tecnológicos'
+    ],
+    projection: `1 cliente USD = +${currency(nearMin)} a ${currency(nearMax)} mensuales en ingresos adicionales`,
+    projectionMin: nearMin,
+    projectionMax: nearMax,
+    effort: 'Alto',
+    term: '8-12 semanas'
+  });
+
+  pool.sort((a, b) => b.priority - a.priority);
+  return pool.slice(0, 3);
+}
+
+// ── Oportunidades: Educación y Capacitación ───────────────────────────────
+// Datos: tasa abandono e-learning LATAM 60-70% (eLAC 2024); adquisición
+// digital reduce costo por alumno 40% vs. presencial (SENCE 2023);
+// alumni referral genera 30% más retención que canal frío (EdTech Chile 2024).
+
+function opportunitiesEducacion(lead, a) {
+  const sales = toNumber(lead.monthly_sales);
+  const pool  = [];
+
+  // ── 1. Mejorar tasa de finalización y reducir abandono ────────────────
+  const lowCompletion = (a.completion_rate || '').toLowerCase().includes('menos') ||
+                        (a.completion_rate || '').toLowerCase().includes('30') ||
+                        (a.completion_rate || '').toLowerCase().includes('50');
+  const compMin = Math.round(sales * 0.08);
+  const compMax = Math.round(sales * 0.15);
+  pool.push({
+    priority: lowCompletion ? 10 : 5,
+    title: 'Reducir Abandono y Aumentar Tasa de Finalización',
+    why: `La tasa de abandono en e-learning y capacitación LATAM es del 60-70% (eLAC 2024). Cada alumno que abandona es ingresos perdidos, una mala referencia potencial, y una señal de que el programa no está reteniendo. Bajar el abandono un 15% con el mismo número de matriculados representa más ingresos sin costo de captación adicional. Con ventas de ${currency(sales)}, esto equivale a ${currency(compMin)}-${currency(compMax)} mensuales recuperados.`,
+    cases: [
+      { name: 'Academia digital Aprendo (Chile)', text: 'Implementó check-in semanal por WhatsApp a alumnos sin avance. Redujo abandono del 58% al 31% en 3 cohortes consecutivas.' },
+      { name: 'Instituto AIEP — Modalidad online', text: 'Agregó sesión de tutoría grupal semanal de 45 min. Finalización subió de 42% a 67% en 6 meses.' },
+      { name: 'eLAC — Benchmark EdTech LATAM 2024', text: 'El 72% del abandono ocurre en las primeras 3 semanas. Intervención en ese período reduce la deserción general en 40%.' }
+    ],
+    plan: [
+      'Semana 1: Identificar en qué punto exacto del programa ocurre el mayor abandono y por qué (encuesta de 3 preguntas a los que salieron)',
+      'Semana 2: Crear alerta automática para alumnos sin actividad por 7 días — mensaje directo de WhatsApp del instructor',
+      'Semana 3: Agregar sesión grupal semanal de 45 min por Zoom — aumenta sensación de comunidad y accountability',
+      'Semana 4: Crear "hito de celebración" a mitad del programa (certificado parcial, reconocimiento público) para motivar continuidad'
+    ],
+    projection: `Reducir abandono 15% = +${currency(compMin)} a ${currency(compMax)} en ingresos ya matriculados`,
+    projectionMin: compMin,
+    projectionMax: compMax,
+    effort: 'Bajo',
+    term: '4-6 semanas'
+  });
+
+  // ── 2. Diversificar canales de captación ──────────────────────────────
+  const organicOnly = (a.acquisition_channel || '').toLowerCase().includes('boca') ||
+                      (a.acquisition_channel || '').toLowerCase().includes('referido') ||
+                      (a.acquisition_channel || '').toLowerCase().includes('orgánico');
+  const captMin = Math.round(sales * 0.12);
+  const captMax = Math.round(sales * 0.22);
+  pool.push({
+    priority: organicOnly ? 9 : 5,
+    title: 'Diversificar Captación: Digital, Empresas y SENCE',
+    why: `Depender de un solo canal (boca a boca, redes sociales o SENCE) es el mayor riesgo de flujo en educación. El canal digital reduce el costo de adquisición por alumno un 40% vs. el canal presencial (SENCE 2023). Agregar el canal empresas (B2B para capacitación de equipos) y SENCE (franquicia tributaria) permite acceder a presupuestos de capacitación corporativos sin competir solo por precio.`,
+    cases: [
+      { name: 'Instituto de Capacitación Técnica (Rancagua)', text: 'Activó franquicia SENCE para sus cursos y captó 4 empresas que usaron ese beneficio. Ingresos +$4,2M CLP en primer semestre.' },
+      { name: 'Plataforma de cursos online (8 instructores)', text: 'Corrió campaña Meta Ads con $150.000 CLP y captó 18 alumnos. CAC: $8.300 CLP vs. $45.000 CLP del canal orgánico.' },
+      { name: 'SENCE — Franquicia Tributaria', text: 'Empresas pueden descontar hasta el 1% de su planilla en capacitación SENCE. El OTEC activo captura ese gasto como ingreso.' }
+    ],
+    plan: [
+      'Semana 1: Verificar si los programas actuales están acreditados como OTEC en SENCE — si no, iniciar el proceso (6-8 semanas)',
+      'Semana 2: Identificar 10 empresas locales con más de 20 empleados y ofrecer una charla de diagnóstico gratis sobre necesidades de capacitación',
+      'Semana 3: Probar pauta de $100.000-150.000 CLP en Meta Ads con audiencia segmentada por interés y ubicación geográfica',
+      'Semana 4: Comparar costo por alumno captado en cada canal y doblar la apuesta en el más eficiente'
+    ],
+    projection: `Nuevo canal activo = +${currency(captMin)} a ${currency(captMax)} mensuales en matrículas adicionales`,
+    projectionMin: captMin,
+    projectionMax: captMax,
+    effort: 'Medio',
+    term: '6-8 semanas'
+  });
+
+  // ── 3. Monetizar la red de egresados ──────────────────────────────────
+  const lowRepeat = (a.repeat_enrollment || '').toLowerCase().includes('rara') ||
+                    (a.repeat_enrollment || '').toLowerCase().includes('poco') ||
+                    (a.repeat_enrollment || '').toLowerCase().includes('no');
+  const alumniMin = Math.round(sales * 0.07);
+  const alumniMax = Math.round(sales * 0.14);
+  pool.push({
+    priority: lowRepeat ? 8 : 4,
+    title: 'Activar la Red de Egresados: Recompra y Referidos',
+    why: `Un egresado satisfecho es el canal más barato de captación y recompra. En EdTech Chile, el canal alumni referral genera un 30% más de retención que el canal frío (EdTech Chile 2024). Sin embargo, el 80% de las instituciones de capacitación no tienen ningún programa de seguimiento post-egreso. La base de exalumnos es un activo sin explotar que puede generar recompra directa y referidos sin costo de adquisición.`,
+    cases: [
+      { name: 'Academia de Marketing Digital Chile', text: 'Creó programa "Alumni 20%" — descuento para egresados en cursos avanzados. El 28% de sus matriculados actuales son re-matrículas.' },
+      { name: 'Instituto de Finanzas Personales (online)', text: 'Lanzó grupo privado de WhatsApp para egresados. Genera 4-6 matrículas nuevas por referido mensualmente sin inversión publicitaria.' },
+      { name: 'EdTech Chile — Benchmark 2024', text: 'Instituciones con programa alumni activo tienen LTV (lifetime value) por alumno 2,8x mayor que las que no lo tienen.' }
+    ],
+    plan: [
+      'Semana 1: Crear grupo de WhatsApp o comunidad privada para egresados de los últimos 12 meses',
+      'Semana 2: Ofrecer a todos los egresados un 20-25% de descuento en el siguiente curso de la institución (caducidad 60 días)',
+      'Semana 3: Lanzar programa de referidos: el egresado que traiga un alumno nuevo recibe 1 mes de acceso gratuito al curso que elija',
+      'Semana 4: Publicar 1 caso de éxito de un egresado en redes sociales — el reconocimiento activa el sentido de pertenencia y los referidos'
+    ],
+    projection: `Red alumni activa = +${currency(alumniMin)} a ${currency(alumniMax)} en recompras y referidos mensuales`,
+    projectionMin: alumniMin,
+    projectionMax: alumniMax,
+    effort: 'Bajo',
+    term: '4 semanas'
+  });
+
+  pool.sort((a, b) => b.priority - a.priority);
+  return pool.slice(0, 3);
+}
+
+// ── Oportunidades: Otro Rubro ──────────────────────────────────────────────
+// Oportunidades transversales basadas en los dos principales dolores de pymes
+// de rubro no categorizado: ingresos impredecibles y dependencia de personas clave.
+
+function opportunitiesOtro(lead, a) {
+  const sales = toNumber(lead.monthly_sales);
+  const pool  = [];
+
+  // ── 1. Estabilizar ingresos: modelo recurrente ────────────────────────
+  const lowPredictability = (a.income_predictability || '').toLowerCase().includes('impredi') ||
+                             (a.income_predictability || '').toLowerCase().includes('varía') ||
+                             (a.income_predictability || '').toLowerCase().includes('varia') ||
+                             (a.income_predictability || '').toLowerCase().includes('difícil');
+  const stabMin = Math.round(sales * 0.12);
+  const stabMax = Math.round(sales * 0.22);
+  pool.push({
+    priority: lowPredictability ? 10 : 6,
+    title: 'Estabilizar Ingresos con Modelo Recurrente',
+    why: `Sin predictibilidad de ingresos, planificar contrataciones, inversiones y flujo de caja es imposible. Las pymes que tienen al menos el 30% de sus ingresos en modelo recurrente (contrato mensual, suscripción, retainer) tienen acceso a crédito 2x más fácil y márgenes 4-6 pp más estables (Fundación Pymes Chile 2024). Con ventas de ${currency(sales)}, identificar qué parte del negocio puede convertirse en ingreso fijo mensual es la palanca de mayor impacto a corto plazo.`,
+    cases: [
+      { name: 'Pyme de servicios B2B (rubro industrial)', text: 'Convirtió visitas de mantenimiento anuales en contrato mensual de revisión. Ingresos mensuales fijos: $1,8M CLP sin trabajo adicional.' },
+      { name: 'Empresa de arriendo de equipos', text: 'Agregó plan de mantención mensual a sus equipos arrendados. MRR nuevo: $2,4M CLP/mes con cero clientes nuevos.' },
+      { name: 'Fundación Pymes Chile 2024', text: 'Pymes con 30%+ de ingresos recurrentes tienen 60% menos de meses negativos de caja que las que dependen de proyectos únicos.' }
+    ],
+    plan: [
+      'Semana 1: Identificar qué servicio o producto del negocio los clientes necesitan repetidamente y hoy compran de forma esporádica',
+      'Semana 2: Diseñar una oferta de plan mensual con precio fijo — ofrecer descuento del 8-10% vs. el precio por transacción',
+      'Semana 3: Contactar a los 10 mejores clientes actuales y presentarles el plan — el objetivo es convertir 3-5',
+      'Semana 4: Medir cuánto del ingreso mensual es recurrente y fijar meta: 25% recurrente en 90 días'
+    ],
+    projection: `25% ingresos recurrentes = +${currency(stabMin)} a ${currency(stabMax)} estabilizados mensualmente`,
+    projectionMin: stabMin,
+    projectionMax: stabMax,
+    effort: 'Medio',
+    term: '6-8 semanas'
+  });
+
+  // ── 2. Reducir dependencia de personas clave ──────────────────────────
+  const highDependency = (a.key_person_dependency_general || '').toLowerCase().includes('alta') ||
+                          (a.key_person_dependency_general || '').toLowerCase().includes('para');
+  const depMin = Math.round(sales * 0.05);
+  const depMax = Math.round(sales * 0.10);
+  pool.push({
+    priority: highDependency ? 9 : 5,
+    title: 'Reducir Dependencia de Personas Clave',
+    why: `Si 1-2 personas concentran el conocimiento crítico del negocio, la empresa es frágil ante enfermedad, vacaciones o renuncia. Es también el principal freno para escalar: si el dueño debe estar en todo, no puede crecer. Documentar procesos y distribuir conocimiento no es burocracia — es el primer paso para que el negocio funcione sin su presencia constante.`,
+    cases: [
+      { name: 'Empresa de servicios industriales (Bio-Bío)', text: 'Documentó los 5 procesos críticos en videos de 10 min. En 3 meses, el dueño redujo su jornada operativa de 60 a 35 horas semanales.' },
+      { name: 'Pyme logística Santiago', text: 'Creó manual de operaciones para el turno nocturno. Primer mes sin supervisor: cero incidentes, ahorro de $800K CLP en horas extra del jefe.' },
+      { name: 'Modelo EOS (Entrepreneurial Operating System)', text: 'Pymes que documentan sus 10 procesos principales reducen errores operativos 45% y tiempo de onboarding de nuevos empleados en 60%.' }
+    ],
+    plan: [
+      'Semana 1: Identificar las 5 tareas que solo "tú o X persona" saben hacer — esas son el riesgo real',
+      'Semana 2: Grabar un video de 5-10 min haciendo cada tarea (el teléfono es suficiente) — es más rápido que escribir un manual',
+      'Semana 3: Crear una carpeta compartida (Google Drive o Notion) con los videos y documentos de proceso — accesible para todo el equipo',
+      'Semana 4: Delegar 1 tarea de las 5 a otro integrante del equipo con el video como guía — medir si lo hace bien sin supervisión'
+    ],
+    projection: `Procesos documentados = +${currency(depMin)} a ${currency(depMax)} en productividad y reducción de errores`,
+    projectionMin: depMin,
+    projectionMax: depMax,
+    effort: 'Bajo',
+    term: '4 semanas'
+  });
+
+  // ── 3. Formalizar el proceso comercial ────────────────────────────────
+  const comercialMin = Math.round(sales * 0.10);
+  const comercialMax = Math.round(sales * 0.18);
+  pool.push({
+    priority: 7,
+    title: 'Formalizar el Proceso Comercial y Medir el Embudo',
+    why: `Sin un proceso de venta estandarizado, cada cierre depende de la improvisación y el talento individual. Las pymes que documentan su proceso comercial (contacto → propuesta → seguimiento → cierre) y miden 3 KPIs básicos (leads por mes, tasa de cierre, ticket promedio) aumentan sus ventas un 15-25% en 90 días sin aumentar el gasto de marketing (Endeavor Chile 2024).`,
+    cases: [
+      { name: 'Empresa de servicios B2B Stgo', text: 'Estandarizó propuesta y creó seguimiento a 24h/72h/7 días. Tasa de cierre subió del 28% al 51% en 60 días.' },
+      { name: 'Pyme tecnológica Concepción', text: 'Implementó CRM gratuito (HubSpot Free). En 90 días tenía claridad de en qué etapa se perdían los prospectos y corrigió el mensaje.' },
+      { name: 'Endeavor Chile — Estudio Pymes 2024', text: 'El 65% de las ventas perdidas en pymes ocurren por falta de seguimiento, no por precio o competencia.' }
+    ],
+    plan: [
+      'Semana 1: Definir las 4 etapas del proceso de venta actual y crear una plantilla de propuesta profesional estándar',
+      'Semana 2: Activar HubSpot Free o Notion para registrar cada prospecto y su estado (sin costo)',
+      'Semana 3: Implementar seguimiento estructurado: WhatsApp a 24h, llamada a 72h, email a 7 días de enviada la propuesta',
+      'Semana 4: Medir 3 KPIs: leads del mes, propuestas enviadas, cierres — repetir semanalmente para detectar cuellos de botella'
+    ],
+    projection: `+15-25% en tasa de cierre = +${currency(comercialMin)} a ${currency(comercialMax)} mensuales adicionales`,
+    projectionMin: comercialMin,
+    projectionMax: comercialMax,
+    effort: 'Bajo',
+    term: '4-6 semanas'
+  });
+
+  pool.sort((a, b) => b.priority - a.priority);
+  return pool.slice(0, 3);
+}
+
 // ── Build payload ──────────────────────────────────────────────────────────
 
 export function buildReportPayload(lead, externalCases = []) {
@@ -795,7 +1176,11 @@ export function buildReportPayload(lead, externalCases = []) {
   if (lead.sector === 'comercio_ecommerce')        opportunities = opportunitiesCommerce(lead, answers);
   if (lead.sector === 'manufactura')               opportunities = opportunitiesManufactura(lead, answers);
   if (lead.sector === 'gastronomia')               opportunities = opportunitiesGastronomia(lead, answers);
-  if (lead.sector === 'salud_belleza')              opportunities = opportunitiesSaludBelleza(lead, answers);
+  if (lead.sector === 'salud_belleza')             opportunities = opportunitiesSaludBelleza(lead, answers);
+  if (lead.sector === 'construccion')              opportunities = opportunitiesConstruccion(lead, answers);
+  if (lead.sector === 'tecnologia')                opportunities = opportunitiesTecnologia(lead, answers);
+  if (lead.sector === 'educacion')                 opportunities = opportunitiesEducacion(lead, answers);
+  if (lead.sector === 'otro')                      opportunities = opportunitiesOtro(lead, answers);
 
   // Inyectar casos reales de Brave Search en la primera oportunidad
   // Si hay resultados externos, reemplazamos los casos hardcoded del top-1 con casos reales
