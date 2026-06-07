@@ -159,7 +159,8 @@ async function sendQuestionnaireEmail(lead) {
 async function sendAdvisorPaymentNotification(lead) {
   const siteUrl = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
   const adminUrl = `${siteUrl}/admin.html`;
-  const advisorEmail = process.env.ADVISOR_EMAIL || 'asesor.pac@gmail.com';
+  const advisorEmail = process.env.ADVISOR_EMAIL;
+  if (!advisorEmail) { console.error('[flow-webhook] ADVISOR_EMAIL no configurada'); }
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">

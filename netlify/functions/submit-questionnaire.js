@@ -96,10 +96,9 @@ export default async (req) => {
 
   const siteUrl = process.env.SITE_URL;
   const reviewerToken = process.env.ADMIN_REVIEW_TOKEN;
-  const reviewerEmail = process.env.REVIEWER_EMAIL;
-
   try {
-    const advisorEmail = reviewerEmail || 'asesor.pac@gmail.com';
+    const advisorEmail = process.env.ADVISOR_EMAIL;
+    if (!advisorEmail) console.error('[submit-questionnaire] ADVISOR_EMAIL no configurada');
     const aiBadge = lead.ai_generated
       ? '<span style="background:#d4edda;color:#155724;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;">✦ Generado con IA</span>'
       : '<span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;">⚙ Generado con reglas</span>';

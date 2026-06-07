@@ -1,6 +1,10 @@
 export async function sendAdvisorEmail(lead) {
   const apiKey      = process.env.SENDGRID_API_KEY; // Resend key: re_...
-  const advisorEmail = 'asesor.pac@gmail.com';
+  const advisorEmail = process.env.ADVISOR_EMAIL;
+  if (!advisorEmail) {
+    console.error('[send-advisor-email] ADVISOR_EMAIL no configurada — email omitido');
+    return false;
+  }
 
   if (!apiKey) {
     console.warn('[email] SENDGRID_API_KEY (Resend) no configurada');

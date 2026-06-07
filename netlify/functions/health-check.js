@@ -96,7 +96,8 @@ export default async (req) => {
     return new Response('OK', { status: 200 });
   }
 
-  const advisorEmail = process.env.REVIEWER_EMAIL || 'asesor.pac@gmail.com';
+  const advisorEmail = process.env.ADVISOR_EMAIL;  // unificado con el resto del sistema
+  if (!advisorEmail) { console.error('[health-check] ADVISOR_EMAIL no configurada'); }
   const siteUrl      = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
   // SEGURIDAD: no incluir el token de admin en emails. El asesor accede al
   // panel ingresando el token manualmente en admin.html.

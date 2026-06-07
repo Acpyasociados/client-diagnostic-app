@@ -130,11 +130,12 @@ export default async (req) => {
 };
 
 function json(status, body) {
+  const origin = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
   return new Response(JSON.stringify(body), {
     status,
     headers: {
       'Content-Type':                'application/json',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin,
     }
   });
 }

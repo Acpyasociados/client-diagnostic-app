@@ -12,7 +12,8 @@ export default async (req) => {
   if (!lead.report_html) return json(400, { error: 'No existe borrador' });
 
   const isPremium = (lead.plan || '').toLowerCase() === 'premium';
-  const advisorPhoneClean = (process.env.ADVISOR_PHONE || '56944018594').replace(/[^0-9]/g, '');
+  const advisorPhoneClean = (process.env.ADVISOR_PHONE || '').replace(/[^0-9]/g, '') || '56944018594';
+  if (!process.env.ADVISOR_PHONE) console.warn('[approve-report] ADVISOR_PHONE no configurada, usando fallback');
   const waSessionLink = `https://wa.me/${advisorPhoneClean}?text=Hola%2C%20acabo%20de%20recibir%20mi%20informe%20Premium%20de%20ACP%20y%20quiero%20agendar%20mi%20sesi%C3%B3n%20de%20implementaci%C3%B3n.`;
 
   const emailFooter = isPremium
