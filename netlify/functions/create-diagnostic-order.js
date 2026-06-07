@@ -142,9 +142,9 @@ export default async (event, context) => {
 
   // Precios
   const prices = {
-    basico:  Number(process.env.PRICE_BASIC_CLP   || 1000),
-    basic:   Number(process.env.PRICE_BASIC_CLP   || 1000),
-    premium: Number(process.env.PRICE_PREMIUM_CLP || 11000)
+    basico:  Number(process.env.PRICE_BASIC_CLP   || 9900),
+    basic:   Number(process.env.PRICE_BASIC_CLP   || 9900),
+    premium: Number(process.env.PRICE_PREMIUM_CLP || 39900)
   };
 
   const plan       = (body.plan || 'basico').toLowerCase();

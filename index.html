@@ -394,10 +394,10 @@ padding: 1.5rem 1.25rem;
 
 <div class="pricing-banner">
 <div class="price-item">
-<span class="price" id="header-price">$1.500</span>
+<span class="price" id="header-price">$9.900</span>
 <span class="price-label">CLP</span>
 </div>
-<div class="price-note" id="header-note">Plan Básico • Informe en 48 horas</div>
+<div class="price-note" id="header-note">Plan Básico • Informe automatizado en &lt;30 min</div>
 </div>
 
 <div class="info-strip">
@@ -543,13 +543,13 @@ padding: 1.5rem 1.25rem;
 <div class="radio-group">
 <div class="radio-item">
 <input type="radio" id="plan_basico" name="plan" value="basico" checked required>
-<label for="plan_basico"><strong>Básico</strong> - $1.500 CLP (Informe + 3 mejoras)</label>
+<label for="plan_basico"><strong>Básico</strong> — $9.900 CLP · Informe IA + 3 oportunidades (entrega &lt;30 min)</label>
 </div>
 </div>
 <div class="radio-group">
 <div class="radio-item">
 <input type="radio" id="plan_premium" name="plan" value="premium" required>
-<label for="plan_premium"><strong>Premium</strong> - $149.900 CLP (Plan 30/90/180 días + seguimiento)</label>
+<label for="plan_premium"><strong>Premium</strong> — $39.900 CLP · Revisión por asesor + sesión de implementación 30 min</label>
 </div>
 </div>
 </div>
@@ -557,17 +557,17 @@ padding: 1.5rem 1.25rem;
 <div class="benefits" id="plan-benefits">
 <h3>✓ Qué incluye el Plan Básico:</h3>
 <ul id="benefits-list">
-<li>Análisis de oportunidades de crecimiento personalizadas</li>
-<li>Reducción de costos operacionales identificada</li>
-<li>Estrategias de optimización tributaria aplicables</li>
-<li>Plan de acción 30 días para implementar</li>
-<li>Informe profesional entregado por email</li>
+<li>3 oportunidades priorizadas con datos reales de tu sector en Chile</li>
+<li>Informe PDF con plan de acción 30/60/90 días</li>
+<li>Generado con IA en menos de 30 minutos — sin esperas</li>
+<li>Benchmarks de margen, caja y ventas comparados con tu rubro</li>
+<li>Entregado directamente a tu email</li>
 </ul>
 </div>
 
 <div class="submit-section">
 <button type="submit" class="btn-submit" id="submitBtn">
-<span id="submitText">Continuar al Pago ($1.500)</span>
+<span id="submitText">Continuar al Pago ($9.900)</span>
 </button>
 <p class="submit-note">Serás redirigido a Flow para completar el pago de forma segura</p>
 </div>
@@ -640,14 +640,14 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
   document.querySelectorAll('input[name="plan"]').forEach(radio => {
     radio.addEventListener('change', function() {
       const isBasico = this.value === 'basico';
-      const price = isBasico ? '$1.500' : '$149.900';
+      const price = isBasico ? '$9.900' : '$39.900';
       submitText.textContent = `Continuar al Pago (${price})`;
 
       // Actualizar encabezado
       const headerPrice = document.getElementById('header-price');
       const headerNote = document.getElementById('header-note');
-      if (headerPrice) headerPrice.textContent = isBasico ? '$1.500' : '$149.900';
-      if (headerNote) headerNote.textContent = isBasico ? 'Plan Básico • Informe en 48 horas' : 'Plan Premium • Seguimiento 30/90/180 días';
+      if (headerPrice) headerPrice.textContent = isBasico ? '$9.900' : '$39.900';
+      if (headerNote) headerNote.textContent = isBasico ? 'Plan Básico • Informe automatizado en <30 min' : 'Plan Premium • Revisado por asesor + sesión 30 min';
 
       // Actualizar beneficios según plan
       const benefitsTitle = document.querySelector('#plan-benefits h3');
@@ -655,20 +655,19 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
       if (isBasico) {
         benefitsTitle.textContent = '✓ Qué incluye el Plan Básico:';
         benefitsList.innerHTML = `
-          <li>Análisis de oportunidades de crecimiento personalizadas</li>
-          <li>Reducción de costos operacionales identificada</li>
-          <li>Estrategias de optimización tributaria aplicables</li>
-          <li>Plan de acción 30 días para implementar</li>
-          <li>Informe profesional entregado por email</li>`;
+          <li>3 oportunidades priorizadas con datos reales de tu sector en Chile</li>
+          <li>Informe PDF con plan de acción 30/60/90 días</li>
+          <li>Generado con IA en menos de 30 minutos — sin esperas</li>
+          <li>Benchmarks de margen, caja y ventas comparados con tu rubro</li>
+          <li>Entregado directamente a tu email</li>`;
       } else {
         benefitsTitle.textContent = '✓ Qué incluye el Plan Premium:';
         benefitsList.innerHTML = `
           <li>Todo lo del Plan Básico</li>
-          <li>Plan de seguimiento 30, 90 y 180 días</li>
-          <li>Reunión de implementación con asesor</li>
-          <li>Revisiones trimestrales del avance</li>
-          <li>Soporte prioritario por WhatsApp</li>
-          <li>Informe actualizado a los 90 días</li>`;
+          <li>Revisión y validación del informe por un asesor ACP</li>
+          <li>Sesión de implementación de 30 min por WhatsApp o videollamada</li>
+          <li>Priorización de las 3 oportunidades con el asesor en vivo</li>
+          <li>Entrega en máx. 48 horas hábiles</li>`;
       }
     });
   });
@@ -692,7 +691,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
     const data = {
       timestamp: new Date().toISOString(),
       product: document.getElementById('plan_basico').checked ? 'diagnostico_basico' : 'diagnostico_premium',
-      price: document.getElementById('plan_basico').checked ? 1500 : 149900,
+      price: document.getElementById('plan_basico').checked ? 9900 : 39900,
       company_name: formData.get('company_name'),
       rut: formData.get('rut'),
       contact_name: formData.get('contact_name'),
@@ -745,7 +744,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
       alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o contáctanos por WhatsApp al +56 9 4401 8594.\n\nError: ' + error.message);
 
       submitBtn.disabled = false;
-      const price = document.getElementById('plan_basico').checked ? '$1.500' : '$149.900';
+      const price = document.getElementById('plan_basico').checked ? '$9.900' : '$39.900';
       submitText.textContent = `Continuar al Pago (${price})`;
     }
   });

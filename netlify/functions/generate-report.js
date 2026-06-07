@@ -40,6 +40,69 @@ function fillTemplate(html, data) {
   return out;
 }
 
+/**
+ * Genera el bloque CTA al final del PDF, diferenciado por plan.
+ * Básico  → oferta de sesión de implementación (upsell)
+ * Premium → confirma sesión de seguimiento incluida
+ */
+function buildCtaBlock(lead) {
+  const phone   = process.env.ADVISOR_PHONE || '+56 9 4401 8594';
+  const waLink  = `https://wa.me/${phone.replace(/[^0-9]/g, '')}`;
+  const email   = process.env.ADVISOR_EMAIL || 'contacto@acpasociados.cl';
+  const isPremium = (lead.plan || '').toLowerCase() === 'premium';
+
+  if (isPremium) {
+    // Plan Premium: sesión de implementación ya incluida
+    return `
+    <div style="background:linear-gradient(135deg,#1B3B5C 0%,#16A085 100%); border-radius:4px; padding:6mm 8mm; display:flex; align-items:stretch; gap:6mm;">
+      <div style="width:4px; background:rgba(255,255,255,0.4); flex-shrink:0; border-radius:2px;"></div>
+      <div style="flex:1;">
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:700; color:rgba(255,255,255,0.65); letter-spacing:2.5px; text-transform:uppercase; margin-bottom:2mm;">TU PLAN PREMIUM INCLUYE</div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:17px; font-weight:700; color:#FFFFFF; line-height:1.3; margin-bottom:3mm;">Sesión de implementación de 30 min con tu asesor ACP</div>
+        <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8.5px; color:rgba(255,255,255,0.82); line-height:1.6; margin-bottom:3.5mm;">En esta sesión priorizamos en conjunto las 3 oportunidades del informe, definimos quién hace qué y en qué plazo, y resolvemos cualquier duda sobre la implementación.</div>
+        <div style="display:flex; gap:5mm; align-items:center;">
+          <a href="${waLink}?text=Hola%2C%20tengo%20mi%20informe%20Premium%20listo%20y%20quiero%20agendar%20mi%20sesi%C3%B3n%20de%20implementaci%C3%B3n."
+             style="background:#25D366; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:8.5px; font-weight:700; padding:2.5mm 5mm; border-radius:20px; text-decoration:none; display:inline-block;">
+            📱 Agendar por WhatsApp
+          </a>
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:rgba(255,255,255,0.55);">o escríbenos a <span style="color:#FFFFFF;">${email}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Plan Básico: upsell a sesión de implementación
+  return `
+    <div style="background:#1B3B5C; border-radius:4px; padding:5mm 7mm;">
+      <div style="display:flex; align-items:flex-start; gap:5mm;">
+        <div style="width:4px; min-height:50px; background:#16A085; flex-shrink:0; border-radius:2px; margin-top:1mm;"></div>
+        <div style="flex:1;">
+          <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; font-weight:700; color:#3498DB; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:2mm;">¿QUIERES IMPLEMENTARLO CON RESPALDO EXPERTO?</div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:16px; font-weight:700; color:#FFFFFF; line-height:1.3; margin-bottom:2mm;">Sesión de Implementación — 30 min con tu asesor ACP</div>
+          <div style="display:flex; gap:4mm; margin-bottom:3mm;">
+            <div style="font-family:'DM Sans',Arial,sans-serif; font-size:8px; color:rgba(255,255,255,0.75); line-height:1.6;">
+              ✓ Priorizamos las 3 oportunidades en vivo<br>
+              ✓ Definimos quién hace qué y en qué plazo<br>
+              ✓ Resolvemos dudas de implementación
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,0.15); padding-left:4mm; flex-shrink:0; text-align:center;">
+              <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7px; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1px; margin-bottom:1mm;">Valor</div>
+              <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:20px; font-weight:700; color:#16A085; line-height:1;">$39.900</div>
+              <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7px; color:rgba(255,255,255,0.45);">CLP · 1 sesión</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:4mm; align-items:center;">
+            <a href="${waLink}?text=Hola%2C%20acabo%20de%20recibir%20mi%20informe%20de%20diagn%C3%B3stico%20y%20me%20interesa%20la%20sesi%C3%B3n%20de%20implementaci%C3%B3n."
+               style="background:#25D366; color:#FFFFFF; font-family:'DM Sans',Arial,sans-serif; font-size:8.5px; font-weight:700; padding:2.5mm 5mm; border-radius:20px; text-decoration:none; display:inline-block;">
+              📱 Quiero la sesión — WhatsApp
+            </a>
+            <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7.5px; color:rgba(255,255,255,0.45);">${email}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
 function oppData(opp, n) {
   if (!opp) {
     return {
@@ -207,7 +270,10 @@ export default async (req) => {
     // Plan de acción (template usa 30/60/90; engine produce 30/90/180)
     plan_30: formatList(plan30),
     plan_60: formatList(plan60),
-    plan_90: formatList(plan90)
+    plan_90: formatList(plan90),
+
+    // CTA diferenciado por plan (básico → upsell sesión; premium → confirma sesión incluida)
+    cta_block: buildCtaBlock(lead)
   };
 
   // 6. Rellenar template
