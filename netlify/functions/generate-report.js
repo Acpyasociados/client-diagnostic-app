@@ -87,7 +87,7 @@ function buildCtaBlock(lead) {
             </div>
             <div style="border-left:1px solid rgba(255,255,255,0.15); padding-left:4mm; flex-shrink:0; text-align:center;">
               <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7px; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:1px; margin-bottom:1mm;">Valor</div>
-              <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:20px; font-weight:700; color:#16A085; line-height:1;">$39.900</div>
+              <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:20px; font-weight:700; color:#16A085; line-height:1;">$149.900</div>
               <div style="font-family:'DM Sans',Arial,sans-serif; font-size:7px; color:rgba(255,255,255,0.45);">CLP · 1 sesión</div>
             </div>
           </div>
