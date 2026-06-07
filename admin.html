@@ -246,6 +246,7 @@
     .badge-info    { background: #dbeafe; color: #1e40af; }
     .badge-purple  { background: #ede9fe; color: #4c1d95; }
     .badge-muted   { background: #f1f5f9; color: #64748b; }
+    .badge-orange  { background: #ffedd5; color: #9a3412; }
 
     /* ── ACTION BUTTONS ────────────────────────────────── */
     .actions { display: flex; gap: 5px; flex-wrap: nowrap; }
@@ -447,6 +448,7 @@ const STATUS_CFG = {
   pagado:                   { label: 'Pagado',             badgeClass: 'badge-success', icon: '✅', step: 2 },
   cuestionario_completado:  { label: 'Cuest. completado',  badgeClass: 'badge-warning', icon: '📋', step: 3 },
   borrador_listo:           { label: '⚠ Revisar borrador', badgeClass: 'badge-purple',  icon: '✏️', step: 4 },
+  cambios_solicitados:      { label: 'Cambios solicitados', badgeClass: 'badge-orange', icon: '🔄', step: 4 },
   enviado:                  { label: 'Enviado',            badgeClass: 'badge-info',    icon: '📨', step: 5 },
   payment_failed:           { label: 'Pago fallido',       badgeClass: 'badge-danger',  icon: '❌', step: 0 },
 };
@@ -494,12 +496,13 @@ function renderTable(leads) {
 
     // Acciones según estado
     let actions = `<button class="btn btn-sm btn-secondary" onclick="showDetail(${i})">Ver</button>`;
-    if (lead.status === 'borrador_listo') {
+    if (lead.status === 'borrador_listo' || lead.status === 'cambios_solicitados') {
       const siteUrl = 'https://acp-asociados.netlify.app';
       const reviewUrl = `${siteUrl}/review.html?lead_id=${encodeURIComponent(lead.lead_id)}&token=${encodeURIComponent(currentToken)}`;
-      actions += ` <button class="btn btn-sm btn-purple" onclick="openReview('${reviewUrl}')">✏ Revisar</button>`;
+      const reviewLabel = lead.status === 'cambios_solicitados' ? '🔄 Regenerar' : '✏ Revisar';
+      actions += ` <button class="btn btn-sm btn-purple" onclick="openReview('${reviewUrl}')">${reviewLabel}</button>`;
     }
-    if (lead.draft_generated || lead.status === 'borrador_listo' || lead.status === 'enviado') {
+    if (lead.draft_generated || lead.status === 'borrador_listo' || lead.status === 'cambios_solicitados' || lead.status === 'enviado') {
       actions += ` <button class="btn btn-sm btn-info" onclick="genPDF('${lead.lead_id}')">PDF</button>`;
     }
 
@@ -531,7 +534,7 @@ function updateKPIs(leads) {
   const qPending = leads.filter(l => l.payment_status === 'approved' && !l.questionnaire_completed).length;
   document.getElementById('kpiQ').textContent = qPending;
 
-  const toReview = leads.filter(l => l.status === 'borrador_listo').length;
+  const toReview = leads.filter(l => l.status === 'borrador_listo' || l.status === 'cambios_solicitados').length;
   document.getElementById('kpiReview').textContent = toReview;
 
   const done = leads.filter(l => l.status === 'enviado').length;
@@ -549,7 +552,10 @@ function applyFilter(filter, btn) {
 function applySearch() {
   const q = document.getElementById('searchBox').value.toLowerCase();
   let filtered = allLeads;
-  if (currentFilter !== 'all') filtered = filtered.filter(l => l.status === currentFilter);
+  if (currentFilter !== 'all') filtered = filtered.filter(l => {
+    if (currentFilter === 'borrador_listo') return l.status === 'borrador_listo' || l.status === 'cambios_solicitados';
+    return l.status === currentFilter;
+  });
   if (q) filtered = filtered.filter(l =>
     (l.name || '').toLowerCase().includes(q) ||
     (l.company || '').toLowerCase().includes(q) ||
@@ -586,7 +592,7 @@ async function loadLeads() {
     updateKPIs(allLeads);
     applySearch();
 
-    const toReview = allLeads.filter(l => l.status === 'borrador_listo').length;
+    const toReview = allLeads.filter(l => l.status === 'borrador_listo' || l.status === 'cambios_solicitados').length;
     if (toReview > 0) {
       showMsg(`⚠ Hay ${toReview} borrador${toReview > 1 ? 'es' : ''} esperando tu revisión.`, 'success');
     } else {
