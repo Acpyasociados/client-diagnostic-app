@@ -1,4 +1,15 @@
+const ADMIN_TOKEN = process.env.ADMIN_REVIEW_TOKEN;
+
 export default async (event, context) => {
+  // ── Autenticación requerida ───────────────────────────────────────────────
+  const token = event.queryStringParameters?.token;
+  if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+    return new Response('<h1>401 — Acceso no autorizado</h1>', {
+      status: 401,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
+  }
+
   const leadId = event.queryStringParameters?.lead_id;
 
   if (!leadId) {

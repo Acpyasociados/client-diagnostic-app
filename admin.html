@@ -438,7 +438,7 @@
 </div>
 
 <script>
-let currentToken = localStorage.getItem('adminToken') || null;
+let currentToken = sessionStorage.getItem('adminToken') || null;
 let allLeads = [];
 let currentFilter = 'all';
 
@@ -573,7 +573,7 @@ async function loadLeads() {
     const t = prompt('Ingresa tu ADMIN_REVIEW_TOKEN:');
     if (!t) return;
     currentToken = t;
-    localStorage.setItem('adminToken', t);
+    sessionStorage.setItem('adminToken', t);
   }
 
   document.getElementById('tableBody').innerHTML =
@@ -584,7 +584,7 @@ async function loadLeads() {
 
     if (res.status === 403) {
       showMsg('❌ Token inválido.', 'error');
-      localStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminToken');
       currentToken = null;
       return;
     }
@@ -767,7 +767,7 @@ function closeModal(e) {
 
 // ── UTILS ─────────────────────────────────────────────────
 function clearToken() {
-  localStorage.removeItem('adminToken');
+  sessionStorage.removeItem('adminToken');
   currentToken = null;
   location.reload();
 }

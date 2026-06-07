@@ -98,7 +98,8 @@ export default async (req) => {
 
   const advisorEmail = process.env.REVIEWER_EMAIL || 'asesor.pac@gmail.com';
   const siteUrl      = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
-  const adminToken   = process.env.ADMIN_REVIEW_TOKEN || '';
+  // SEGURIDAD: no incluir el token de admin en emails. El asesor accede al
+  // panel ingresando el token manualmente en admin.html.
 
   // Ordenar: primero los más urgentes (mayor tiempo atascado)
   stuck.sort((a, b) => b.hoursStuck - a.hoursStuck);
@@ -115,7 +116,7 @@ export default async (req) => {
       <td style="padding:10px 12px;color:#dc2626;font-size:13px;">${escHtml(s.label)}</td>
       <td style="padding:10px 12px;font-weight:700;color:#dc2626;">${s.hoursStuck}h</td>
       <td style="padding:10px 12px;">
-        <a href="${siteUrl}/admin.html?token=${adminToken}" style="color:#2563eb;font-size:12px;">Ver admin →</a>
+        <a href="${siteUrl}/admin.html" style="color:#2563eb;font-size:12px;">Ver admin →</a>
       </td>
     </tr>`).join('');
 
@@ -148,7 +149,7 @@ export default async (req) => {
           </p>
         </div>
         <div style="padding:16px 20px;text-align:center;">
-          <a href="${siteUrl}/admin.html?token=${adminToken}"
+          <a href="${siteUrl}/admin.html"
              style="background:#1a3a5c;color:white;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;">
             Ir al panel de administración
           </a>

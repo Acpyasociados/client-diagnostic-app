@@ -147,12 +147,26 @@ export default async (event, context) => {
     premium: Number(process.env.PRICE_PREMIUM_CLP || 149900)
   };
 
-  const plan       = (body.plan || 'basico').toLowerCase();
-  const discount   = Number(body.discount_percentage || 0);
-  const basePrice  = prices[plan] || prices.basico;
-  const finalPrice = body.price !== undefined
-    ? Number(body.price)
-    : Math.round(basePrice * (100 - discount) / 100);
+  const plan      = (body.plan || 'basico').toLowerCase();
+  const basePrice = prices[plan] || prices.basico;
+
+  // SEGURIDAD: precio calculado 100% server-side.
+  // Si el cliente envía un cupón, lo re-validamos aquí en el servidor.
+  // Nunca se acepta body.price ni body.discount_percentage del cliente.
+  let discount = 0;
+  let appliedCoupon = null;
+  const couponCode = (body.coupon_code || '').toString().toUpperCase().trim();
+  if (couponCode) {
+    const couponResult = validateCouponServerSide(couponCode, plan);
+    if (couponResult.valid) {
+      discount = couponResult.discount;
+      appliedCoupon = couponCode;
+      console.log(`Cupón ${couponCode} aplicado: ${discount}% descuento`);
+    } else {
+      console.warn(`Cupón inválido recibido: ${couponCode}`);
+    }
+  }
+  const finalPrice = Math.round(basePrice * (100 - discount) / 100);
 
   // ── Evitar registros duplicados ───────────────────────────────────────────
   // Si la persona reintenta el envío (doble clic, botón "atrás", recarga,
@@ -193,6 +207,7 @@ export default async (event, context) => {
     goal_6m:                 body.goal_6m || body.objectives_6m,
     plan,
     discount_percentage:     discount,
+    applied_coupon:          appliedCoupon,
     final_price:             finalPrice,
     questionnaire_sent:      false,
     questionnaire_completed: false,
@@ -252,4 +267,21 @@ function json(statusCode, body) {
     status: statusCode,
     headers: { 'Content-Type': 'application/json' }
   });
+}
+
+// ── Validación de cupón server-side ──────────────────────────────────────────
+// Cupones de descuento parcial válidos en producción.
+// NUNCA agregar cupones 100% o TEST aquí. Usar variables de entorno si se
+// necesitan cupones dinámicos en el futuro.
+function validateCouponServerSide(couponCode, plan) {
+  const COUPONS = {
+    'DESC50':   { discount: 50, plans: ['basico', 'premium'] },
+    'STARTUP30': { discount: 30, plans: ['premium'] },
+    // Para agregar nuevos cupones: editar esta tabla y re-deployar.
+  };
+
+  const coupon = COUPONS[couponCode];
+  if (!coupon) return { valid: false };
+  if (!coupon.plans.includes(plan)) return { valid: false };
+  return { valid: true, discount: coupon.discount };
 }
