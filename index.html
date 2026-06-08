@@ -315,6 +315,39 @@ cursor: not-allowed;
 transform: none;
 }
 
+/* ── Validación de campos ── */
+.field-error-msg {
+  display: none;
+  font-size: 0.78rem;
+  color: #dc2626;
+  margin-top: 5px;
+  font-weight: 500;
+}
+.field-error-msg.visible {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.input-invalid {
+  border-color: #dc2626 !important;
+  background: #fff5f5 !important;
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.12) !important;
+}
+.form-error-banner {
+  display: none;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-left: 4px solid #dc2626;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  font-size: 0.88rem;
+  color: #7f1d1d;
+  line-height: 1.5;
+}
+.form-error-banner.visible { display: block; }
+.form-error-banner a { color: #dc2626; font-weight: 700; text-decoration: underline; cursor: pointer; }
+
 .submit-note {
 font-size: 0.85rem;
 color: var(--text-secondary);
@@ -432,7 +465,8 @@ padding: 1.5rem 1.25rem;
 
 <div class="form-group">
 <label for="contact_email">Email <span class="required">*</span></label>
-<input type="email" id="contact_email" name="contact_email" placeholder="tu@email.com" required>
+<input type="email" id="contact_email" name="contact_email" placeholder="tu@email.com" required autocomplete="email">
+<span class="field-error-msg" id="email_error">⚠ Revisa el email ingresado — parece que hay un error en el formato o el dominio.</span>
 </div>
 
 <div class="section-title" style="margin-top: 2rem;">2. Perfil de tu Negocio</div>
@@ -566,6 +600,7 @@ padding: 1.5rem 1.25rem;
 </div>
 
 <div class="submit-section">
+<div class="form-error-banner" id="form_error_banner"></div>
 <button type="submit" class="btn-submit" id="submitBtn">
 <span id="submitText">Continuar al Pago ($49.900)</span>
 </button>
@@ -675,12 +710,72 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
   // ========================================
   // SUBMIT EVENT HANDLER - PARTE CRÍTICA
   // ========================================
+  // ── Validación de email ──────────────────────────────────────────────────
+  const emailInput  = document.getElementById('contact_email');
+  const emailError  = document.getElementById('email_error');
+  const errorBanner = document.getElementById('form_error_banner');
+
+  function isValidEmail(val) {
+    // RFC básico: usuario@dominio.tld — rechaza espacios, dobles puntos, dominios sin punto
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val.trim());
+  }
+
+  function markEmailInvalid(msg) {
+    emailInput.classList.add('input-invalid');
+    emailError.textContent = '⚠ ' + (msg || 'Revisa el email — parece que hay un error en el formato o el dominio.');
+    emailError.classList.add('visible');
+    emailInput.focus();
+    emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function clearEmailError() {
+    emailInput.classList.remove('input-invalid');
+    emailError.classList.remove('visible');
+  }
+
+  function showBanner(msg) {
+    errorBanner.innerHTML = msg;
+    errorBanner.classList.add('visible');
+    errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function clearBanner() {
+    errorBanner.classList.remove('visible');
+    errorBanner.innerHTML = '';
+  }
+
+  // Validar en tiempo real al salir del campo
+  emailInput.addEventListener('blur', function() {
+    const val = this.value.trim();
+    if (val && !isValidEmail(val)) {
+      markEmailInvalid('Revisa el email — parece que hay un error en el formato o el dominio (ej: nombre@empresa.cl).');
+    } else {
+      clearEmailError();
+    }
+  });
+
+  emailInput.addEventListener('input', function() {
+    if (this.classList.contains('input-invalid') && isValidEmail(this.value.trim())) {
+      clearEmailError();
+    }
+    clearBanner();
+  });
+
+  // ── Submit ───────────────────────────────────────────────────────────────
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+    clearBanner();
     console.log('✅ Submit event triggered');
 
-    // Validate
+    // Validar email antes de todo lo demás
+    const emailVal = emailInput.value.trim();
+    if (!emailVal || !isValidEmail(emailVal)) {
+      markEmailInvalid('El email ingresado no es válido. Corrígelo antes de continuar (ej: nombre@empresa.cl).');
+      return;
+    }
+    clearEmailError();
+
+    // Validar resto del formulario
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
@@ -696,7 +791,7 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
       rut: formData.get('rut'),
       contact_name: formData.get('contact_name'),
       contact_phone: formData.get('contact_phone'),
-      contact_email: formData.get('contact_email'),
+      contact_email: emailVal,
       industry: formData.get('industry'),
       other_industry: formData.get('other_industry') || '',
       annual_income: formData.get('annual_income'),
@@ -717,37 +812,63 @@ WhatsApp: <a href="https://wa.me/56944018594">+56 9 4401 8594</a></p>
     submitBtn.disabled = true;
     submitText.innerHTML = '<span class="spinner"></span>Procesando...';
 
+    const resetBtn = () => {
+      submitBtn.disabled = false;
+      const price = document.getElementById('plan_basico').checked ? '$49.900' : '$149.900';
+      submitText.textContent = `Continuar al Pago (${price})`;
+    };
+
     try {
       console.log('🚀 Sending request to Netlify Function...');
-      
+
       const response = await fetch('/.netlify/functions/create-diagnostic-order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
 
       console.log('📨 Response status:', response.status);
-
       const result = await response.json();
       console.log('📨 Response data:', result);
 
       if (response.ok && result.checkout_url) {
         console.log('✅ Redirigiendo a Flow:', result.checkout_url);
         window.location.href = result.checkout_url;
-      } else {
-        throw new Error(result.error || 'Error al procesar');
+        return;
       }
+
+      // ── Manejo de errores con mensajes específicos ──────────────────────
+      const errMsg = result.error || 'Error al procesar la solicitud.';
+      const errLow = errMsg.toLowerCase();
+
+      // Error de email (Flow error 1620 u otro error de email)
+      if (errLow.includes('email') || errLow.includes('useremail') || errLow.includes('1620')) {
+        markEmailInvalid('El email ingresado fue rechazado. Verifica que no tenga errores tipográficos (ej: nombre@empresa.cl).');
+        showBanner('⚠ <strong>Error en el campo Email:</strong> ' +
+          'El email <strong>' + escHtml(emailVal) + '</strong> no es válido. ' +
+          '<a onclick="document.getElementById(\'contact_email\').focus()">Haz clic aquí para corregirlo</a>.');
+      } else {
+        // Error genérico — mostrar banner sin alert
+        showBanner('⚠ <strong>No se pudo procesar tu solicitud.</strong> ' +
+          'Por favor intenta nuevamente. Si el problema persiste, contáctanos por ' +
+          '<strong>WhatsApp al +56 9 4401 8594</strong>.<br>' +
+          '<small style="opacity:.7">Detalle técnico: ' + escHtml(errMsg) + '</small>');
+      }
+
+      resetBtn();
+
     } catch (error) {
       console.error('❌ Error:', error);
-      alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o contáctanos por WhatsApp al +56 9 4401 8594.\n\nError: ' + error.message);
-
-      submitBtn.disabled = false;
-      const price = document.getElementById('plan_basico').checked ? '$49.900' : '$149.900';
-      submitText.textContent = `Continuar al Pago (${price})`;
+      showBanner('⚠ <strong>Sin conexión o error inesperado.</strong> ' +
+        'Revisa tu conexión a internet e intenta de nuevo. ' +
+        'Si el problema persiste escríbenos al <strong>+56 9 4401 8594</strong>.');
+      resetBtn();
     }
   });
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   console.log('✅ Event listener registrado correctamente');
 })();
