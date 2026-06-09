@@ -2,19 +2,17 @@
  * free-diagnostic.js
  * ─────────────────────────────────────────────────────────────────────────────
  * Endpoint para el diagnóstico gratuito.
- * Recibe un formulario corto, genera un mini-reporte con IA y lo retorna
- * en JSON para mostrar en pantalla + envía copia por email al usuario.
+ * Recibe un formulario corto, genera un mini-reporte con MOTOR DE REGLAS
+ * (sin IA, costo $0, respuesta instantánea) y lo retorna en JSON para
+ * mostrar en pantalla + envía copia por email al usuario.
  *
  * POST /.netlify/functions/free-diagnostic
  * Body (JSON o form-urlencoded):
  *   name, email, company, sector, monthly_sales, main_problem
  *
- * No requiere pago. No guarda leads en Blobs (solo log).
+ * No requiere pago. No guarda leads en Blobs (solo log). Sin costo de API.
  * ─────────────────────────────────────────────────────────────────────────────
  */
-
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const MODEL = 'claude-haiku-4-5-20251001';
 
 const SECTOR_LABELS = {
   servicios_profesionales: 'Servicios profesionales',
@@ -28,6 +26,267 @@ const SECTOR_LABELS = {
   manufactura:             'Manufactura e industria',
   otro:                    'Otro'
 };
+
+/* ───────────────────────── MOTOR DE REGLAS ─────────────────────────
+ * Perfiles por sector:
+ *  - riesgo: ponderación base 0-2 por área (flujo, rentabilidad, eficiencia)
+ *  - pct: % de ventas mensuales usado para estimar el impacto de la
+ *    oportunidad principal (rangos conservadores típicos de asesoría PyME)
+ *  - opp: oportunidad principal del sector
+ *  - otras: 4 títulos bloqueados (gancho para el informe pagado)
+ */
+const SECTOR_PROFILES = {
+  servicios_profesionales: {
+    riesgo: { flujo: 1, rentabilidad: 2, eficiencia: 1 },
+    pct: 0.06,
+    opp: {
+      titulo: 'Repricing de servicios por valor entregado',
+      desc: (v, imp) => `En servicios profesionales el error más común es cobrar por hora y no por valor. Con ventas de $${v}/mes, un ajuste de tarifas del 8-12% en tus 3 servicios principales —sin perder clientes— suele capturar ${imp} adicionales, porque la demanda en este rubro es poco sensible al precio cuando hay confianza.`
+    },
+    otras: [
+      'Modelo de ingresos recurrentes (retainer mensual)',
+      'Automatización de propuestas y cobranza',
+      'Estructura tributaria óptima para tu régimen',
+      'Sistema de referidos con clientes actuales'
+    ]
+  },
+  comercio_ecommerce: {
+    riesgo: { flujo: 2, rentabilidad: 2, eficiencia: 1 },
+    pct: 0.05,
+    opp: {
+      titulo: 'Depuración de margen por producto (regla 80/20)',
+      desc: (v, imp) => `En comercio, típicamente el 20% de los SKU genera el 80% de la utilidad y un grupo de productos vende con margen casi nulo. Con ventas de $${v}/mes, reordenar el mix —eliminar o repreciar los productos de bajo margen— suele recuperar ${imp} sin vender una unidad más.`
+    },
+    otras: [
+      'Optimización de capital inmovilizado en inventario',
+      'Estrategia de precios dinámicos vs. competencia',
+      'Reducción de costos de última milla y despacho',
+      'Recuperación de carritos abandonados'
+    ]
+  },
+  servicios_terreno: {
+    riesgo: { flujo: 2, rentabilidad: 1, eficiencia: 2 },
+    pct: 0.06,
+    opp: {
+      titulo: 'Cobro anticipado y control de horas en terreno',
+      desc: (v, imp) => `En servicios en terreno el dinero se pierde entre el trabajo hecho y el pago recibido: traslados no cobrados, horas extra sin facturar y pagos a 30-60 días. Con ventas de $${v}/mes, implementar abono inicial del 30-50% y registro de horas por visita suele capturar ${imp}.`
+    },
+    otras: [
+      'Optimización de rutas y costo por visita',
+      'Tarifario diferenciado por zona y urgencia',
+      'Contratos de mantención recurrente',
+      'Política de anticipos que reduce incobrables'
+    ]
+  },
+  construccion: {
+    riesgo: { flujo: 2, rentabilidad: 1, eficiencia: 2 },
+    pct: 0.05,
+    opp: {
+      titulo: 'Estados de pago y control de avance por obra',
+      desc: (v, imp) => `La construcción quiebra por caja, no por falta de obras: financias materiales y sueldos meses antes de cobrar. Con ventas de $${v}/mes, estructurar estados de pago quincenales con avance documentado y anticipo de obra del 20-30% libera ${imp} que hoy estás financiando de tu bolsillo.`
+    },
+    otras: [
+      'Control de desviación de presupuesto por partida',
+      'Negociación de plazos con proveedores de materiales',
+      'Estructura de contratos que protege tu margen',
+      'Gestión de boletas de garantía y retenciones'
+    ]
+  },
+  gastronomia: {
+    riesgo: { flujo: 1, rentabilidad: 2, eficiencia: 2 },
+    pct: 0.04,
+    opp: {
+      titulo: 'Ingeniería de menú y control de merma',
+      desc: (v, imp) => `En gastronomía la utilidad se decide en la cocina: merma, porciones sin estandarizar y platos populares con margen bajo. Con ventas de $${v}/mes, costear cada plato y reordenar el menú (subir precio o eliminar los de margen inferior al 60%) suele recuperar ${imp}.`
+    },
+    otras: [
+      'Reducción de merma y control de porciones',
+      'Renegociación con 3 proveedores principales',
+      'Estrategia de precios en apps de delivery',
+      'Optimización de turnos según curva de demanda'
+    ]
+  },
+  salud_belleza: {
+    riesgo: { flujo: 1, rentabilidad: 1, eficiencia: 2 },
+    pct: 0.05,
+    opp: {
+      titulo: 'Reducción de horas muertas y no-shows',
+      desc: (v, imp) => `En salud y belleza el costo invisible son las horas de agenda vacías y las citas no asistidas: cada bloque sin atender es ingreso perdido con costo fijo corriendo. Con ventas de $${v}/mes, confirmación automática + lista de espera + abono de reserva suele recuperar ${imp}.`
+    },
+    otras: [
+      'Membresías y planes de tratamiento prepagados',
+      'Venta cruzada de productos en cada atención',
+      'Tarifas diferenciadas por horario valle y punta',
+      'Reactivación de clientes inactivos (+90 días)'
+    ]
+  },
+  tecnologia: {
+    riesgo: { flujo: 1, rentabilidad: 1, eficiencia: 1 },
+    pct: 0.07,
+    opp: {
+      titulo: 'Migración a ingresos recurrentes (MRR)',
+      desc: (v, imp) => `En tecnología, vivir de proyectos uno-a-uno significa empezar cada mes de cero. Con ventas de $${v}/mes, convertir soporte, mantención y mejoras en contratos mensuales recurrentes suele asegurar ${imp} de base estable, además de subir la valorización de tu empresa ante cualquier inversionista.`
+    },
+    otras: [
+      'Pricing por valor en vez de horas-hombre',
+      'Reducción de costos cloud y licencias',
+      'Estructura de equity y opciones para retener talento',
+      'Postulación a fondos CORFO y beneficios I+D'
+    ]
+  },
+  educacion: {
+    riesgo: { flujo: 2, rentabilidad: 1, eficiencia: 1 },
+    pct: 0.05,
+    opp: {
+      titulo: 'Reducción de deserción y morosidad de alumnos',
+      desc: (v, imp) => `En educación el ingreso se fuga por dos lados: alumnos que desertan a mitad de programa y mensualidades impagas. Con ventas de $${v}/mes, un sistema de alerta temprana de deserción más cobro automatizado (PAC/PAT) suele retener ${imp} que hoy se pierden silenciosamente.`
+    },
+    otras: [
+      'Productos digitales escalables (cursos grabados)',
+      'Convenios con empresas y uso de franquicia SENCE',
+      'Calendario de matrículas que suaviza la estacionalidad',
+      'Estrategia de precios por cohorte y early-bird'
+    ]
+  },
+  manufactura: {
+    riesgo: { flujo: 1, rentabilidad: 2, eficiencia: 2 },
+    pct: 0.04,
+    opp: {
+      titulo: 'Costeo real por producto y línea',
+      desc: (v, imp) => `En manufactura es habitual vender productos que pierden plata sin saberlo, porque el costeo no incluye mermas, setup ni energía. Con ventas de $${v}/mes, un costeo real por línea y el ajuste de precios o descontinuación de las líneas deficitarias suele recuperar ${imp}.`
+    },
+    otras: [
+      'Reducción de inventario de materia prima inmovilizado',
+      'Eficiencia energética y costos de producción',
+      'Renegociación de condiciones con proveedores clave',
+      'Mix de productos según margen de contribución'
+    ]
+  },
+  otro: {
+    riesgo: { flujo: 1, rentabilidad: 1, eficiencia: 1 },
+    pct: 0.05,
+    opp: {
+      titulo: 'Diagnóstico de margen y fugas de caja',
+      desc: (v, imp) => `Toda PyME tiene fugas que no ve: gastos hormiga, servicios contratados sin uso, precios sin actualizar por inflación y cobros tardíos. Con ventas de $${v}/mes, una revisión sistemática de margen y ciclo de caja suele recuperar ${imp} en los primeros 90 días.`
+    },
+    otras: [
+      'Actualización de precios según inflación acumulada',
+      'Reducción de gastos fijos sin afectar operación',
+      'Aceleración del ciclo de cobro a clientes',
+      'Estructura tributaria óptima para tu régimen'
+    ]
+  }
+};
+
+/* Detección simple del área problemática según el texto libre del usuario */
+function detectProblemArea(text) {
+  if (!text) return null;
+  const t = text.toLowerCase();
+  const match = (words) => words.some(w => t.includes(w));
+  if (match(['caja', 'liquidez', 'fin de mes', 'pagar', 'deuda', 'plata', 'flujo', 'cobr', 'moros', 'financ'])) return 'flujo';
+  if (match(['precio', 'margen', 'rentab', 'utilidad', 'gano', 'ganancia', 'barato', 'costos', 'caro'])) return 'rentabilidad';
+  if (match(['tiempo', 'orden', 'proceso', 'administr', 'organiz', 'papeleo', 'contabilidad', 'desorden', 'control'])) return 'eficiencia';
+  if (match(['venta', 'cliente', 'marketing', 'vender', 'competencia', 'crecer', 'demanda'])) return 'comercial';
+  return null;
+}
+
+/* Tramo de ventas (CLP/mes) */
+function salesTier(v) {
+  if (v < 3000000)  return 'micro';
+  if (v < 10000000) return 'pequena';
+  if (v < 30000000) return 'mediana';
+  return 'grande';
+}
+
+const SEM_MESSAGES = {
+  flujo: {
+    rojo:     (s) => `Señales de presión de caja: en ${s} el desfase entre pagar y cobrar es el riesgo número uno.`,
+    amarillo: (s) => `Tu ciclo de caja requiere monitoreo: en ${s} los desfases de pago pueden tensionar el mes.`,
+    verde:    (s) => `Sin señales críticas de caja, aunque en ${s} conviene mantener un colchón de 2 meses de gastos.`
+  },
+  rentabilidad: {
+    rojo:     (s) => `Tu margen muestra señales de alerta: en ${s} es frecuente vender bien y ganar poco.`,
+    amarillo: (s) => `Margen probablemente bajo el potencial del rubro: en ${s} hay espacio típico de mejora de 5-10 puntos.`,
+    verde:    (s) => `Rentabilidad sin alertas evidentes, aunque un costeo fino por producto o servicio suele revelar sorpresas.`
+  },
+  eficiencia: {
+    rojo:     (s) => `La operación está consumiendo tiempo y margen: en ${s} los procesos manuales son la fuga principal.`,
+    amarillo: (s) => `Procesos con espacio de mejora: en ${s} la falta de sistemas resta horas productivas cada semana.`,
+    verde:    (s) => `Operación razonablemente ordenada para tu tamaño; el desafío será mantenerla al crecer.`
+  }
+};
+
+function buildMiniReport(data) {
+  const sectorKey   = SECTOR_PROFILES[data.sector] ? data.sector : 'otro';
+  const profile     = SECTOR_PROFILES[sectorKey];
+  const sectorLabel = SECTOR_LABELS[data.sector] || data.sector || 'tu rubro';
+  const ventasNum   = Number(data.monthly_sales) || 0;
+  const ventasFmt   = ventasNum.toLocaleString('es-CL');
+  const tier        = salesTier(ventasNum);
+  const detected    = detectProblemArea(data.main_problem);
+
+  // Puntaje por área: base sector + problema declarado + tamaño
+  const score = (area) => {
+    let s = profile.riesgo[area] || 0;
+    if (detected === area) s += 2;
+    if (detected === 'comercial' && area === 'rentabilidad') s += 1; // problema de ventas presiona margen
+    if (tier === 'micro' && area === 'flujo') s += 1;                // micro = caja más frágil
+    return s;
+  };
+  const estado = (s) => s >= 3 ? 'rojo' : s >= 1 ? 'amarillo' : 'verde';
+
+  const areas = ['flujo', 'rentabilidad', 'eficiencia'];
+  const estados = {};
+  areas.forEach(a => { estados[a] = estado(score(a)); });
+
+  // Impacto estimado: % del sector sobre ventas, redondeado a $10.000
+  let impactoFmt;
+  if (ventasNum > 0) {
+    const impacto = Math.round((ventasNum * profile.pct) / 10000) * 10000;
+    impactoFmt = `+$${impacto.toLocaleString('es-CL')} CLP/mes`;
+  } else {
+    impactoFmt = `+${Math.round(profile.pct * 100)}% de tus ventas mensuales`;
+  }
+
+  // Diagnóstico general
+  const tierTxt = {
+    micro:   'En tu tramo de ventas, cada peso de caja cuenta y los errores de precio se sienten de inmediato.',
+    pequena: 'Estás en el tramo donde el negocio ya vive, pero todavía depende demasiado de ti.',
+    mediana: 'Tu nivel de ventas exige pasar de la intuición al control de gestión con números.',
+    grande:  'A tu escala, una mejora de pocos puntos de margen representa millones al año.'
+  }[tier];
+
+  const problemTxt = {
+    flujo:        'El dolor que describes —presión de caja— es el más urgente de resolver y también el más tratable con método.',
+    rentabilidad: 'El dolor que describes apunta a margen y precios: es la palanca más rápida de mejorar en tu rubro.',
+    eficiencia:   'El dolor que describes es operacional: ordenar procesos libera horas y margen al mismo tiempo.',
+    comercial:    'El dolor que describes es comercial: antes de invertir en vender más, asegura que cada venta deje margen.',
+    null:         'Los puntos del semáforo son los patrones más frecuentes que vemos en empresas como la tuya.'
+  }[detected];
+
+  const diagnostico_general = `${data.company} opera en ${sectorLabel.toLowerCase()}, un rubro donde ${
+    profile.riesgo.flujo === 2 ? 'el flujo de caja es la primera causa de estrés financiero' :
+    profile.riesgo.rentabilidad === 2 ? 'el margen real suele estar muy por debajo del percibido' :
+    'la disciplina operacional marca la diferencia entre crecer y estancarse'
+  }. ${tierTxt} ${problemTxt} La buena noticia: la oportunidad principal que identificamos es accionable en semanas, no meses.`;
+
+  return {
+    semaforo: {
+      flujo_caja:     { estado: estados.flujo,        mensaje: SEM_MESSAGES.flujo[estados.flujo](sectorLabel.toLowerCase()) },
+      rentabilidad:   { estado: estados.rentabilidad, mensaje: SEM_MESSAGES.rentabilidad[estados.rentabilidad](sectorLabel.toLowerCase()) },
+      eficiencia_ops: { estado: estados.eficiencia,   mensaje: SEM_MESSAGES.eficiencia[estados.eficiencia](sectorLabel.toLowerCase()) }
+    },
+    oportunidad_principal: {
+      titulo:           profile.opp.titulo,
+      descripcion:      profile.opp.desc(ventasFmt, impactoFmt),
+      impacto_estimado: impactoFmt
+    },
+    otras_oportunidades: profile.otras,
+    diagnostico_general
+  };
+}
+
+/* ───────────────────────── HTTP / EMAIL ───────────────────────── */
 
 async function parseBody(event) {
   let bodyText = null;
@@ -48,78 +307,6 @@ async function parseBody(event) {
   }
 }
 
-async function generateMiniReport(data) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurada');
-
-  const sectorLabel = SECTOR_LABELS[data.sector] || data.sector || 'General';
-  const ventasNum   = Number(data.monthly_sales) || 0;
-  const ventasFmt   = ventasNum.toLocaleString('es-CL');
-
-  const prompt = `Eres un asesor financiero experto en PyMEs chilenas. Analiza esta empresa y genera un mini-diagnóstico honesto y específico.
-
-DATOS DE LA EMPRESA:
-- Nombre: ${data.company}
-- Rubro: ${sectorLabel}
-- Ventas mensuales: $${ventasFmt} CLP
-- Principal problema declarado: ${data.main_problem || 'No especificado'}
-
-INSTRUCCIONES:
-Genera un mini-diagnóstico en JSON con este formato EXACTO (sin markdown, solo JSON válido):
-{
-  "semaforo": {
-    "flujo_caja": { "estado": "rojo|amarillo|verde", "mensaje": "Una frase específica de 15-20 palabras para esta empresa" },
-    "rentabilidad": { "estado": "rojo|amarillo|verde", "mensaje": "Una frase específica de 15-20 palabras para esta empresa" },
-    "eficiencia_ops": { "estado": "rojo|amarillo|verde", "mensaje": "Una frase específica de 15-20 palabras para esta empresa" }
-  },
-  "oportunidad_principal": {
-    "titulo": "Título corto de la oportunidad (5-8 palabras)",
-    "descripcion": "Descripción concreta de 40-60 palabras con dato numérico estimado de impacto. Usa $ o % reales típicos del sector.",
-    "impacto_estimado": "Ejemplo: +$180.000 CLP/mes"
-  },
-  "otras_oportunidades": [
-    "Título oportunidad 2 (sin detalles)",
-    "Título oportunidad 3 (sin detalles)",
-    "Título oportunidad 4 (sin detalles)",
-    "Título oportunidad 5 (sin detalles)"
-  ],
-  "diagnostico_general": "Párrafo de 60-80 palabras. Sé directo, usa el nombre de la empresa y el rubro. Menciona el principal problema con empatía y autoridad técnica."
-}
-
-IMPORTANTE:
-- Sé específico para este rubro y nivel de ventas
-- Los semáforos deben reflejar los riesgos reales del sector
-- La oportunidad principal debe tener impacto numérico realista (no genérico)
-- Las 4 oportunidades adicionales son solo títulos, intrigantes pero no desarrollados
-- Responde SOLO con el JSON, sin texto adicional`;
-
-  const resp = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type':      'application/json',
-      'x-api-key':         apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model:      MODEL,
-      max_tokens: 1200,
-      messages:   [{ role: 'user', content: prompt }]
-    })
-  });
-
-  if (!resp.ok) {
-    const err = await resp.text();
-    throw new Error(`Anthropic API error ${resp.status}: ${err.substring(0, 200)}`);
-  }
-
-  const result = await resp.json();
-  const raw = result.content?.[0]?.text || '';
-
-  // Parsear JSON — limpiar posibles ```json ... ``` si el modelo los agrega
-  const cleaned = raw.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
-  return JSON.parse(cleaned);
-}
-
 async function sendFreeReportEmail(data, report) {
   const apiKey = process.env.SENDGRID_API_KEY;
   if (!apiKey) { console.warn('[free-email] SENDGRID_API_KEY no configurada'); return false; }
@@ -128,7 +315,6 @@ async function sendFreeReportEmail(data, report) {
   const ventasFmt   = Number(data.monthly_sales || 0).toLocaleString('es-CL');
 
   const semaforoIcon = (e) => e === 'verde' ? '🟢' : e === 'amarillo' ? '🟡' : '🔴';
-  const semaforoColor = (e) => e === 'verde' ? '#27ae60' : e === 'amarillo' ? '#f39c12' : '#e74c3c';
 
   const html = `
 <!DOCTYPE html>
@@ -238,7 +424,7 @@ export default async (event) => {
   const method = (event.method || event.httpMethod || '').toUpperCase();
 
   if (method === 'OPTIONS') {
-    return new Response('', {
+    return new Response(null, {
       status: 204,
       headers: {
         'Access-Control-Allow-Origin':  '*',
@@ -267,7 +453,7 @@ export default async (event) => {
   console.log('=== FREE-DIAGNOSTIC ===', body.company, body.sector);
 
   try {
-    const report = await generateMiniReport(body);
+    const report = buildMiniReport(body);
 
     // Enviar email en background (no bloquea respuesta)
     sendFreeReportEmail(body, report).catch(e => console.error('[free-email] bg error:', e.message));
@@ -281,7 +467,7 @@ export default async (event) => {
     });
   } catch (err) {
     console.error('Error generando diagnóstico:', err.message);
-    return json(500, { error: 'No se pudo generar el diagnóstico. Intenta de nuevo.', _debug: err.message });
+    return json(500, { error: 'No se pudo generar el diagnóstico. Intenta de nuevo.' });
   }
 };
 
