@@ -281,7 +281,7 @@ export default async (event) => {
     });
   } catch (err) {
     console.error('Error generando diagnóstico:', err.message);
-    return json(500, { error: 'No se pudo generar el diagnóstico. Intenta de nuevo.' });
+    return json(500, { error: 'No se pudo generar el diagnóstico. Intenta de nuevo.', _debug: err.message });
   }
 };
 
