@@ -83,6 +83,10 @@ export default async (req) => {
       }
     }
 
+    // Recalcular totales con las proyecciones de la IA (antes quedaban los de reglas)
+    reportPayload.totalMin = reportPayload.opportunities.reduce((s, o) => s + (o.projectionMin || 0), 0);
+    reportPayload.totalMax = reportPayload.opportunities.reduce((s, o) => s + (o.projectionMax || 0), 0);
+
     // Sincronizar con los arrays que usa generate-report.js para el PDF
     // (usar las oportunidades ya traducidas al esquema del renderizador)
     reportPayload.improvements = reportPayload.opportunities;
