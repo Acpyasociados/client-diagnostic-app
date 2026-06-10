@@ -647,7 +647,7 @@ async function genPDF(leadId) {
     const res = await fetch('/.netlify/functions/generate-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lead_id: leadId })
+      body: JSON.stringify({ lead_id: leadId, admin_token: currentToken })
     });
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
@@ -814,7 +814,7 @@ async function genPDF(leadId) {
     const res = await fetch('/.netlify/functions/generate-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lead_id: leadId })
+      body: JSON.stringify({ lead_id: leadId, admin_token: currentToken })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
