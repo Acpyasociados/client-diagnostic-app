@@ -20,6 +20,9 @@
 [functions.daily-backup]
   schedule = "0 6 * * *"    # 06:00 UTC = 03:00 AM Chile (hora de menor tráfico)
 
+[functions.free-followup]
+  schedule = "0 13 * * *"   # 13:00 UTC = 09:00 AM Chile — secuencia seguimiento leads gratis
+
 [context.production.environment]
   # Secrets configuradas en Netlify UI (Site settings → Environment variables):
   #   FLOW_API_KEY, FLOW_SECRET_KEY        — pagos Flow

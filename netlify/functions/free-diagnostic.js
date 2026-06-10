@@ -10,9 +10,13 @@
  * Body (JSON o form-urlencoded):
  *   name, email, company, sector, monthly_sales, main_problem
  *
- * No requiere pago. No guarda leads en Blobs (solo log). Sin costo de API.
+ * No requiere pago. Guarda el lead en el store "free-leads" para la
+ * secuencia de seguimiento automática (free-followup.js). Sin costo de API.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+
+import crypto from 'crypto';
+import { getStore } from '@netlify/blobs';
 
 const SECTOR_LABELS = {
   servicios_profesionales: 'Servicios profesionales',
@@ -286,6 +290,31 @@ function buildMiniReport(data) {
   };
 }
 
+/* ───────────────────────── PERSISTENCIA DEL LEAD ───────────────────────── */
+
+async function saveFreeLead(data, report) {
+  const store = getStore('free-leads');
+  const id = crypto.randomUUID();
+  const lead = {
+    id,
+    name:          data.name,
+    email:         String(data.email).trim().toLowerCase(),
+    company:       data.company,
+    sector:        data.sector,
+    sector_label:  SECTOR_LABELS[data.sector] || data.sector,
+    monthly_sales: Number(data.monthly_sales) || 0,
+    main_problem:  data.main_problem || '',
+    report,
+    created_at:    new Date().toISOString(),
+    followup:      { d1: null, d3: null, d7: null },
+    optout:        false,
+    converted:     false,
+    unsub_token:   crypto.randomBytes(16).toString('hex')
+  };
+  await store.set(id, JSON.stringify(lead));
+  console.log('[free-lead] Guardado:', lead.company, id.substring(0, 8));
+}
+
 /* ───────────────────────── HTTP / EMAIL ───────────────────────── */
 
 async function parseBody(event) {
@@ -454,6 +483,9 @@ export default async (event) => {
 
   try {
     const report = buildMiniReport(body);
+
+    // Guardar lead para la secuencia de seguimiento (no bloquea respuesta)
+    saveFreeLead(body, report).catch(e => console.error('[free-lead] save error:', e.message));
 
     // Enviar email en background (no bloquea respuesta)
     sendFreeReportEmail(body, report).catch(e => console.error('[free-email] bg error:', e.message));
