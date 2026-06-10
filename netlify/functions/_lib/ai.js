@@ -110,22 +110,22 @@ Diagnóstico específico para ESTA empresa. Compara sus números con benchmarks.
 Responde SOLO con un objeto JSON válido (sin markdown, sin texto adicional):
 
 {
-  "summary": "Párrafo de 3-4 oraciones que describe la situación financiera actual de la empresa, los 2 riesgos más críticos y la oportunidad de mayor impacto. Usa sus números reales.",
+  "summary": "Párrafo de 3 oraciones máximo: situación financiera actual, los 2 riesgos más críticos y la oportunidad de mayor impacto. Usa sus números reales.",
   "opportunities": [
     {
       "axis": "caja",
       "title": "Título corto y directo (5-8 palabras)",
-      "finding": "Diagnóstico específico basado en SUS datos. 2-3 oraciones. Cuantifica el problema en CLP si es posible.",
-      "action": "3 acciones concretas y ordenadas para resolver el problema.",
+      "finding": "Diagnóstico específico basado en SUS datos. Máximo 2 oraciones. Cuantifica en CLP.",
+      "action": "3 acciones concretas, una frase cada una.",
       "impact": 5,
-      "kpi": "KPI específico para medir el avance",
+      "kpi": "KPI específico (máximo 8 palabras)",
       "term": "30 días",
       "intervention": "Baja",
       "plan": [
-        "Semana 1: Acción específica con detalle operativo",
-        "Semana 2: Acción específica con detalle operativo",
-        "Semana 3: Acción específica con detalle operativo",
-        "Semana 4: Acción específica con detalle operativo"
+        "Semana 1: acción concreta en máximo 12 palabras",
+        "Semana 2: acción concreta en máximo 12 palabras",
+        "Semana 3: acción concreta en máximo 12 palabras",
+        "Semana 4: acción concreta en máximo 12 palabras"
       ]
     }
   ]
@@ -139,6 +139,7 @@ REGLAS:
 - Genera exactamente 3 oportunidades, ordenadas de mayor a menor impacto
 - El primer eje debe ser el más crítico según los datos
 - Todos los textos en español chileno, tono profesional pero directo
+- BREVEDAD OBLIGATORIA: tu respuesta completa debe caber en menos de 1.500 tokens. Textos cortos y densos, sin relleno. Es CRÍTICO que el JSON quede completo y cerrado
 - Si los datos son insuficientes para una oportunidad específica, usa benchmarks del sector en Chile${reviewNotes ? `
 
 OBSERVACIONES DEL ASESOR — INCORPORAR OBLIGATORIAMENTE:
