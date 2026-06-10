@@ -484,11 +484,15 @@ export default async (event) => {
   try {
     const report = buildMiniReport(body);
 
-    // Guardar lead para la secuencia de seguimiento (no bloquea respuesta)
-    saveFreeLead(body, report).catch(e => console.error('[free-lead] save error:', e.message));
-
-    // Enviar email en background (no bloquea respuesta)
-    sendFreeReportEmail(body, report).catch(e => console.error('[free-email] bg error:', e.message));
+    // Guardar lead + enviar email ANTES de responder.
+    // Netlify congela el proceso al retornar: las promesas "en background"
+    // se matan y ni el lead ni el email llegan. Esperarlas cuesta <1s.
+    const [saveRes, mailRes] = await Promise.allSettled([
+      saveFreeLead(body, report),
+      sendFreeReportEmail(body, report)
+    ]);
+    if (saveRes.status === 'rejected') console.error('[free-lead] save error:', saveRes.reason?.message);
+    if (mailRes.status === 'rejected') console.error('[free-email] error:', mailRes.reason?.message);
 
     return json(200, {
       success: true,
