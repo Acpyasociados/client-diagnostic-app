@@ -31,7 +31,15 @@ export default async (req) => {
   lead.questionnaire_completed_at   = new Date().toISOString();
   lead.status                       = 'cuestionario_completado';
 
-  // 1. Buscar casos reales en internet (Tavily) — no bloquea si falla
+  // 1. IA (Claude) parte DE INMEDIATO, en paralelo con la busqueda Tavily,
+  //    para darle el maximo de tiempo dentro del limite de la funcion.
+  //    Si Claude falla o no esta configurado, cae silenciosamente a reglas.
+  const aiPromise = generateAiEnrichment(lead, answers).catch(e => {
+    console.warn('[submit] generateAiEnrichment fallo (no critico):', e.message);
+    return null;
+  });
+
+  // 2. Buscar casos reales en internet (Tavily) — no bloquea si falla
   let externalCases = [];
   try {
     externalCases = await searchCasesForSector(lead.sector || 'servicios_terreno', lead);
@@ -42,15 +50,9 @@ export default async (req) => {
     console.warn('[submit] searchCasesForSector fallo (no critico):', e.message);
   }
 
-  // 2. Generar diagnostico con IA (Claude) en paralelo con logica de reglas.
-  //    Si Claude falla o no esta configurado, cae silenciosamente a reglas.
-  const [reportPayload, aiEnrichment] = await Promise.all([
-    Promise.resolve(buildReportPayload(lead, externalCases)),
-    generateAiEnrichment(lead, answers).catch(e => {
-      console.warn('[submit] generateAiEnrichment fallo (no critico):', e.message);
-      return null;
-    })
-  ]);
+  // 3. Reglas como base + esperar resultado de la IA
+  const reportPayload = buildReportPayload(lead, externalCases);
+  const aiEnrichment  = await aiPromise;
 
   // 3. Mezclar: si la IA genero contenido valido, lo usa como fuente principal
   if (aiEnrichment) {

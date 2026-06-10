@@ -21,7 +21,7 @@ import { QUESTION_LABELS } from './questions_labels.js';
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-haiku-4-5-20251001';
 const MAX_TOKENS = 2000;
-const TIMEOUT_MS = 20000;
+const TIMEOUT_MS = 24000;
 
 const SECTOR_LABELS = {
   servicios_profesionales: 'Servicios profesionales',
