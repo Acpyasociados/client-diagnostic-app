@@ -121,6 +121,9 @@ Responde SOLO con un objeto JSON válido (sin markdown, sin texto adicional):
       "kpi": "KPI específico (máximo 8 palabras)",
       "term": "30 días",
       "intervention": "Baja",
+      "projection": "Frase corta con el beneficio esperado y rango en CLP (ej: Ahorro de 3-5 pp food cost = +$280.000 a $470.000 mensuales)",
+      "projection_min": 280000,
+      "projection_max": 470000,
       "plan": [
         "Semana 1: acción concreta en máximo 12 palabras",
         "Semana 2: acción concreta en máximo 12 palabras",
@@ -134,6 +137,7 @@ Responde SOLO con un objeto JSON válido (sin markdown, sin texto adicional):
 REGLAS:
 - "axis" debe ser exactamente uno de: "caja", "comercial", "estructura"
 - "impact" debe ser un número entero del 1 al 5
+- "projection_min" y "projection_max" son números enteros en CLP (sin puntos ni símbolos), estimación conservadora del beneficio mensual basada en las ventas reales de la empresa
 - "term" debe ser exactamente uno de: "30 días", "90 días", "180 días"
 - "intervention" debe ser exactamente uno de: "Baja", "Media", "Alta"
 - Genera exactamente 3 oportunidades, ordenadas de mayor a menor impacto
@@ -228,6 +232,9 @@ export async function generateAiEnrichment(lead, answers = {}, reviewNotes = nul
       kpi:          String(opp.kpi          || '').substring(0, 100),
       term:         validTerms.has(opp.term)             ? opp.term         : '30 días',
       intervention: validInterventions.has(opp.intervention) ? opp.intervention : 'Media',
+      projection:    String(opp.projection || '').substring(0, 200),
+      projectionMin: Math.max(0, parseInt(opp.projection_min) || 0),
+      projectionMax: Math.max(0, parseInt(opp.projection_max) || 0),
       plan:         Array.isArray(opp.plan) ? opp.plan.slice(0, 4).map(s => String(s).substring(0, 200)) : [],
       cases:        [],      // sin casos externos — Tavily se encarga de eso
       ai_generated: true     // flag para identificar origen en admin

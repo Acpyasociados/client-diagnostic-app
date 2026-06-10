@@ -59,7 +59,13 @@ export default async (req) => {
     reportPayload.summary = aiEnrichment.summary;
 
     if (aiEnrichment.opportunities.length > 0) {
-      reportPayload.opportunities = aiEnrichment.opportunities;
+      // Traducir campos IA → esquema del renderizador (why/effort/projection)
+      const effortMap = { 'Baja': 'Bajo', 'Media': 'Medio', 'Alta': 'Alto' };
+      reportPayload.opportunities = aiEnrichment.opportunities.map(o => ({
+        ...o,
+        why:    [o.finding, o.action].filter(Boolean).join(' '),
+        effort: effortMap[o.intervention] || 'Medio'
+      }));
 
       // Distribuir casos externos de Tavily en las 3 oportunidades (1 por cada una)
       if (externalCases.length > 0) {
@@ -78,10 +84,11 @@ export default async (req) => {
     }
 
     // Sincronizar con los arrays que usa generate-report.js para el PDF
-    reportPayload.improvements = aiEnrichment.opportunities;
-    reportPayload.plan_30  = aiEnrichment.opportunities.filter(o => o.term === '30 días').map(o => o.title);
-    reportPayload.plan_90  = aiEnrichment.opportunities.filter(o => o.term === '90 días').map(o => o.title);
-    reportPayload.plan_180 = aiEnrichment.opportunities.filter(o => o.term === '180 días').map(o => o.title);
+    // (usar las oportunidades ya traducidas al esquema del renderizador)
+    reportPayload.improvements = reportPayload.opportunities;
+    reportPayload.plan_30  = reportPayload.opportunities.filter(o => o.term === '30 días').map(o => o.title);
+    reportPayload.plan_90  = reportPayload.opportunities.filter(o => o.term === '90 días').map(o => o.title);
+    reportPayload.plan_180 = reportPayload.opportunities.filter(o => o.term === '180 días').map(o => o.title);
 
     lead.ai_generated = true;
     console.log('[submit] Informe enriquecido con IA para: ' + lead.company);
