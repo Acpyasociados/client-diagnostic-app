@@ -166,12 +166,14 @@ export default async () => {
       continue;
     }
 
-    const days = Math.floor((now - new Date(lead.created_at).getTime()) / 86400000);
+    // Umbrales en horas (no días exactos): el run es 1 vez al día a las 09:00,
+    // con 24h exactas un lead de la tarde esperaría 2 días para el "D+1".
+    const hours = (now - new Date(lead.created_at).getTime()) / 3600000;
     let step = null, payload = null;
 
-    if (days >= 7 && !lead.followup.d7)      { step = 'd7'; payload = emailD7(lead); }
-    else if (days >= 3 && !lead.followup.d3) { step = 'd3'; payload = emailD3(lead); }
-    else if (days >= 1 && !lead.followup.d1) { step = 'd1'; payload = emailD1(lead); }
+    if (hours >= 164 && !lead.followup.d7)     { step = 'd7'; payload = emailD7(lead); } // ~7 días
+    else if (hours >= 68 && !lead.followup.d3) { step = 'd3'; payload = emailD3(lead); } // ~3 días
+    else if (hours >= 20 && !lead.followup.d1) { step = 'd1'; payload = emailD1(lead); } // mañana siguiente
 
     if (!step) { skipped++; continue; }
 
