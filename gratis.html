@@ -396,6 +396,10 @@ body {
         Completa estos 6 campos con datos reales de tu empresa. Cuanto más preciso seas, más útil será tu diagnóstico. La información es confidencial y solo se usa para generar tu reporte.
       </div>
 
+      <div class="legal-notice" style="background: #fef3e2; border: 1px solid #fcd34d; border-radius: 8px; padding: 0.875rem 1rem; margin-bottom: 1.5rem; font-size: 0.825rem; color: #78350f; line-height: 1.5;">
+        <strong>📋 Aviso de Privacidad:</strong> Al enviar este formulario, autorizas a ACP & Asociados a recopilar y procesar tus datos personales (nombre, email, empresa, sector, ventas y desafío) para generar un diagnóstico gratuito y contactarte. Tus datos no se compartirán con terceros y se retendrán durante 1 año. Puedes solicitar acceso, corrección o eliminación escribiendo a <strong>info@acpasociados.cl</strong>.
+      </div>
+
       <form id="free-form" novalidate>
         <div class="form-row">
           <div class="form-group">
@@ -443,6 +447,13 @@ body {
         </div>
 
         <div class="form-error-banner" id="form_error"></div>
+
+        <div class="form-group" style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.875rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; margin-bottom: 1rem;">
+          <input type="checkbox" id="consent-checkbox" name="consent" style="width: auto; margin-top: 4px; cursor: pointer;">
+          <label for="consent-checkbox" style="margin: 0; font-size: 0.875rem; font-weight: 500; color: #166534; cursor: pointer; display: flex; align-items: center;">
+            He leído y acepto el Aviso de Privacidad. Autorizo el procesamiento de mis datos.
+          </label>
+        </div>
 
         <button type="submit" class="submit-btn" id="submit-btn">
           <span id="btn-icon">🔍</span>
@@ -595,6 +606,7 @@ form.addEventListener('submit', async (e) => {
   const sector        = form.querySelector('[name=sector]').value;
   const monthly_sales = form.querySelector('[name=monthly_sales]').value.trim();
   const main_problem  = form.querySelector('[name=main_problem]').value.trim();
+  const consent       = form.querySelector('[name=consent]').checked;
 
   if (!name || !email || !company || !sector || !monthly_sales) {
     showError('⚠ Por favor completa todos los campos obligatorios (*).');
@@ -606,6 +618,11 @@ form.addEventListener('submit', async (e) => {
     emailErr.classList.add('visible');
     emailInput.focus();
     emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  if (!consent) {
+    showError('⚠ Debes aceptar el Aviso de Privacidad para continuar.');
     return;
   }
 
