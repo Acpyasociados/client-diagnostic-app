@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eliminar mi cuenta — ACP y Asociados</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary-dark: #1a2d3e;
+      --primary-dark-2: #2C3E50;
+      --white: #FFFFFF;
+      --bg-light: #ECF0F3;
+      --accent-teal: #16A085;
+      --accent-red: #e74c3c;
+      --border-color: #D5DCE3;
+      --text-dark: #1A1A1A;
+      --text-secondary: #555555;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, var(--bg-light) 0%, #F5F8FB 100%);
+      color: var(--text-dark);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    .container { max-width: 600px; margin: 0 auto; }
+
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-dark-2) 100%);
+      color: var(--white);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+
+    .header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .header p { font-size: 0.95rem; opacity: 0.9; }
+
+    .content { padding: 2rem 1.5rem; }
+
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent-teal);
+      box-shadow: 0 0 0 3px rgba(22,160,133,0.12);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 500px) {
+      .button-group { grid-template-columns: 1fr; }
+    }
+
+    .btn {
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-confirm {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .btn-confirm:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-confirm:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-cancel {
+      background: var(--border-color);
+      color: var(--text-dark);
+    }
+
+    .btn-cancel:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .alert.error {
+      display: block;
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      border-left: 4px solid var(--accent-red);
+      color: #991b1b;
+    }
+
+    .alert.success {
+      display: block;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-left: 4px solid #27ae60;
+      color: #166534;
+    }
+
+    .alert.info {
+      display: block;
+      background: #f0faf8;
+      border: 1px solid #b2dfdb;
+      border-left: 4px solid var(--accent-teal);
+      color: #1a5c52;
+    }
+
+    .warning-box {
+      background: #fef3e2;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      color: #78350f;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    .warning-box strong { color: #b45309; }
+
+    .loading { display: none; text-align: center; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top-color: var(--accent-teal);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <div class="header">
+      <h1>Eliminar mi Cuenta</h1>
+      <p>Derecho al Olvido — Ley 21.719</p>
+    </div>
+
+    <div class="content" id="form-content">
+      <div class="alert info" id="info-msg"></div>
+      <div class="alert error" id="error-msg"></div>
+      <div class="alert success" id="success-msg"></div>
+
+      <div class="warning-box">
+        <strong>⚠️ Atención:</strong> Al confirmar, <strong>TODOS</strong> tus datos serán eliminados permanentemente de nuestros registros. Esta acción no se puede deshacer.
+      </div>
+
+      <form id="delete-form">
+        <div class="form-group">
+          <label for="code">Código de Verificación</label>
+          <input
+            type="text"
+            id="code"
+            name="code"
+            placeholder="123456"
+            maxlength="6"
+            autocomplete="off"
+            required
+          >
+          <p style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">
+            El código fue enviado a tu email. Válido por 15 minutos.
+          </p>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn btn-confirm" id="confirm-btn">
+            Eliminar Permanentemente
+          </button>
+          <button type="button" class="btn btn-cancel" onclick="window.location.href='/'">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="loading" id="loading-content">
+      <div class="spinner"></div>
+      <p>Procesando tu solicitud...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = '/.netlify/functions';
+
+// Detectar código en URL
+const urlParams = new URLSearchParams(window.location.search);
+const codeFromUrl = urlParams.get('code');
+
+if (codeFromUrl && codeFromUrl.trim()) {
+  document.getElementById('code').value = codeFromUrl;
+  document.getElementById('info-msg').textContent =
+    '✓ Código detectado automáticamente. Haz click en "Eliminar Permanentemente" para confirmar.';
+}
+
+document.getElementById('delete-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const code = document.getElementById('code').value.trim();
+
+  if (!code || code.length !== 6 || !code.match(/^\d{6}$/)) {
+    showError('El código debe ser 6 dígitos numéricos');
+    return;
+  }
+
+  // Confirmar que realmente quiere eliminar
+  if (!confirm('⚠️ ESTA ACCIÓN ES IRREVERSIBLE. ¿Estás seguro de que deseas eliminar TODOS tus datos?')) {
+    return;
+  }
+
+  showLoading(true);
+
+  try {
+    const response = await fetch(`${API_BASE}/delete-my-data-confirm?code=${code}`);
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      showSuccess(`✓ Datos eliminados exitosamente. ${data.message}`);
+      document.getElementById('delete-form').style.display = 'none';
+      setTimeout(() => {
+        alert('Tu solicitud ha sido procesada. Serás redirigido en 5 segundos...');
+        window.location.href = '/';
+      }, 3000);
+    } else {
+      showError(data.error || 'Error al procesar tu solicitud');
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    showError('Error de conexión. Intenta de nuevo.');
+  } finally {
+    showLoading(false);
+  }
+});
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('info-msg').style.display = 'none';
+  document.getElementById('success-msg').style.display = 'none';
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('success-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('info-msg').style.display = 'none';
+}
+
+function showLoading(show) {
+  document.getElementById('form-content').style.display = show ? 'none' : 'block';
+  document.getElementById('loading-content').style.display = show ? 'block' : 'none';
+  document.getElementById('confirm-btn').disabled = show;
+}
+</script>
+
+</body>
+</html>
