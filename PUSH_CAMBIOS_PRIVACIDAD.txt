@@ -1,0 +1,47 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║         PUSH CAMBIOS PRIVACIDAD - Ejecuta estos comandos                   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📋 CAMBIOS REALIZADOS:
+  ✅ gratis.html - Agregado aviso de privacidad (1 párrafo)
+  ✅ gratis.html - Agregado checkbox de consentimiento obligatorio
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 COMANDOS A EJECUTAR EN POWERSHELL:
+
+1️⃣  Navega a la carpeta del proyecto:
+   cd "C:\Users\Admin\Documents\Claude\Projects\Acp y Asociados"
+
+2️⃣  Verifica los cambios:
+   git status
+
+3️⃣  Agrega los cambios:
+   git add gratis.html
+
+4️⃣  Crea el commit:
+   git commit -m "Security: Agregar aviso de privacidad y checkbox de consentimiento (Ley 21.719)"
+
+5️⃣  Haz el push (dispara deploy automático en Netlify):
+   git push origin main
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️  TIEMPO ESTIMADO DE DEPLOY:
+   - Push a GitHub: 5-10 segundos
+   - Deploy Netlify: 2-5 minutos
+
+📍 VERIFICA DESPUÉS:
+   https://acp-asociados.netlify.app/gratis.html
+
+   ✔ Aviso legal visible
+   ✔ Checkbox de consentimiento presente
+   ✔ Rechaza envío si no está marcado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ SI TIENES ERROR DE BLOQUEO GIT:
+   git update-index --remove --cached .git/index.lock
+   Luego reintenta step 3
+
+═════════════════════════════════════════════════════════════════════════════

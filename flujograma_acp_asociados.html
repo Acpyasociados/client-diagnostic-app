@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f7fa; padding: 20px; }
+  h2.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+  .diagram { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 780px; margin: 0 auto; }
+
+  /* Columnas */
+  .row { display: flex; align-items: flex-start; justify-content: center; width: 100%; gap: 12px; }
+  .row.single { justify-content: center; }
+
+  /* Nodos */
+  .node {
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-align: center;
+    position: relative;
+    min-width: 130px;
+    max-width: 170px;
+    line-height: 1.4;
+  }
+  .node .label { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .node .desc { font-size: 11px; opacity: 0.85; }
+  .node .fn { font-size: 10px; font-family: monospace; margin-top: 4px; opacity: 0.7; }
+
+  /* Colores por tipo */
+  .actor   { background: #1a3a5c; color: white; }
+  .action  { background: #e8f0fe; color: #1a3a5c; border: 1.5px solid #c5d6f8; }
+  .payment { background: #fff3cd; color: #856404; border: 1.5px solid #ffc107; }
+  .email   { background: #d4edda; color: #155724; border: 1.5px solid #5cb85c; }
+  .ai      { background: #f3e8ff; color: #6b21a8; border: 1.5px solid #c084fc; }
+  .admin   { background: #fff0e6; color: #7c3504; border: 1.5px solid #f4843c; }
+  .success { background: #1a3a5c; color: white; }
+  .free    { background: #e6faf6; color: #0d6e5c; border: 1.5px solid #16a085; }
+  .gate    { background: #fef3c7; color: #92400e; border: 1.5px solid #f59e0b; border-radius: 50px; font-size: 11px; padding: 6px 16px; }
+
+  /* Conectores */
+  .arrow { text-align: center; font-size: 18px; color: #94a3b8; line-height: 1; margin: 2px 0; }
+  .arrow-row { display: flex; justify-content: center; gap: 12px; width: 100%; }
+  .arrow-cell { display: flex; flex-direction: column; align-items: center; min-width: 130px; max-width: 170px; }
+  .arrow-label { font-size: 10px; color: #64748b; margin-top: 1px; }
+
+  /* Separador de sección */
+  .section-label {
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    margin: 10px 0 4px;
+    position: relative;
+  }
+  .section-label::before, .section-label::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 28%;
+    height: 1px;
+    background: #e2e8f0;
+  }
+  .section-label::before { left: 0; }
+  .section-label::after { right: 0; }
+
+  /* Leyenda */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #64748b; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h2 class="sr-only">Flujograma completo del sistema ACP & Asociados: desde el diagnóstico gratuito y el formulario del cliente hasta la entrega del informe.</h2>
+
+<div class="diagram">
+
+  <!-- FASE 0: EMBUDO GRATUITO -->
+  <div class="section-label">Fase 0 — Embudo gratuito (lead magnet)</div>
+
+  <div class="row single">
+    <div class="node actor">
+      <div class="label">🌐 Visitante</div>
+      <div class="desc">Llega desde acpasociados.cl (botón "Diagnóstico gratuito"), redes o directo</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node free">
+      <div class="label">🎁 Diagnóstico gratuito</div>
+      <div class="desc">Formulario corto: empresa, sector, ventas, problema principal</div>
+      <div class="fn">gratis.html</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node free">
+      <div class="label">⚙️ Motor de reglas</div>
+      <div class="desc">Semáforo + oportunidad por sector. Sin IA · costo $0 · instantáneo</div>
+      <div class="fn">free-diagnostic.js</div>
+    </div>
+  </div>
+
+  <div class="arrow-row" style="justify-content:space-around">
+    <div class="arrow-cell"><div class="arrow">↙</div></div>
+    <div class="arrow-cell"><div class="arrow">↘</div></div>
+  </div>
+
+  <div class="row" style="margin-top:-4px">
+    <div class="node free">
+      <div class="label">📱 Reporte en pantalla</div>
+      <div class="desc">Semáforo, 1 oportunidad abierta + 4 bloqueadas 🔒</div>
+    </div>
+    <div class="node email">
+      <div class="label">📧 Copia por email</div>
+      <div class="desc">Lead capturado con CTA al informe pagado</div>
+      <div class="fn">Resend API</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+  <div class="arrow-label" style="text-align:center;margin-bottom:4px">CTA: "Ver Informe Completo — $49.900"</div>
+
+  <!-- FASE 1: CAPTACIÓN -->
+  <div class="section-label">Fase 1 — Captación (informe pagado)</div>
+
+  <div class="row single">
+    <div class="node actor">
+      <div class="label">🌐 Cliente</div>
+      <div class="desc">Llega a acp-asociados.netlify.app (desde el diagnóstico gratis o directo)</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node action">
+      <div class="label">📋 Formulario de diagnóstico</div>
+      <div class="desc">Empresa, RUT, sector, ventas, plan</div>
+      <div class="fn">index.html</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node action">
+      <div class="label">💾 Guardar lead</div>
+      <div class="desc">UUID único + client_token generado</div>
+      <div class="fn">submit-lead.js → Netlify Blobs</div>
+    </div>
+  </div>
+
+  <!-- FASE 2: PAGO -->
+  <div class="section-label">Fase 2 — Pago</div>
+
+  <div class="row">
+    <div class="node payment">
+      <div class="label">💳 Básico $49.900</div>
+      <div class="desc">Redirige a Flow</div>
+    </div>
+    <div class="node payment">
+      <div class="label">💳 Premium $149.900</div>
+      <div class="desc">Redirige a Flow</div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <div class="arrow-cell"><div class="arrow">↘</div></div>
+    <div class="arrow-cell"><div class="arrow">↙</div></div>
+  </div>
+
+  <div class="arrow" style="margin-top:-6px">↓</div>
+
+  <div class="row single">
+    <div class="node payment">
+      <div class="label">🏦 Flow</div>
+      <div class="desc">Procesa el pago (tarjeta / transferencia)</div>
+    </div>
+  </div>
+
+  <div class="arrow-row">
+    <div class="arrow-cell" style="align-items:flex-end;padding-right:30px">
+      <div class="arrow">↙</div>
+      <div class="arrow-label">pago OK</div>
+    </div>
+    <div class="arrow-cell" style="align-items:flex-start;padding-left:30px">
+      <div class="arrow">↘</div>
+      <div class="arrow-label">pago fallido</div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:-4px">
+    <div class="node action" style="min-width:160px">
+      <div class="label">✅ Webhook confirmado</div>
+      <div class="desc">Firma HMAC verificada<br>Lead actualizado: pagado</div>
+      <div class="fn">flow-webhook.js</div>
+    </div>
+    <div class="node gate" style="align-self:center">
+      ❌ Error → cliente<br>notificado
+    </div>
+  </div>
+
+  <!-- FASE 3: POST-PAGO -->
+  <div class="section-label">Fase 3 — Post-pago</div>
+
+  <div class="row single">
+    <div class="node email">
+      <div class="label">📧 2 emails automáticos</div>
+      <div class="desc">noreply@mail.acpasociados.cl</div>
+      <div class="fn">flow-webhook.js → Resend API</div>
+    </div>
+  </div>
+
+  <div class="arrow-row" style="justify-content:space-around">
+    <div class="arrow-cell"><div class="arrow">↙</div></div>
+    <div class="arrow-cell"><div class="arrow">↘</div></div>
+  </div>
+
+  <div class="row" style="margin-top:-4px">
+    <div class="node email">
+      <div class="label">📩 Cliente</div>
+      <div class="desc">Link único al cuestionario</div>
+    </div>
+    <div class="node email">
+      <div class="label">📩 Asesor</div>
+      <div class="desc">Notificación nueva solicitud</div>
+      <div class="fn">asesor.pac@gmail.com</div>
+    </div>
+  </div>
+
+  <!-- FASE 4: CUESTIONARIO -->
+  <div class="section-label">Fase 4 — Cuestionario</div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node action">
+      <div class="label">📝 Cuestionario sectorial</div>
+      <div class="desc">5–10 min, preguntas por rubro</div>
+      <div class="fn">questionnaire.html</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- FASE 5: IA -->
+  <div class="section-label">Fase 5 — Generación con IA</div>
+
+  <div class="row">
+    <div class="node ai">
+      <div class="label">🔍 Búsqueda externa</div>
+      <div class="desc">Casos reales del sector</div>
+      <div class="fn">Tavily API</div>
+    </div>
+    <div class="node ai">
+      <div class="label">🤖 Análisis IA</div>
+      <div class="desc">Oportunidades, riesgos, plan</div>
+      <div class="fn">Claude API</div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node ai">
+      <div class="label">📄 Borrador del informe</div>
+      <div class="desc">HTML generado + PDF adjunto</div>
+      <div class="fn">submit-questionnaire.js + generate-report.js</div>
+    </div>
+  </div>
+
+  <!-- FASE 6: REVISIÓN -->
+  <div class="section-label">Fase 6 — Revisión humana</div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node admin">
+      <div class="label">👤 Asesor revisa</div>
+      <div class="desc">Panel de revisión protegido por token</div>
+      <div class="fn">review.html · get-review-case.js</div>
+    </div>
+  </div>
+
+  <div class="arrow-row" style="justify-content:space-around">
+    <div class="arrow-cell"><div class="arrow">↙</div><div class="arrow-label">aprueba</div></div>
+    <div class="arrow-cell"><div class="arrow">↘</div><div class="arrow-label">solicita cambios</div></div>
+  </div>
+
+  <div class="row" style="margin-top:-4px">
+    <div class="node email" style="min-width:150px">
+      <div class="label">✅ Aprobado</div>
+      <div class="desc">Informe enviado al cliente</div>
+      <div class="fn">approve-report.js</div>
+    </div>
+    <div class="node admin" style="min-width:150px">
+      <div class="label">✏️ Cambios</div>
+      <div class="desc">Vuelve al borrador</div>
+      <div class="fn">request-changes.js</div>
+    </div>
+  </div>
+
+  <!-- FASE 7: ENTREGA -->
+  <div class="section-label">Fase 7 — Entrega</div>
+
+  <div class="arrow">↓</div>
+
+  <div class="row single">
+    <div class="node success">
+      <div class="label">🎯 Cliente recibe informe</div>
+      <div class="desc">Email con PDF + plan de acción personalizado</div>
+    </div>
+  </div>
+
+  <!-- PANEL ADMIN -->
+  <div class="section-label">Panel de control</div>
+  <div class="row single">
+    <div class="node admin">
+      <div class="label">📊 Admin Dashboard</div>
+      <div class="desc">Seguimiento de todos los leads en tiempo real</div>
+      <div class="fn">admin.html · audit-leads.js</div>
+    </div>
+  </div>
+
+  <!-- LEYENDA -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#e6faf6;border:1px solid #16a085"></div> Gratis (motor de reglas, $0)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8f0fe;border:1px solid #c5d6f8"></div> Función Netlify</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fff3cd;border:1px solid #ffc107"></div> Pago / Flow</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d4edda;border:1px solid #5cb85c"></div> Email (Resend)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f3e8ff;border:1px solid #c084fc"></div> IA (Claude + Tavily)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fff0e6;border:1px solid #f4843c"></div> Revisión manual</div>
+  </div>
+
+</div>
+</body>
+</html>
