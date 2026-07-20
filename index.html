@@ -790,213 +790,144 @@
     </div>
 
     <script>
-        const form = document.getElementById('diagnosticForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const submitText = document.getElementById('submitText');
-        const successOverlay = document.getElementById('successOverlay');
-        const digitalPresenceRadios = document.querySelectorAll('input[name="digital_presence"]');
-        const platformsGroup = document.getElementById('platforms_group');
+    document.addEventListener('DOMContentLoaded', function() {
+        var form           = document.getElementById('diagnosticForm');
+        var submitBtn      = document.getElementById('submitBtn');
+        var submitText     = document.getElementById('submitText');
+        var successOverlay = document.getElementById('successOverlay');
+        var platformsGroup = document.getElementById('platforms_group');
+        var paymentUrl     = '';
 
-        let flowPaymentUrl = '';
-
-        // Mostrar/ocultar opciones de plataformas según selección
-        digitalPresenceRadios.forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.value === 'si') {
-                    platformsGroup.style.display = 'block';
-                } else {
-                    platformsGroup.style.display = 'none';
-                    // Desmarcar todas las plataformas
-                    document.querySelectorAll('input[name="plataformas"]').forEach(cb => {
-                        cb.checked = false;
-                    });
-                }
-            });
-        });
-
-        // Definir contenido dinámico por plan
-        const PLAN_CONTENT = {
-            basico: {
-                price: 49900,
-                priceText: '$49.900',
-                benefits: [
-                    'Análisis de oportunidades de crecimiento personalizadas',
-                    'Reducción de costos operacionales identificada',
-                    'Estrategias de optimización tributaria aplicables',
-                    'Plan de acción 30 días para implementar',
-                    'Informe profesional en HTML + PDF'
-                ]
-            },
-            premium: {
-                price: 149900,
-                priceText: '$149.900',
-                benefits: [
-                    'Análisis de oportunidades de crecimiento personalizadas',
-                    'Reducción de costos operacionales identificada',
-                    'Estrategias de optimización tributaria aplicables',
-                    'Plan de acción 30 días para implementar',
-                    'Informe profesional en HTML + PDF',
-                    'Plan de implementación 30/90/180 días detallado',
-                    'Seguimiento y consultoría por WhatsApp durante 3 meses',
-                    '5 casos de empresas comparables que crecieron en tu sector',
-                    'Análisis de competencia sectorial',
-                    'Proyecciones financieras a 12 meses',
-                    'Sesión 1:1 de 30 minutos con asesor'
-                ]
-            }
+        var PLANS = {
+            basico:  { label: '$49.900' },
+            premium: { label: '$149.900' }
         };
 
-        // Función para actualizar beneficios
-        function updatePlanContent(planType) {
-            const plan = PLAN_CONTENT[planType];
-            const benefitsList = document.getElementById('benefitsList');
-
-            // Actualizar lista de beneficios
-            benefitsList.innerHTML = plan.benefits
-                .map(benefit => `<li>${benefit}</li>`)
-                .join('');
-
-            // Actualizar precio en encabezado
-            const headerPrice = document.getElementById('header-price');
-            if (headerPrice) headerPrice.textContent = plan.priceText;
-
-            // Actualizar texto del botón
-            submitText.textContent = `Continuar al Pago (${plan.priceText})`;
-        }
-
-        // Actualizar texto del botón según plan seleccionado
-        document.querySelectorAll('input[name="plan"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                updatePlanContent(this.value);
+        // Toggle plataformas
+        document.querySelectorAll('input[name="digital_presence"]').forEach(function(r) {
+            r.addEventListener('change', function() {
+                if (platformsGroup) {
+                    platformsGroup.style.display = this.value === 'si' ? 'block' : 'none';
+                }
             });
         });
 
-        // Inicializar con plan Básico
-        updatePlanContent('basico');
-
-        // Form submission
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            // Validate
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            // Collect data — mapear nombres de campos al formato que espera flow-create-payment
-            const formData = new FormData(form);
-            const plataformas = Array.from(document.querySelectorAll('input[name="plataformas"]:checked'))
-                .map(el => el.value)
-                .join(', ');
-
-            const planActual = document.getElementById('plan_basico').checked ? 'basico' : 'premium';
-
-            const data = {
-                // Campos requeridos por flow-create-payment
-                name:    formData.get('contact_name'),
-                email:   formData.get('contact_email'),
-                phone:   formData.get('contact_phone'),
-                company: formData.get('company_name'),
-                sector:  formData.get('industry'),
-                plan:    planActual,
-                // Campos adicionales de contexto
-                rut:             formData.get('rut'),
-                monthly_sales:   formData.get('annual_income'),
-                profit_margin:   formData.get('margin'),
-                active_clients:  formData.get('active_clients'),
-                tax_regime:      formData.get('tax_regime'),
-                top_costs:       formData.get('main_costs'),
-                digital_presence: formData.get('digital_presence'),
-                plataformas:     plataformas || 'ninguna',
-                tax_advisor:     formData.get('accountant_name'),
-                main_challenge:  formData.get('main_challenge'),
-                objectives_6m:   formData.get('objective_6m'),
-                timestamp:       new Date().toISOString()
-            };
-
-            // Show loading
-            submitBtn.disabled = true;
-            submitText.innerHTML = '<span class="spinner"></span>Procesando...';
-
-            try {
-                // Enviar a función Netlify (crea lead + link de pago en Flow)
-                const response = await fetch('/.netlify/functions/create-diagnostic-order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.checkout_url) {
-                    // Guardar URL de pago Flow
-                    flowPaymentUrl = result.checkout_url;
-
-                    // Mostrar overlay de confirmación
-                    successOverlay.classList.add('show');
-
-                    // Limpiar formulario
-                    form.reset();
-                } else {
-                    throw new Error(result.error || result.message || 'Error al procesar');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o contáctanos por WhatsApp al +56 9 4401 8594.');
-
-                submitBtn.disabled = false;
-                const price = document.getElementById('plan_basico').checked ? '$49.900' : '$149.900';
-                submitText.textContent = `Continuar al Pago (${price})`;
-            }
-        });
-
-        function closeSuccessAndRedirect() {
-            if (flowPaymentUrl) {
-                window.location.href = flowPaymentUrl;
-            } else {
-                // Fallback: cerrar overlay
-                successOverlay.classList.remove('show');
-                submitBtn.disabled = false;
-                const price = document.getElementById('plan_basico').checked ? '$49.900' : '$149.900';
-                submitText.textContent = `Continuar al Pago (${price})`;
-            }
+        // Toggle "Especifica tu rubro"
+        var industrySelect     = document.getElementById('industry');
+        var otherIndustryGroup = document.getElementById('other_industry_group');
+        if (industrySelect && otherIndustryGroup) {
+            industrySelect.addEventListener('change', function() {
+                otherIndustryGroup.style.display = this.value === 'otro' ? 'block' : 'none';
+            });
         }
 
-        // Format RUT as user types
-        document.getElementById('rut').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^0-9kK]/g, '');
+        // Toggle "Especifica tu desafío"
+        var challengeSelect     = document.getElementById('main_challenge');
+        var otherChallengeGroup = document.getElementById('other_challenge_group');
+        if (challengeSelect && otherChallengeGroup) {
+            challengeSelect.addEventListener('change', function() {
+                otherChallengeGroup.style.display = this.value === 'otro' ? 'block' : 'none';
+            });
+        }
 
-            if (value.length > 1) {
-                const dv = value.slice(-1);
-                const number = value.slice(0, -1);
-
-                // Format with dots
-                const formatted = number.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                e.target.value = formatted + '-' + dv.toUpperCase();
-            }
+        // Actualizar texto botón al cambiar plan
+        document.querySelectorAll('input[name="plan"]').forEach(function(r) {
+            r.addEventListener('change', function() {
+                var lbl = (PLANS[this.value] || PLANS.basico).label;
+                submitText.textContent = 'Continuar al Pago (' + lbl + ')';
+            });
         });
 
-        // Format phone as user types
-        document.getElementById('contact_phone').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/[^0-9+]/g, '');
+        // Formatear RUT
+        var rutInput = document.getElementById('rut');
+        if (rutInput) {
+            rutInput.addEventListener('input', function() {
+                var v = this.value.replace(/[^0-9kK]/g, '');
+                if (v.length > 1) {
+                    var dv  = v.slice(-1);
+                    var num = v.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    this.value = num + '-' + dv.toUpperCase();
+                }
+            });
+        }
 
-            if (value.startsWith('56') && !value.startsWith('+56')) {
-                value = '+' + value;
-            }
+        // Formatear teléfono
+        var phoneInput = document.getElementById('contact_phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function() {
+                var v = this.value.replace(/[^0-9+]/g, '');
+                if (v.startsWith('56') && !v.startsWith('+56')) v = '+' + v;
+                this.value = v;
+            });
+        }
 
-            e.target.value = value;
+        // Submit del formulario
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            var fd   = new FormData(form);
+            var plan = document.getElementById('plan_basico').checked ? 'basico' : 'premium';
+            var lbl  = PLANS[plan].label;
+
+            var data = {
+                name:             fd.get('contact_name'),
+                email:            fd.get('contact_email'),
+                phone:            fd.get('contact_phone'),
+                company:          fd.get('company_name'),
+                sector:           fd.get('industry'),
+                plan:             plan,
+                rut:              fd.get('rut'),
+                monthly_sales:    fd.get('annual_income'),
+                margin:           fd.get('margin'),
+                active_clients:   fd.get('active_clients'),
+                tax_regime:       fd.get('tax_regime'),
+                top_costs:        fd.get('main_costs'),
+                digital_presence: fd.get('digital_presence'),
+                tax_advisor:      fd.get('accountant_name'),
+                main_challenge:   fd.get('main_challenge'),
+                objective_6m:     fd.get('objective_6m'),
+                timestamp:        new Date().toISOString()
+            };
+
+            submitBtn.disabled = true;
+            submitText.textContent = 'Procesando...';
+
+            fetch('/.netlify/functions/create-diagnostic-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function(res) {
+                return res.json().then(function(r) { return { ok: res.ok, body: r }; });
+            })
+            .then(function(res) {
+                if (res.ok && res.body.checkout_url) {
+                    paymentUrl = res.body.checkout_url;
+                    successOverlay.classList.add('show');
+                    form.reset();
+                } else {
+                    throw new Error(res.body.error || 'Error al procesar');
+                }
+            })
+            .catch(function(err) {
+                console.error('Error pago:', err);
+                alert('Hubo un error al procesar tu solicitud. Contáctanos por WhatsApp al +56 9 4401 8594.');
+                submitBtn.disabled = false;
+                submitText.textContent = 'Continuar al Pago (' + lbl + ')';
+            });
         });
 
-        // Handle conditional fields for "Otro" options
-        const industrySelect = document.getElementById('industry');
-        const otherIndustryGroup = document.getElementById('other_industry_group');
-        const otherIndustryInput = document.getElementById('other_industry');
-
-        const mainChallengeSelect = document.getElementById('main_challenge');
-        const otherChallengeGroup = document.getElementById('other_challenge_group');
-        const otherChallengeInput = document.getElementById('other_challenge');
-
-        // Show/hide "Especifica tu rubro" when
+        // Exponer globalmente para el onclick del overlay
+        window.closeSuccessAndRedirect = function() {
+            if (paymentUrl) {
+                window.location.href = paymentUrl;
+            } else {
+                successOverlay.classList.remove('show');
+                submitBtn.disabled = false;
+            }
+        };
+    });
+    </script>
+    </body>
+    </html>
