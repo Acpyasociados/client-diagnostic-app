@@ -480,7 +480,7 @@
 
             <div class="pricing-banner">
                 <div class="price-item">
-                    <span class="price">$49.990</span>
+                    <span id="header-price" class="price">$49.900</span>
                     <span class="price-label">CLP</span>
                 </div>
                 <div class="price-note">Inversión única • Informe en 48 horas</div>
@@ -727,13 +727,13 @@
                     <div class="radio-group">
                         <div class="radio-item">
                             <input type="radio" id="plan_basico" name="plan" value="basico" checked required>
-                            <label for="plan_basico"><strong>Básico</strong> - $49.990 (Informe + 3 mejoras)</label>
+                            <label for="plan_basico"><strong>Básico</strong> - $49.900 (Informe + 3 mejoras)</label>
                         </div>
                     </div>
                     <div class="radio-group">
                         <div class="radio-item">
                             <input type="radio" id="plan_premium" name="plan" value="premium" required>
-                            <label for="plan_premium"><strong>Premium</strong> - $149.990 (Plan 30/90/180 días + seguimiento)</label>
+                            <label for="plan_premium"><strong>Premium</strong> - $149.900 (Plan 30/90/180 días + seguimiento)</label>
                         </div>
                     </div>
                 </div>
@@ -753,10 +753,10 @@
                 <!-- Submit -->
                 <div class="submit-section">
                     <button type="submit" class="btn-submit" id="submitBtn">
-                        <span id="submitText">Continuar al Pago ($49.990)</span>
+                        <span id="submitText">Continuar al Pago ($49.900)</span>
                     </button>
                     <p class="submit-note">
-                        Serás redirigido a Mercado Pago para completar el pago de forma segura
+                        Serás redirigido a Flow para completar el pago de forma segura
                     </p>
                 </div>
             </form>
@@ -780,12 +780,12 @@
             <h2>¡Registro Exitoso!</h2>
             <p>
                 Hemos guardado tu información.<br>
-                Ahora serás redirigido a Mercado Pago para completar el pago.
+                Ahora serás redirigido a Flow para completar el pago.
             </p>
             <p style="font-size: 0.9rem; color: var(--text-secondary);">
                 Una vez confirmado el pago, recibirás tu diagnóstico personalizado por email en las próximas 48 horas.
             </p>
-            <button class="btn-close" onclick="closeSuccessAndRedirect()">Ir a Mercado Pago</button>
+            <button class="btn-close" onclick="closeSuccessAndRedirect()">Ir a Pagar con Flow</button>
         </div>
     </div>
 
@@ -797,7 +797,7 @@
         const digitalPresenceRadios = document.querySelectorAll('input[name="digital_presence"]');
         const platformsGroup = document.getElementById('platforms_group');
 
-        let mercadoPagoLink = '';
+        let flowPaymentUrl = '';
 
         // Mostrar/ocultar opciones de plataformas según selección
         digitalPresenceRadios.forEach(radio => {
@@ -817,8 +817,8 @@
         // Definir contenido dinámico por plan
         const PLAN_CONTENT = {
             basico: {
-                price: 49990,
-                priceText: '$49.990',
+                price: 49900,
+                priceText: '$49.900',
                 benefits: [
                     'Análisis de oportunidades de crecimiento personalizadas',
                     'Reducción de costos operacionales identificada',
@@ -828,8 +828,8 @@
                 ]
             },
             premium: {
-                price: 149990,
-                priceText: '$149.990',
+                price: 149900,
+                priceText: '$149.900',
                 benefits: [
                     'Análisis de oportunidades de crecimiento personalizadas',
                     'Reducción de costos operacionales identificada',
@@ -856,6 +856,10 @@
                 .map(benefit => `<li>${benefit}</li>`)
                 .join('');
 
+            // Actualizar precio en encabezado
+            const headerPrice = document.getElementById('header-price');
+            if (headerPrice) headerPrice.textContent = plan.priceText;
+
             // Actualizar texto del botón
             submitText.textContent = `Continuar al Pago (${plan.priceText})`;
         }
@@ -880,18 +884,35 @@
                 return;
             }
 
-            // Collect data
+            // Collect data — mapear nombres de campos al formato que espera flow-create-payment
             const formData = new FormData(form);
             const plataformas = Array.from(document.querySelectorAll('input[name="plataformas"]:checked'))
                 .map(el => el.value)
                 .join(', ');
 
+            const planActual = document.getElementById('plan_basico').checked ? 'basico' : 'premium';
+
             const data = {
-                timestamp: new Date().toISOString(),
-                product: document.getElementById('plan_basico').checked ? 'diagnostico_basico' : 'diagnostico_premium',
-                price: document.getElementById('plan_basico').checked ? 49990 : 149990,
-                ...Object.fromEntries(formData),
-                plataformas: plataformas || 'ninguna'
+                // Campos requeridos por flow-create-payment
+                name:    formData.get('contact_name'),
+                email:   formData.get('contact_email'),
+                phone:   formData.get('contact_phone'),
+                company: formData.get('company_name'),
+                sector:  formData.get('industry'),
+                plan:    planActual,
+                // Campos adicionales de contexto
+                rut:             formData.get('rut'),
+                monthly_sales:   formData.get('annual_income'),
+                profit_margin:   formData.get('margin'),
+                active_clients:  formData.get('active_clients'),
+                tax_regime:      formData.get('tax_regime'),
+                top_costs:       formData.get('main_costs'),
+                digital_presence: formData.get('digital_presence'),
+                plataformas:     plataformas || 'ninguna',
+                tax_advisor:     formData.get('accountant_name'),
+                main_challenge:  formData.get('main_challenge'),
+                objectives_6m:   formData.get('objective_6m'),
+                timestamp:       new Date().toISOString()
             };
 
             // Show loading
@@ -899,7 +920,7 @@
             submitText.innerHTML = '<span class="spinner"></span>Procesando...';
 
             try {
-                // Save to Netlify Function
+                // Enviar a función Netlify (crea lead + link de pago en Flow)
                 const response = await fetch('/.netlify/functions/create-diagnostic-order', {
                     method: 'POST',
                     headers: {
@@ -910,36 +931,36 @@
 
                 const result = await response.json();
 
-                if (response.ok && result.mercadoPagoUrl) {
-                    // Store MercadoPago link
-                    mercadoPagoLink = result.mercadoPagoUrl;
+                if (response.ok && result.checkout_url) {
+                    // Guardar URL de pago Flow
+                    flowPaymentUrl = result.checkout_url;
 
-                    // Show success overlay
+                    // Mostrar overlay de confirmación
                     successOverlay.classList.add('show');
 
-                    // Reset form
+                    // Limpiar formulario
                     form.reset();
                 } else {
-                    throw new Error(result.error || 'Error al procesar');
+                    throw new Error(result.error || result.message || 'Error al procesar');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 alert('Hubo un error al procesar tu solicitud. Por favor intenta de nuevo o contáctanos por WhatsApp al +56 9 4401 8594.');
 
                 submitBtn.disabled = false;
-                const price = document.getElementById('plan_basico').checked ? '$49.990' : '$149.990';
+                const price = document.getElementById('plan_basico').checked ? '$49.900' : '$149.900';
                 submitText.textContent = `Continuar al Pago (${price})`;
             }
         });
 
         function closeSuccessAndRedirect() {
-            if (mercadoPagoLink) {
-                window.location.href = mercadoPagoLink;
+            if (flowPaymentUrl) {
+                window.location.href = flowPaymentUrl;
             } else {
-                // Fallback: just close overlay
+                // Fallback: cerrar overlay
                 successOverlay.classList.remove('show');
                 submitBtn.disabled = false;
-                const price = document.getElementById('plan_basico').checked ? '$49.990' : '$149.990';
+                const price = document.getElementById('plan_basico').checked ? '$49.900' : '$149.900';
                 submitText.textContent = `Continuar al Pago (${price})`;
             }
         }
