@@ -71,6 +71,7 @@
     .btn-info      { background: var(--info); color: white; }
     .btn-secondary { background: #6c757d; color: white; }
     .btn-purple    { background: var(--purple); color: white; }
+    .btn-danger    { background: var(--danger); color: white; }
 
     /* ── MAIN CONTENT ──────────────────────────────────── */
     .main { padding: 28px; max-width: 1400px; margin: 0 auto; }
@@ -508,6 +509,7 @@ function renderTable(leads) {
     if (lead.draft_generated || lead.status === 'borrador_listo' || lead.status === 'cambios_solicitados' || lead.status === 'enviado') {
       actions += ` <button class="btn btn-sm btn-info" onclick="genPDF('${lead.lead_id}')">PDF</button>`;
     }
+    actions += ` <button class="btn btn-sm btn-danger" onclick="deleteLead('${lead.lead_id}')">🗑️ Eliminar</button>`;
 
     return `<tr>
       <td>
@@ -832,6 +834,35 @@ async function genPDF(leadId) {
 
 function openReview(url) {
   window.open(url, '_blank');
+}
+
+// ── DELETE LEAD ─────────────────────────────────────────────
+async function deleteLead(leadId) {
+  if (!currentToken) { showMsg('❌ Sin token de acceso', 'error'); return; }
+
+  const lead = allLeads.find(l => l.lead_id === leadId);
+  const who = lead ? `${lead.name || '—'} (${lead.company || '—'})` : leadId;
+  const pagado = lead && lead.payment_status === 'approved'
+    ? `\n\n⚠ Este lead está PAGADO ($${Number(lead.final_price || 0).toLocaleString('es-CL')} CLP). Borrar el registro no anula el pago en Flow ni ninguna obligación tributaria asociada — solo lo saca de este panel.`
+    : '';
+
+  if (!confirm(`¿Borrar definitivamente el lead de ${who}?\n\nEsta acción NO se puede deshacer.${pagado}`)) return;
+
+  showMsg('⏳ Borrando lead…', 'success');
+  try {
+    const res = await fetch('/.netlify/functions/delete-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_id: leadId, token: currentToken, confirm: true })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    showMsg(`✅ Lead de ${who} borrado.`, 'success');
+    setTimeout(() => loadLeads(), 1000);
+  } catch (err) {
+    showMsg('❌ Error borrando lead: ' + err.message, 'error');
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────
