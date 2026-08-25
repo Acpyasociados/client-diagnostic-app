@@ -1,3 +1,4 @@
+﻿[build]
   command = "echo Build complete"
   functions = "netlify/functions"
   publish = "."
@@ -12,59 +13,13 @@
   node_bundler = "nft"
   included_files = ["templates/**"]
 
-[functions.generate-report]
+[functions."generate-report"]
   timeout = 26
 
 [context.production.environment]
-  # Secrets (MERCADO_PAGO_ACCESS_TOKEN, SENDGRID_API_KEY) are configured in Netlify UI
-  # Non-secret environment variables:
   SENDGRID_FROM_EMAIL = "noreply@acp-asociados.com"
   ADVISOR_EMAIL = "asesor.pac@gmail.com"
   SITE_URL = "https://acp-asociados.netlify.app"
   NODE_ENV = "production"
   PRICE_BASIC_CLP = "1000"
   PRICE_PREMIUM_CLP = "11000"
-  # Flow Payment Gateway Credentials (Production)
-  # IMPORTANT: Using real production credentials from Flow account
-  FLOW_API_KEY = "1F7ABDF2-7286-4261-9A54-963935CDCL21"
-  FLOW_SECRET_KEY = "0d11403f33bbddd3125e537ea7ef044ef390e65f"
-
-[build]
-  command = "echo 'Build complete' && date > .netlify-build-time"
-  functions = "netlify/functions"
-  publish = "."
-
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "nft"
-  included_files = ["templates/**"]
-
-[functions.generate-report]
-  timeout = 26
-
-[functions.submit-questionnaire]
-  timeout = 26
-
-[functions.health-check]
-  schedule = "0 * * * *"    # cada hora en punto
-
-[functions.daily-backup]
-  schedule = "0 6 * * *"    # 06:00 UTC = 03:00 AM Chile (hora de menor tráfico)
-
-[functions.free-followup]
-  schedule = "0 13 * * *"   # 13:00 UTC = 09:00 AM Chile — secuencia seguimiento leads gratis
-
-[context.production.environment]
-  # Secrets configuradas en Netlify UI (Site settings → Environment variables):
-  #   FLOW_API_KEY, FLOW_SECRET_KEY        — pagos Flow
-  #   SENDGRID_API_KEY                     — emails
-  #   ANTHROPIC_API_KEY                    — Claude IA (obtener en console.anthropic.com)
-  # Non-secret environment variables:
-  SENDGRID_FROM_EMAIL = "patriciosilvavalenzuela@gmail.com"
-  ADVISOR_EMAIL = "asesor.pac@gmail.com"
-  SITE_URL = "https://acp-asociados.netlify.app"
-  NODE_ENV = "production"
-  PRICE_BASIC_CLP = "49900"
-  PRICE_PREMIUM_CLP = "149900"
-  ADVISOR_PHONE = "56944018594"
-c26e4bbc8dfffcd97cd99a44a3a2aff69e851c9e
