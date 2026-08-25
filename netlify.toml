@@ -1,25 +1,41 @@
-[build]
-  command = "echo Build complete"
+﻿[build]
+  command = "echo 'Build complete' && date > .netlify-build-time"
   functions = "netlify/functions"
   publish = "."
-
-[[redirects]]
-  from = "/*"
-  to = "/"
-  status = 200
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "nft"
   included_files = ["templates/**"]
 
-[functions."generate-report"]
+[functions.generate-report]
   timeout = 26
 
+[functions.submit-questionnaire]
+  timeout = 26
+
+[functions.health-check]
+  schedule = "0 * * * *"    # cada hora en punto
+
+[functions.daily-backup]
+  schedule = "0 6 * * *"    # 06:00 UTC = 03:00 AM Chile (hora de menor tráfico)
+
+[functions.free-followup]
+  schedule = "0 13 * * *"   # 13:00 UTC = 09:00 AM Chile — secuencia seguimiento leads gratis
+
+[functions.monitor-payment-failures]
+  schedule = "*/5 * * * *"  # cada 5 minutos — monitoreo de pagos fallidos
+
 [context.production.environment]
-  SENDGRID_FROM_EMAIL = "noreply@acp-asociados.com"
+  # Secrets configuradas en Netlify UI (Site settings → Environment variables):
+  #   FLOW_API_KEY, FLOW_SECRET_KEY        — pagos Flow
+  #   SENDGRID_API_KEY                     — emails
+  #   ANTHROPIC_API_KEY                    — Claude IA (obtener en console.anthropic.com)
+  # Non-secret environment variables:
+  SENDGRID_FROM_EMAIL = "patriciosilvavalenzuela@gmail.com"
   ADVISOR_EMAIL = "asesor.pac@gmail.com"
   SITE_URL = "https://acp-asociados.netlify.app"
   NODE_ENV = "production"
-  PRICE_BASIC_CLP = "1000"
-  PRICE_PREMIUM_CLP = "11000"
+  PRICE_BASIC_CLP = "49900"
+  PRICE_PREMIUM_CLP = "149900"
+  ADVISOR_PHONE = "56944018594"
