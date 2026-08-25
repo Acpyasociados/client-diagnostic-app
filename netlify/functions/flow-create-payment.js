@@ -1,145 +1,193 @@
 import crypto from 'crypto';
-import { getStore } from '@netlify/blobs';
+import { getLead, saveLead } from './_lib/storage.js';
+import { sendAdvisorEmail } from './send-advisor-email.js';
 
-const FLOW_API_URL = 'https://www.flow.cl/api';
-const FLOW_API_KEY = process.env.FLOW_API_KEY;
-const FLOW_SECRET_KEY = process.env.FLOW_SECRET_KEY;
-const SITE_URL = process.env.SITE_URL || 'https://acp-asociados.netlify.app';
-
-async function parseBody(event) {
-  console.log('=== Flow Payment parseBody START ===');
-  let bodyText = null;
-  if (typeof event.text === 'function') {
-    try {
-      bodyText = await event.text();
-    } catch (e) {
-      console.error('event.text() error:', e.message);
-      return null;
-    }
-  } else if (typeof event.body?.text === 'function') {
-    try {
-      bodyText = await event.body.text();
-    } catch (e) {
-      console.error('Body.text() error:', e.message);
-      return null;
-    }
-  } else if (typeof event.body === 'string') {
-    bodyText = event.body;
-  } else if (event.body && typeof event.body === 'object') {
-    return event.body;
-  }
-  if (!bodyText) return null;
-  return JSON.parse(bodyText);
+function verifyFlowSignature(params, signature, secret) {
+  const paramsWithoutSignature = { ...params };
+  delete paramsWithoutSignature.s;
+  const sortedParams = Object.keys(paramsWithoutSignature).sort().map(key => `${key}${paramsWithoutSignature[key]}`).join('');
+  const computedSignature = crypto.createHash('sha256').update(sortedParams + secret).digest('hex');
+  return computedSignature === signature;
 }
 
-function generateFlowSignature(params, secret) {
-  const sortedParams = Object.keys(params)
-    .sort()
-    .map(key => `${key}${params[key]}`)
-    .join('');
-  return crypto.createHash('sha256').update(sortedParams + secret).digest('hex');
+function sha256Hex(value) {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+function normalizeChileanPhone(phone) {
+  if (!phone) return null;
+  let digits = String(phone).replace(/\D/g, '');
+  if (digits.startsWith('56')) return digits;
+  if (digits.startsWith('9') && digits.length === 9) return `56${digits}`;
+  return digits;
+}
+
+async function sendMetaPurchaseEvent(lead, siteUrl) {
+  const pixelId = process.env.META_PIXEL_ID;
+  const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
+  if (!pixelId || !accessToken) {
+    console.warn('[flow-webhook] META_PIXEL_ID / META_CAPI_ACCESS_TOKEN no configurados — evento Purchase NO enviado');
+    return { sent: false, reason: 'missing_config' };
+  }
+  const userData = {};
+  if (lead.email) userData.em = [sha256Hex(lead.email.trim().toLowerCase())];
+  const normalizedPhone = normalizeChileanPhone(lead.phone);
+  if (normalizedPhone) userData.ph = [sha256Hex(normalizedPhone)];
+
+  const body = {
+    data: [{
+      event_name: 'Purchase',
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: `purchase-${lead.lead_id}`,
+      action_source: 'website',
+      event_source_url: `${siteUrl}/.netlify/functions/flow-success-page`,
+      user_data: userData,
+      custom_data: {
+        currency: 'CLP',
+        value: lead.final_price,
+        content_name: `Diagnostico ${lead.plan} - ${lead.company}`,
+        content_type: 'product'
+      }
+    }]
+  };
+  try {
+    const res = await fetch(`https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${accessToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) { console.error('[flow-webhook] Meta CAPI error:', JSON.stringify(data)); return { sent: false, reason: 'api_error' }; }
+    console.log('[flow-webhook] Evento Purchase enviado a Meta CAPI');
+    return { sent: true };
+  } catch (err) {
+    console.error('[flow-webhook] Error llamando a Meta CAPI:', err.message);
+    return { sent: false, reason: 'exception' };
+  }
+}
+
+async function sendEmailViaResend({ from, to, subject, html, attachments }) {
+  const apiKey = process.env.SENDGRID_API_KEY; // clave de Resend, guardada bajo este nombre en Netlify
+  if (!apiKey) { console.error('[flow-webhook] SENDGRID_API_KEY (clave Resend) no configurada'); return { ok: false }; }
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, subject, html, attachments })
+  });
+  if (!res.ok) { console.error('[flow-webhook] Error Resend:', res.status, await res.text()); return { ok: false }; }
+  return { ok: true };
+}
+
+function reviewEmailHtml(lead, siteUrl) {
+  const planLabel = lead.plan === 'premium' ? 'Premium' : 'Básico';
+  return `
+    <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+    <body style="font-family:Arial,sans-serif;color:#2C3E50;">
+      <h2 style="color:#1B3B5C;">✅ Nueva venta confirmada (Flow) – ${lead.company}</h2>
+      <table style="border-collapse:collapse;width:100%;font-size:14px;margin-bottom:20px;">
+        <tr><td style="padding:8px;color:#666;width:40%;">Cliente</td><td style="padding:8px;">${lead.name}</td></tr>
+        <tr><td style="padding:8px;color:#666;">Email</td><td style="padding:8px;">${lead.email}</td></tr>
+        <tr><td style="padding:8px;color:#666;">Teléfono</td><td style="padding:8px;">${lead.phone || 'N/A'}</td></tr>
+        <tr><td style="padding:8px;color:#666;">Empresa</td><td style="padding:8px;"><strong>${lead.company}</strong></td></tr>
+        <tr><td style="padding:8px;color:#666;">Plan</td><td style="padding:8px;"><strong>${planLabel}</strong></td></tr>
+        <tr><td style="padding:8px;color:#666;">Monto</td><td style="padding:8px;"><strong>$${lead.final_price} CLP</strong></td></tr>
+        <tr><td style="padding:8px;color:#666;font-family:monospace;font-size:11px;">Lead ID</td><td style="padding:8px;font-family:monospace;font-size:11px;">${lead.lead_id}</td></tr>
+      </table>
+      <a href="${siteUrl}/admin.html" style="background:#1B3B5C;color:white;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;">Abrir panel de administración</a>
+    </body></html>
+  `;
 }
 
 export default async (event, context) => {
-  console.log('=== Flow Create Payment Handler START ===');
-  console.log('Checking env vars - FLOW_API_KEY defined:', !!FLOW_API_KEY, 'FLOW_SECRET_KEY defined:', !!FLOW_SECRET_KEY);
-  console.log('SITE_URL:', SITE_URL);
-
+  console.log('=== Flow Webhook Handler START ===');
   try {
-    if (!FLOW_API_KEY || !FLOW_SECRET_KEY) {
-      console.error('Missing Flow API credentials - FLOW_API_KEY:', !!FLOW_API_KEY, 'FLOW_SECRET_KEY:', !!FLOW_SECRET_KEY);
-      return new Response(
-        JSON.stringify({ error: 'Missing Flow API configuration' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+    const params = event.queryStringParameters || {};
+    const signature = params.s;
+    if (!signature || !verifyFlowSignature(params, signature, process.env.FLOW_SECRET_KEY)) {
+      console.error('[flow-webhook] Firma inválida');
+      return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const formData = await parseBody(event);
-    console.log('Form data received:', { name: formData?.name, email: formData?.email, plan: formData?.plan });
-    console.log('Full form data:', formData);
-    console.log('Event body type:', typeof event.body);
-    console.log('Event body keys:', Object.keys(formData || {}));
+    const leadId = params.commerceOrder;
+    if (!leadId) return new Response(JSON.stringify({ error: 'Missing commerceOrder' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-    const requiredFields = ['name', 'email', 'phone', 'company', 'sector', 'plan'];
-    const missingFields = requiredFields.filter(field => !formData[field]);
+    const lead = await getLead(leadId);
+    if (!lead) { console.error('[flow-webhook] Lead no encontrado:', leadId); return new Response(JSON.stringify({ error: 'Lead not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } }); }
 
-    if (missingFields.length > 0) {
-      console.error('Missing required fields:', missingFields);
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields', missing: missingFields }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (params.status !== 'PAYED') {
+      lead.status = 'payment_failed';
+      lead.payment_status = params.status;
+      await saveLead(leadId, lead);
+      return new Response(JSON.stringify({ success: false, status: params.status }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const priceBasic = parseInt(process.env.PRICE_BASIC_CLP) || 1000;
-    const pricePremium = parseInt(process.env.PRICE_PREMIUM_CLP) || 11000;
-    const amount = formData.plan === 'premium' ? pricePremium : priceBasic;
-
-    console.log(`Creating payment for plan: ${formData.plan}, amount: ${amount} CLP`);
-
-    const orderId = `ACP-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-    const store = getStore('cases');
-    const caseData = {
-      id: orderId, name: formData.name, email: formData.email, phone: formData.phone, company: formData.company, sector: formData.sector,
-      monthly_sales: formData.monthly_sales, profit_margin: formData.profit_margin, active_clients: formData.active_clients,
-      tax_regime: formData.tax_regime, top_costs: formData.top_costs, digital_presence: formData.digital_presence,
-      tax_advisor: formData.tax_advisor, main_challenge: formData.main_challenge, objectives_6m: formData.objectives_6m,
-      plan: formData.plan, amount: amount, status: 'pending', created_at: new Date().toISOString()
-    };
-
-    await store.setJSON(orderId, caseData);
-    console.log('Case data stored:', orderId);
-
-    const flowParams = {
-      apiKey: FLOW_API_KEY,
-      commerceOrder: orderId,
-      subject: `Diagnóstico ACP - ${formData.company}`,
-      amount: amount,
-      email: formData.email,
-      currency: 'CLP',
-      urlReturn: `${SITE_URL}/flow-success.html?orderId=${orderId}`,
-      urlConfirm: `${SITE_URL}/.netlify/functions/flow-webhook`
-    };
-
-    flowParams.s = generateFlowSignature(flowParams, FLOW_SECRET_KEY);
-
-    console.log('Flow Parameters:', JSON.stringify(flowParams, null, 2));
-    const urlEncodedBody = new URLSearchParams(flowParams).toString();
-    console.log('URL Encoded Body:', urlEncodedBody);
-    console.log('FLOW_API_KEY value:', FLOW_API_KEY);
-    console.log('FLOW_SECRET_KEY value:', FLOW_SECRET_KEY);
-    console.log('Calling Flow API endpoint: /payment/create');
-    const flowResponse = await fetch(`${FLOW_API_URL}/payment/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-      body: urlEncodedBody
-    });
-
-    const flowData = await flowResponse.json();
-    console.log('Flow API Response Status:', flowResponse.status);
-
-    if (!flowResponse.ok || flowData.status !== 'SUCCESS') {
-      console.error('Flow API Error:', flowData);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create payment in Flow', details: flowData.message || 'Unknown error' }),
-        { status: flowResponse.status || 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (lead.payment_status === 'approved') {
+      console.log('[flow-webhook] Lead ya procesado, ignorando duplicado:', leadId);
+      return new Response(JSON.stringify({ success: true, duplicate: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
-    caseData.flow_token = flowData.token;
-    caseData.payment_created = new Date().toISOString();
-    await store.setJSON(orderId, caseData);
+    const siteUrl = process.env.SITE_URL;
+    const adminToken = process.env.ADMIN_REVIEW_TOKEN;
+    const reviewerEmail = process.env.REVIEWER_EMAIL;
 
-    return new Response(
-      JSON.stringify({ success: true, orderId: orderId, paymentUrl: flowData.url, token: flowData.token }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    lead.payment_status = 'approved';
+    lead.status = 'paid';
+    lead.flow_reference = params.token;
+    lead.payment_date = new Date().toISOString();
+    await saveLead(leadId, lead);
+    console.log('[flow-webhook] Lead marcado como pagado:', leadId);
+
+    let pdfBuffer = null, reportGenerated = false;
+    try {
+      const pdfResponse = await fetch(`${siteUrl}/.netlify/functions/generate-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, admin_token: adminToken })
+      });
+      if (pdfResponse.ok) {
+        pdfBuffer = await pdfResponse.arrayBuffer();
+        reportGenerated = true;
+        console.log('[flow-webhook] PDF generado:', pdfBuffer.byteLength, 'bytes');
+      } else {
+        console.error('[flow-webhook] generate-report falló:', pdfResponse.status, await pdfResponse.text());
+      }
+    } catch (e) {
+      console.error('[flow-webhook] Error llamando generate-report:', e.message);
+    }
+
+    if (reviewerEmail) {
+      const emailPayload = {
+        from: process.env.SENDGRID_FROM_EMAIL || 'informes@acpasociados.cl',
+        to: reviewerEmail,
+        subject: `🔔 REVISAR (Flow): Diagnóstico ${lead.plan === 'premium' ? 'Premium' : 'Básico'} - ${lead.company}`,
+        html: reviewEmailHtml(lead, siteUrl)
+      };
+      if (reportGenerated && pdfBuffer) {
+        emailPayload.attachments = [{
+          filename: `diagnostico-${String(lead.company).replace(/\s+/g, '-').toLowerCase()}.pdf`,
+          content: Buffer.from(pdfBuffer).toString('base64')
+        }];
+      }
+      await sendEmailViaResend(emailPayload);
+    } else {
+      console.warn('[flow-webhook] REVIEWER_EMAIL no configurado');
+    }
+
+    try {
+      await sendAdvisorEmail(lead);
+    } catch (e) {
+      console.error('[flow-webhook] Error email asesor:', e.message);
+    }
+
+    const metaResult = await sendMetaPurchaseEvent(lead, siteUrl);
+    lead.report_generated = reportGenerated;
+    lead.meta_purchase_event_sent = metaResult.sent;
+    await saveLead(leadId, lead);
+
+    return new Response(JSON.stringify({ success: true, leadId }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
   } catch (error) {
-    console.error('Flow Create Payment Error:', { message: error.message, stack: error.stack });
-    return new Response(
-      JSON.stringify({ error: 'Internal server error while creating Flow payment', message: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    console.error('[flow-webhook] Error no manejado:', error.message, error.stack);
+    return new Response(JSON.stringify({ error: 'Internal error', message: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };

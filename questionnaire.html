@@ -30,7 +30,7 @@
         message.className = 'notice error';
         return;
       }
-      const response = await fetch(`/api/get-questionnaire?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
+      const response = await fetch(`/.netlify/functions/get-questionnaire?lead_id=${encodeURIComponent(leadId)}&token=${encodeURIComponent(token)}`);
       const data = await response.json();
       if (!response.ok) {
         message.textContent = data.error || 'No se pudo cargar el cuestionario';
@@ -40,29 +40,52 @@
       render(data);
     }
 
+    function renderField(q) {
+      if (q.type === 'select' && q.options) {
+        const opts = q.options.map(o => `<option value="${o}">${o}</option>`).join('');
+        return `
+          <div class="field">
+            <label>${q.label}${q.required ? ' *' : ''}</label>
+            <select name="${q.key}" ${q.required ? 'required' : ''}>
+              <option value="">-- Selecciona una opción --</option>
+              ${opts}
+            </select>
+          </div>`;
+      }
+      const inputType = q.type === 'text' ? 'text' : 'number';
+      return `
+        <div class="field">
+          <label>${q.label}${q.required ? ' *' : ''}</label>
+          <input name="${q.key}" type="${inputType}" ${inputType === 'number' ? 'min="0"' : ''} ${q.required ? 'required' : ''} placeholder="${q.placeholder || ''}" />
+        </div>`;
+    }
+
     function render(data) {
       form.innerHTML = `
-        <div class="notice">Empresa: ${data.lead.company} · Rubro: ${data.lead.sector_label}</div>
-        ${data.questions.map((q) => `
-          <div class="field">
-            <label>${q.label}</label>
-            <input name="${q.key}" type="${q.type || 'number'}" ${q.type !== 'text' ? 'min="0"' : ''} ${q.required ? 'required' : ''} placeholder="${q.placeholder || ''}" />
-          </div>
-        `).join('')}
+        <div class="notice">Empresa: ${data.lead.company} &middot; Rubro: ${data.lead.sector_label}</div>
+        ${data.questions.map(renderField).join('')}
         <button type="submit">Enviar cuestionario</button>
       `;
 
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const payload = Object.fromEntries(new FormData(form).entries());
-        const response = await fetch('/api/submit-questionnaire', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lead_id: leadId, token, answers: payload })
-        });
-        const result = await response.json();
+        let response, result;
+        try {
+          response = await fetch('/.netlify/functions/submit-questionnaire', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lead_id: leadId, token, answers: payload })
+          });
+          const text = await response.text();
+          try { result = JSON.parse(text); } catch(e) { result = { error: 'Respuesta no-JSON (' + response.status + '): ' + text.substring(0, 200) }; }
+        } catch(e) {
+          message.textContent = 'Error de red: ' + e.message;
+          message.className = 'notice error';
+          return;
+        }
         if (!response.ok) {
-          message.textContent = result.error || 'No fue posible enviar respuestas';
+          message.textContent = 'Error ' + response.status + ': ' + (result.error || JSON.stringify(result));
           message.className = 'notice error';
           return;
         }

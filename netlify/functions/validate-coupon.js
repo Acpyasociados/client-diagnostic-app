@@ -84,22 +84,14 @@ export default async (req) => {
  * Valida un cupÃ³n contra la base de cupones disponibles
  */
 function validateCoupon(coupon, plan) {
-  // Base de cupones disponibles (desarrollo)
-  // En producciÃ³n, guardar en base de datos
+  // Cupones de producción — solo descuentos parciales.
+  // NUNCA agregar cupones TEST/DEMO/100% aquí.
+  // El descuento real se recalcula en create-diagnostic-order.js (server-side).
   const coupons = {
-    'TEST95': { valid: true, discount: 95, plans: ['basico', 'premium'] },
-    // Cupones de prueba 100% descuento
-    'TEST100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
-    'DEMO100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
-    'PRUEBA100': { valid: true, discount: 100, plans: ['basico', 'premium'] },
-    'TESTBASICO': { valid: true, discount: 100, plans: ['basico'] },
-    'TESTPREMIUM': { valid: true, discount: 100, plans: ['premium'] },
-
-    // Cupones de descuento parcial (ejemplo)
-    'DESC50': { valid: true, discount: 50, plans: ['basico', 'premium'] },
+    'DESC50':    { valid: true, discount: 50, plans: ['basico', 'premium'] },
     'STARTUP30': { valid: true, discount: 30, plans: ['premium'] },
 
-    // Agregue mÃ¡s cupones aquÃ­ segÃºn necesite
+    // Agregar nuevos cupones aquí y en validateCouponServerSide() de create-diagnostic-order.js
   };
 
   const couponKey = coupon.toUpperCase().trim();

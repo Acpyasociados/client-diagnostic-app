@@ -29,8 +29,9 @@ export default async (req) => {
     const store = getStore('diagnostic-leads');
     const leads = [];
 
-    // Iterar sobre todas las claves (lead_ids)
-    for await (const { key } of store.list()) {
+    // Listar todas las claves (API actual de Netlify Blobs)
+    const { blobs } = await store.list();
+    for (const { key } of blobs) {
       const data = await store.get(key);
       if (data) {
         try {
