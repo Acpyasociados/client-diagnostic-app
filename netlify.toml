@@ -18,19 +18,19 @@
   schedule = "0 * * * *"    # cada hora en punto
 
 [functions.daily-backup]
-  schedule = "0 6 * * *"    # 06:00 UTC = 03:00 AM Chile (hora de menor tráfico)
+  schedule = "0 6 * * *"    # 06:00 UTC = 03:00 AM Chile (hora de menor trÃ¡fico)
 
 [functions.free-followup]
-  schedule = "0 13 * * *"   # 13:00 UTC = 09:00 AM Chile — secuencia seguimiento leads gratis
+  schedule = "0 13 * * *"   # 13:00 UTC = 09:00 AM Chile â€” secuencia seguimiento leads gratis
 
 [functions.monitor-payment-failures]
-  schedule = "*/5 * * * *"  # cada 5 minutos — monitoreo de pagos fallidos
+  schedule = "*/5 * * * *"  # cada 5 minutos â€” monitoreo de pagos fallidos
 
 [context.production.environment]
-  # Secrets configuradas en Netlify UI (Site settings → Environment variables):
-  #   FLOW_API_KEY, FLOW_SECRET_KEY        — pagos Flow
-  #   SENDGRID_API_KEY                     — emails
-  #   ANTHROPIC_API_KEY                    — Claude IA (obtener en console.anthropic.com)
+  # Secrets configuradas en Netlify UI (Site settings â†’ Environment variables):
+  #   FLOW_API_KEY, FLOW_SECRET_KEY        â€” pagos Flow
+  #   SENDGRID_API_KEY                     â€” emails
+  #   ANTHROPIC_API_KEY                    â€” Claude IA (obtener en console.anthropic.com)
   # Non-secret environment variables:
   SENDGRID_FROM_EMAIL = "patriciosilvavalenzuela@gmail.com"
   ADVISOR_EMAIL = "asesor.pac@gmail.com"
